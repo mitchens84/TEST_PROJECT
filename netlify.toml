@@ -1,0 +1,22 @@
+# Netlify deployment configuration
+
+[build]
+  command = "npm run build" # Your build command
+  publish = "dist"          # Your publish directory (output of build)
+  environment = { # Environment variables can be set here or in Netlify UI
+    # NODE_VERSION = "18",
+    # VITE_BASE_URL = "/" # Usually root for Netlify, unless deploying to a subpath
+  }
+
+# Example redirect rule (optional)
+# [[redirects]]
+#   from = "/*"
+#   to = "/index.html"
+#   status = 200
+
+# Example headers rule (optional)
+# [[headers]]
+#   for = "/*"
+#   [headers.values]
+#     X-Frame-Options = "DENY"
+#     X-XSS-Protection = "1; mode=block"

@@ -1,0 +1,4 @@
+# Placeholder for requirements.txt: Python dependencies for airtable_extractor.py (e.g., airtable-python-wrapper, requests).
+requests
+python-dotenv
+# airtable-python-wrapper (if you decide to use it later, the current script uses requests directly)

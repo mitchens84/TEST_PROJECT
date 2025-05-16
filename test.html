@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage System Test Page</title>
+    <link rel="stylesheet" href="assets/styles/main.css">
+    <style>
+        body { padding: 20px; font-family: sans-serif; }
+        .test-section { margin-bottom: 30px; border: 1px solid #ccc; padding: 20px; border-radius: 8px; background-color: #f9f9f9; }
+        .test-section h2 { margin-top: 0; color: var(--primary-color); }
+        label { display: block; margin-bottom: 8px; font-weight: bold; }
+        input[type="text"], input[type="password"], input[type="email"], select, textarea { 
+            margin-bottom: 15px; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            width: calc(100% - 22px); 
+            box-sizing: border-box;
+        }
+        button { 
+            padding: 10px 18px; 
+            background-color: var(--primary-color); 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin-right: 10px; 
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+        button:hover { opacity: 0.85; }
+        button.secondary { background-color: #6c757d; }
+        button.danger { background-color: #dc3545; }
+        pre { 
+            background-color: #e9ecef; 
+            padding: 15px; 
+            border: 1px solid #ced4da; 
+            border-radius: 4px;
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .collapsible {
+            background-color: #f1f1f1;
+            color: #444;
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+        .collapsible.active, .collapsible:hover {
+            background-color: #ddd;
+        }
+        .content {
+            padding: 0 18px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            background-color: white;
+            border: 1px solid #f1f1f1;
+            border-top: none;
+        }
+        .content p, .content label { margin-top: 10px;}
+    </style>
+</head>
+<body>
+    <h1>Comprehensive Storage System Test Page</h1>
+    <p>This page tests <code>auto-storage.js</code>, <code>simple-storage.js</code>, and <code>storage-manager.js</code>.</p>
+    <p><strong>Instructions:</strong> Interact with the form elements. For <code>auto-storage.js</code>, changes should persist after reloading the page. Use the "SimpleStorage" and "StorageManager" controls to test manual operations.</p>
+
+    <!-- AUTO-STORAGE-INIT marker for setup-storage.js -->
+
+    <div class="test-section" id="autoStorageSection">
+        <h2>Auto-Storage Tests (<code>auto-storage.js</code>)</h2>
+        <p>Modify these fields, then reload the page. Values should be restored.</p>
+        
+        <label for="textInput1">Text Input 1 (id="textInput1"):</label>
+        <input type="text" id="textInput1" placeholder="Enter some text">
+
+        <label for="textInput2">Text Input 2 (name="textInput2" - uses name as key):</label>
+        <input type="text" name="textInput2" placeholder="Enter some text">
+
+        <label>Text Input 3 (data-storage-key="customKeyText" - uses custom key):</label>
+        <input type="text" data-storage-key="customKeyText" placeholder="Enter some text">
+        
+        <h3>Checkboxes</h3>
+        <label><input type="checkbox" id="checkbox1" name="checkGroup1"> Checkbox 1 (id="checkbox1")</label>
+        <label><input type="checkbox" name="checkbox2" data-storage-key="customKeyCheckbox"> Checkbox 2 (data-storage-key="customKeyCheckbox")</label>
+
+        <h3>Radio Buttons</h3>
+        <label><input type="radio" id="radioOption1" name="radioGroup1" value="option1"> Radio Option 1 (name="radioGroup1")</label>
+        <label><input type="radio" id="radioOption2" name="radioGroup1" value="option2" checked> Radio Option 2 (name="radioGroup1")</label>
+        <label><input type="radio" name="radioGroupUnique" value="uniqueA" data-storage-key="customRadioKey"> Custom Key Radio A</label>
+        <label><input type="radio" name="radioGroupUnique" value="uniqueB" data-storage-key="customRadioKey"> Custom Key Radio B</label>
+
+        <h3>Select Dropdown</h3>
+        <label for="select1">Select Dropdown (id="select1"):</label>
+        <select id="select1">
+            <option value="">--Please choose an option--</option>
+            <option value="opt1">Option 1</option>
+            <option value="opt2">Option 2</option>
+            <option value="opt3">Option 3</option>
+        </select>
+
+        <h3>Textarea</h3>
+        <label for="textarea1">Textarea (id="textarea1"):</label>
+        <textarea id="textarea1" rows="3" placeholder="Enter multiple lines of text"></textarea>
+
+        <h3>Collapsible Section (State should persist)</h3>
+        <button type="button" class="collapsible" data-storage-key="collapsible1State">Collapsible Section 1</button>
+        <div class="content">
+            <p>This is some content inside a collapsible section. Its open/closed state should be saved.</p>
+            <label for="checkboxInCollapsible">Checkbox inside (id="checkboxInCollapsible"):</label>
+            <input type="checkbox" id="checkboxInCollapsible">
+        </div>
+
+        <button type="button" class="collapsible" id="collapsible2">Collapsible Section 2 (id based)</button>
+        <div class="content">
+            <p>This is another collapsible section.</p>
+            <label for="textInCollapsible2">Text input inside (id="textInCollapsible2"):</label>
+            <input type="text" id="textInCollapsible2" placeholder="Text in collapsible 2">
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>SimpleStorage & StorageManager Direct Tests</h2>
+        <p>Use these controls to interact with <code>SimpleStorage</code> (which uses <code>StorageManager</code>).</p>
+        
+        <label for="simpleStorageKey">Storage Key:</label>
+        <input type="text" id="simpleStorageKey" placeholder="e.g., myTestData">
+        
+        <label for="simpleStorageValue">Storage Value (JSON):</label>
+        <textarea id="simpleStorageValue" rows="3" placeholder=\'e.g., {"name": "Test", "value": 123} or "a simple string"\'></textarea>
+        
+        <button id="saveSimpleBtn">Save with SimpleStorage</button>
+        <button id="loadSimpleBtn">Load with SimpleStorage</button>
+        <button id="removeSimpleBtn" class="secondary">Remove with SimpleStorage</button>
+        
+        <h3>Result/Loaded Value:</h3>
+        <pre id="simpleTestResults">Action results will appear here.</pre>
+    </div>
+
+    <div class="test-section">
+        <h2>Global Storage Inspection & Control</h2>
+        <button id="inspectStorageBtn">Inspect All Prefixed Storage</button>
+        <button id="clearPrefixedBtn" class="danger">Clear All Prefixed Storage (StorageManager)</button>
+        <button id="clearAllLocalStorageBtn" class="danger">Clear ALL LocalStorage (Browser)</button>
+        
+        <h3>Current Prefixed Storage Content (from StorageManager):</h3>
+        <pre id="storageContent">Prefixed storage content will appear here.</pre>
+    </div>
+
+    <!-- 
+        For this test page, we directly import auto-storage.js.
+        In a real application page, you would typically include the <!-- AUTO-STORAGE-INIT --> marker
+        and run `node setup-storage.js` to inject the script tag.
+        Or, if it's a Vite/React app, you'd import it in your main application entry point.
+    -->
+    <script type="module">
+        // Import storage systems
+        import autoStorage from './src/auto-storage.js'; // Initialize auto-storage for elements above
+        import SimpleStorage from './src/simple-storage.js';
+        import StorageManager from './src/storage-manager.js';
+
+        const simpleKeyInput = document.getElementById('simpleStorageKey');
+        const simpleValueInput = document.getElementById('simpleStorageValue');
+        const simpleResultsEl = document.getElementById('simpleTestResults');
+        const storageContentEl = document.getElementById('storageContent');
+
+        // --- SimpleStorage Test Functions ---
+        document.getElementById('saveSimpleBtn').addEventListener('click', () => {
+            const key = simpleKeyInput.value;
+            const rawValue = simpleValueInput.value;
+            if (!key) {
+                simpleResultsEl.textContent = 'Error: Key is required for SimpleStorage.';
+                return;
+            }
+            try {
+                const value = JSON.parse(rawValue); // Assume JSON, or handle as string if parse fails
+                if (SimpleStorage.save(key, value)) {
+                    simpleResultsEl.textContent = `Saved to key "${key}":\\n${JSON.stringify(value, null, 2)}`;
+                } else {
+                    simpleResultsEl.textContent = `Failed to save to key "${key}". Check console.`;
+                }
+            } catch (e) {
+                 // If not valid JSON, try to save as string
+                if (SimpleStorage.save(key, rawValue)) {
+                    simpleResultsEl.textContent = `Saved to key "${key}" (as string):\\n${rawValue}`;
+                } else {
+                    simpleResultsEl.textContent = `Failed to save to key "${key}" (as string). Check console.`;
+                }
+            }
+            inspectPrefixedStorage(); // Update inspection view
+        });
+
+        document.getElementById('loadSimpleBtn').addEventListener('click', () => {
+            const key = simpleKeyInput.value;
+            if (!key) {
+                simpleResultsEl.textContent = 'Error: Key is required for SimpleStorage.';
+                return;
+            }
+            const value = SimpleStorage.load(key);
+            if (value !== null) {
+                simpleResultsEl.textContent = `Loaded from key "${key}":\\n${JSON.stringify(value, null, 2)}`;
+            } else {
+                simpleResultsEl.textContent = `No data found for key "${key}".`;
+            }
+        });
+
+        document.getElementById('removeSimpleBtn').addEventListener('click', () => {
+            const key = simpleKeyInput.value;
+            if (!key) {
+                simpleResultsEl.textContent = 'Error: Key is required for SimpleStorage.';
+                return;
+            }
+            // if (SimpleStorage.remove(key)) { // Incorrect: method is named delete
+            if (SimpleStorage.delete(key)) { // Corrected to use .delete()
+                simpleResultsEl.textContent = `Removed key "${key}" using SimpleStorage.`;
+            } else {
+                simpleResultsEl.textContent = `Failed to remove key "${key}" or key not found.`;
+            }
+            inspectPrefixedStorage(); // Update inspection view
+        });
+
+        // --- StorageManager Global Control Functions ---
+        function inspectPrefixedStorage() {
+            const allData = StorageManager.getAllPrefixedItems();
+            storageContentEl.textContent = JSON.stringify(allData, null, 2);
+        }
+
+        document.getElementById('inspectStorageBtn').addEventListener('click', inspectPrefixedStorage);
+
+        document.getElementById('clearPrefixedBtn').addEventListener('click', () => {
+            if (confirm("Are you sure you want to clear all application-managed storage? This will affect auto-saved form data.")) {
+                StorageManager.clearAllPrefixed();
+                simpleResultsEl.textContent = 'All StorageManager prefixed items have been cleared.';
+                inspectPrefixedStorage(); // Update inspection view
+                // Optionally, alert and reload to see effect on auto-storage
+                alert("All StorageManager prefixed items have been cleared. Reloading page to see effect on auto-saved fields.");
+                location.reload();
+            }
+        });
+
+        document.getElementById('clearAllLocalStorageBtn').addEventListener('click', () => {
+            if (confirm("DANGER! This will clear ALL localStorage for this domain, not just items managed by these scripts. Are you absolutely sure?")) {
+                localStorage.clear();
+                simpleResultsEl.textContent = 'All localStorage for this domain has been cleared.';
+                storageContentEl.textContent = '{}'; // Reflect that all storage is gone
+                alert("All localStorage for this domain has been cleared. Reloading page.");
+                location.reload();
+            }
+        });
+        
+        // --- Collapsible Sections Logic (from original template, ensure it works with auto-storage) ---
+        document.addEventListener('DOMContentLoaded', function() {
+            var collapsibles = document.getElementsByClassName("collapsible");
+            for (var i = 0; i < collapsibles.length; i++) {
+                // Restore state for collapsibles handled by autoStorage
+                // autoStorage should handle this if data-storage-key or id is present.
+                // For manual collapsibles (if any), you might add specific load logic here.
+
+                collapsibles[i].addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    var content = this.nextElementSibling;
+                    if (content.style.maxHeight && content.style.maxHeight !== "0px"){
+                        content.style.maxHeight = null;
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    } 
+                    // autoStorage should pick up this change if the collapsible is configured for it.
+                });
+
+                // Initialize open state for non-auto-managed or if needed before autoStorage runs
+                // This part is tricky if autoStorage also manages it.
+                // Generally, autoStorage should handle the initial state based on stored data.
+                // If a collapsible is active (expanded) by default via autoStorage, reflect that.
+                const content = collapsibles[i].nextElementSibling;
+                if (collapsibles[i].classList.contains('active') && content) { // If autoStorage made it active
+                     if (content.style.maxHeight !== content.scrollHeight + "px") {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                     }
+                } else if (content) {
+                    // content.style.maxHeight = null; // Ensure it's closed if not active
+                }
+            }
+            
+            // Initial inspection of storage
+            inspectPrefixedStorage();
+        });
+
+    </script>
+</body>
+</html>

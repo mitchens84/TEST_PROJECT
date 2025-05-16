@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Content Hub</title>
+    <link rel="stylesheet" href="assets/styles/main.css">
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden; /* Prevent body scrollbars */
+        }
+        #sidebar {
+            width: 250px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #ddd;
+            height: 100%;
+        }
+        #content-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            height: 100%;
+        }
+        #toc-container h2 {
+            margin-top: 0;
+        }
+        iframe {
+            width: 100%;
+            height: calc(100% - 40px); /* Adjust based on padding or other elements */
+            border: 1px solid #ccc;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <div id="toc-container">
+            <h2>Table of Contents</h2>
+            <!-- toc.html will be loaded here -->
+        </div>
+        <hr>
+        <div>
+            <h3>Navigation</h3>
+            <button onclick="showContent('home')">Home</button>
+            <button onclick="showContent('test')">Test Page</button>
+        </div>
+    </div>
+    <div id="content-area">
+        <div id="home-content">
+            <h1>Welcome to the Content Hub</h1>
+            <p>Select an item from the Table of Contents to view its content, or use the navigation buttons.</p>
+            <p>This is the main index page. Content from the <code>EXPRESS</code> directory will be loaded into the iframe below when you click links in the Table of Contents.</p>
+        </div>
+        <div id="test-content" class="hidden">
+            <h2>Test Page Area</h2>
+            <p>This area is for loading <code>test.html</code>.</p>
+            <iframe id="test-iframe" src="test.html" title="Test Page Content"></iframe>
+        </div>
+        <iframe id="content-iframe" title="Express Content"></iframe>
+    </div>
+
+    <script>
+        async function loadToc() {
+            try {
+                const response = await fetch('toc.html');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const tocHtml = await response.text();
+                const tocContainer = document.getElementById('toc-container');
+                
+                // Create a temporary div to parse the toc.html content
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = tocHtml;
+                
+                // Assuming toc.html contains a <ul> or <ol>
+                const tocList = tempDiv.querySelector('ul, ol');
+                if (tocList) {
+                    tocContainer.appendChild(tocList);
+                    // Add event listeners to TOC links
+                    tocContainer.querySelectorAll('a').forEach(link => {
+                        link.addEventListener('click', function(event) {
+                            event.preventDefault();
+                            const targetUrl = this.getAttribute('href');
+                            if (targetUrl) {
+                                loadContentInIframe(targetUrl);
+                            }
+                        });
+                    });
+                } else {
+                    tocContainer.innerHTML += '<p>Table of Contents not found or in unexpected format.</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load Table of Contents:', error);
+                document.getElementById('toc-container').innerHTML += '<p>Error loading Table of Contents. See console for details.</p>';
+            }
+        }
+
+        function loadContentInIframe(url) {
+            const contentIframe = document.getElementById('content-iframe');
+            const homeContent = document.getElementById('home-content');
+            const testContent = document.getElementById('test-content');
+            
+            contentIframe.src = url;
+            contentIframe.classList.remove('hidden');
+            homeContent.classList.add('hidden');
+            testContent.classList.add('hidden');
+        }
+
+        function showContent(contentType) {
+            const contentIframe = document.getElementById('content-iframe');
+            const homeContent = document.getElementById('home-content');
+            const testContent = document.getElementById('test-content');
+
+            contentIframe.classList.add('hidden'); // Hide iframe by default
+            homeContent.classList.add('hidden');
+            testContent.classList.add('hidden');
+
+            if (contentType === 'home') {
+                homeContent.classList.remove('hidden');
+                contentIframe.src = 'about:blank'; // Clear iframe
+            } else if (contentType === 'test') {
+                testContent.classList.remove('hidden');
+                // test-iframe is already set with src="test.html"
+            } 
+            // TOC links will call loadContentInIframe directly
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadToc();
+            showContent('home'); // Show home content by default
+        });
+    </script>
+</body>
+</html>
