@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complex Content Showcase</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- React -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <!-- Babel for JSX (optional, for inline JSX or separate .jsx files if not pre-compiled) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Complex Content Showcase</h1>
+        <nav>
+            <a href="#d3-section">D3.js Chart</a> |
+            <a href="#threejs-section">Three.js Cube</a> |
+            <a href="#react-section">React Counter</a> |
+            <a href="#internal-nav-section">Internal Navigation</a>
+        </nav>
+    </header>
+
+    <main>
+        <section id="d3-section">
+            <h2>D3.js Bar Chart</h2>
+            <div id="d3-chart-container"></div>
+        </section>
+
+        <hr>
+
+        <section id="threejs-section">
+            <h2>Three.js Spinning Cube</h2>
+            <div id="threejs-canvas-container" style="width: 500px; height: 400px; border: 1px solid black;"></div>
+        </section>
+
+        <hr>
+
+        <section id="react-section">
+            <h2>React Counter Component</h2>
+            <div id="react-app-root"></div>
+        </section>
+
+        <hr>
+
+        <section id="internal-nav-section" style="height: 800px; background-color: #f0f0f0; padding: 20px;">
+            <h2>Internal Navigation Test Section</h2>
+            <p>This section is tall to demonstrate scrolling.</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. ... (add more placeholder text) ...</p>
+            <p id="internal-target">This is an internal target to jump to.</p>
+            <a href="#top">Back to Top</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>Showcase Footer</p>
+    </footer>
+
+    <script type="text/babel" src="script.js"></script> <!-- type="text/babel" if using JSX in script.js -->
+</body>
+</html>

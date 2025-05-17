@@ -1,0 +1,77 @@
+/* Basic styling for the complex showcase page */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 1rem;
+    text-align: center;
+}
+
+header nav a {
+    color: #fff;
+    margin: 0 10px;
+    text-decoration: none;
+}
+
+header nav a:hover {
+    text-decoration: underline;
+}
+
+main {
+    padding: 20px;
+}
+
+section {
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+}
+
+section h2 {
+    margin-top: 0;
+    color: #333;
+}
+
+#d3-chart-container svg {
+    display: block;
+    margin: auto;
+}
+
+#threejs-canvas-container {
+    margin: auto; /* Center the container if it's narrower than the section */
+}
+
+#react-app-root button {
+    padding: 10px 15px;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#react-app-root button:hover {
+    background-color: #0056b3;
+}
+
+footer {
+    text-align: center;
+    padding: 1rem;
+    background-color: #333;
+    color: #fff;
+    margin-top: 30px;
+}
+
+/* Ensure content is not hidden by fixed ToC if this page is loaded in iframe */
+/* This might not be strictly necessary if body padding in main index.html handles it */
+/* body {
+    padding-left: 10px; /* Minimal padding if loaded in iframe to avoid toc overlap */
+/* } */

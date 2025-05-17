@@ -37,7 +37,8 @@ fi
 
 # --- 2. Generate Table of Contents ---
 echo "Generating Table of Contents..."
-node generate-toc.js
+# Correctly specify output for TEST_PROJECT
+node ../generate-toc.js --expressDir ./EXPRESS --htmlOutputFile ./toc.html --htmlBaseDir . --all
 if [ $? -ne 0 ]; then
   echo "Error: Failed to generate Table of Contents. Aborting build."
   exit 1
