@@ -12,21 +12,63 @@
             display: flex;
             height: 100vh;
             overflow: hidden; /* Prevent body scrollbars */
+            transition: margin-left 0.3s ease-in-out; /* For content area shift */
         }
+
+        #sidebar-toggle-btn {
+            position: fixed; /* Or absolute if sidebar is the parent */
+            top: 10px;
+            left: 10px; /* Initial position */
+            z-index: 1001; /* Above sidebar */
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: left 0.3s ease-in-out;
+        }
+
         #sidebar {
             width: 250px;
+            min-width: 250px; /* Prevent it from shrinking too much during transition */
             background-color: #f4f4f4;
             padding: 20px;
+            padding-top: 50px; /* Space for the toggle button if it were inside */
             overflow-y: auto;
             border-right: 1px solid #ddd;
             height: 100%;
+            position: fixed; /* Changed to fixed for proper off-screen sliding */
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transform: translateX(0);
+            transition: transform 0.3s ease-in-out;
         }
+
+        #sidebar.sidebar-collapsed {
+            transform: translateX(-100%);
+            border-right: none; /* Hide border when collapsed */
+        }
+
         #content-area {
             flex-grow: 1;
             padding: 20px;
             overflow-y: auto;
             height: 100%;
+            margin-left: 270px; /* Initial margin to account for sidebar width + padding */
+            transition: margin-left 0.3s ease-in-out;
         }
+
+        body.sidebar-collapsed #content-area {
+            margin-left: 20px; /* Adjust as needed, or 0 if toggle button moves with content */
+        }
+        
+        body.sidebar-collapsed #sidebar-toggle-btn {
+            left: 10px; /* Keep button visible */
+        }
+
         #toc-container h2 {
             margin-top: 0;
         }
@@ -41,6 +83,61 @@
     </style>
 </head>
 <body>
+    <button id="sidebar-toggle-btn">☰</button>
+    <script src="src/env-config.js"></script>
+    <script>
+        // --- Basic Password Protection - Tier 0 ---
+        // This is a simple, client-side password protection.
+        // Note: This is not secure and only deters casual viewers.
+        (function() {
+            // Get password from environment config or fall back to hardcoded value
+            const sitePassword = window.envConfig?.authConfig?.password || "TEST_PROJECT";
+            const sessionKey = window.envConfig?.authConfig?.sessionKey || 'tier0Password';
+            
+            // Check if already authenticated in this session
+            let sessionPassword = null;
+            try {
+                sessionPassword = sessionStorage.getItem(sessionKey);
+            } catch (e) {
+                console.warn("Session storage access denied. Password prompt will appear on each navigation.");
+            }
+
+            if (sessionPassword === sitePassword) {
+                // Already authenticated in this session
+                return;
+            }
+
+            const enteredPassword = prompt("Enter password to view content:", "");
+
+            if (enteredPassword === sitePassword) {
+                // Password correct, store in session storage
+                try {
+                    sessionStorage.setItem('tier0Password', enteredPassword);
+                } catch (e) {
+                    console.warn("Session storage access denied. Password prompt will appear on each navigation.");
+                }
+            } else {
+                // Password incorrect, show access denied and halt further execution
+                // Clear everything and create a completely empty page with only the access denied message
+                document.documentElement.innerHTML = 
+                    '<html><head><title>Access Denied</title>' +
+                    '<style>' +
+                    'body { font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f5f5f5; }' +
+                    'h1 { color: #333; }' +
+                    'p { color: #666; }' +
+                    '</style></head>' +
+                    '<body>' +
+                    '<h1>Access Denied</h1>' +
+                    '<p>Please refresh and try again if you have the correct password.</p>' +
+                    '</body></html>';
+                
+                // Prevent any further script execution
+                throw new Error("Access Denied - Halting further script execution.");
+            }
+        })();
+        // --- End Basic Password Protection ---
+    </script>
+
     <div id="sidebar">
         <div id="toc-container">
             <h2>Table of Contents</h2>
@@ -137,6 +234,43 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadToc();
             showContent('home'); // Show home content by default
+
+            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+            const sidebar = document.getElementById('sidebar');
+            // const contentArea = document.getElementById('content-area'); // Not strictly needed for this version
+            const body = document.body;
+
+            // Function to apply state
+            function applySidebarState(state) {
+                if (state === 'collapsed') {
+                    sidebar.classList.add('sidebar-collapsed');
+                    body.classList.add('sidebar-collapsed');
+                    sidebarToggleBtn.textContent = '»'; 
+                } else {
+                    sidebar.classList.remove('sidebar-collapsed');
+                    body.classList.remove('sidebar-collapsed');
+                    sidebarToggleBtn.textContent = '«'; 
+                }
+            }
+
+            // Check localStorage for saved state
+            const savedState = localStorage.getItem('sidebarState_TEST_PROJECT'); // Use a project-specific key
+            if (savedState) {
+                applySidebarState(savedState);
+            } else {
+                applySidebarState('expanded'); // Default to expanded
+            }
+
+            sidebarToggleBtn.addEventListener('click', () => {
+                const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+                if (isCollapsed) {
+                    applySidebarState('expanded');
+                    localStorage.setItem('sidebarState_TEST_PROJECT', 'expanded');
+                } else {
+                    applySidebarState('collapsed');
+                    localStorage.setItem('sidebarState_TEST_PROJECT', 'collapsed');
+                }
+            });
         });
     </script>
 </body>
