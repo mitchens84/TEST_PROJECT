@@ -5,37 +5,71 @@
 echo "Starting build process..."
 
 # --- Configuration ---
-NODE_MODULES_DIR="node_modules" # New path: node_modules is at the project root
-PACKAGE_LOCK="package.json" # New path: package.json is at the project root
+PROJECT_ROOT_NODE_MODULES_DIR="node_modules"
+PROJECT_ROOT_PACKAGE_LOCK="package.json"
+PROPOSAL_APP_DIR="src_react/proposal_app"
+PROPOSAL_APP_OUTPUT_DIR="EXPRESS/career/full-proposal-component"
 
-# --- 1. Install/Update Dependencies (if needed) ---
-# Check if node_modules exists and if package.json is newer than a marker file in node_modules
-# This is a simple way to check if npm install might be needed.
-# A more robust check might involve comparing package.json/package-lock.json modification times.
+# --- 1. Build Internal React Proposal App ---
+echo "Building Internal React Proposal App..."
+
+# Check if node_modules exists in proposal_app, if not, run npm install
+if [ ! -d "$PROPOSAL_APP_DIR/node_modules" ]; then
+  echo "node_modules not found in $PROPOSAL_APP_DIR. Running npm install..."
+  (cd "$PROPOSAL_APP_DIR" && npm install)
+  if [ $? -ne 0 ]; then
+    echo "Error: npm install failed for $PROPOSAL_APP_DIR. Aborting build."
+    exit 1
+  fi
+else
+  # Optional: Could add a check here to run npm install if its package.json is newer
+  # than a marker in its node_modules, similar to the root project check.
+  echo "node_modules found in $PROPOSAL_APP_DIR. Skipping npm install."
+fi
+
+echo "Running npm run build for $PROPOSAL_APP_DIR..."
+(cd "$PROPOSAL_APP_DIR" && npm run build)
+if [ $? -ne 0 ]; then
+  echo "Error: npm run build failed for $PROPOSAL_APP_DIR. Aborting build."
+  exit 1
+fi
+
+echo "Clearing old proposal app assets from $PROPOSAL_APP_OUTPUT_DIR..."
+rm -rf "$PROPOSAL_APP_OUTPUT_DIR"/*
+mkdir -p "$PROPOSAL_APP_OUTPUT_DIR" # Ensure directory exists
+
+echo "Copying built proposal app assets to $PROPOSAL_APP_OUTPUT_DIR..."
+cp -R "$PROPOSAL_APP_DIR/dist/"* "$PROPOSAL_APP_OUTPUT_DIR/"
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to copy built assets from $PROPOSAL_APP_DIR/dist. Aborting build."
+  exit 1
+fi
+echo "Internal React Proposal App built and assets copied successfully."
+
+
+# --- 2. Install/Update Dependencies for TEST_PROJECT shell (if needed) ---
+echo "Checking dependencies for TEST_PROJECT shell..."
 NEEDS_NPM_INSTALL=false
-if [ ! -d "$NODE_MODULES_DIR" ]; then
+if [ ! -d "$PROJECT_ROOT_NODE_MODULES_DIR" ]; then
   NEEDS_NPM_INSTALL=true
 else
-  # Create a marker file to track the last npm install relative to package.json changes
-  # This is a simplified check. For more accuracy, compare modification dates of
-  # package.json and a marker file updated after npm install.
-  if [ "$PACKAGE_LOCK" -nt "$NODE_MODULES_DIR" ]; then
+  if [ "$PROJECT_ROOT_PACKAGE_LOCK" -nt "$PROJECT_ROOT_NODE_MODULES_DIR" ]; then
     NEEDS_NPM_INSTALL=true
   fi
 fi
 
 if [ "$NEEDS_NPM_INSTALL" = true ]; then
-  echo "Changes detected in package.json or node_modules missing. Running npm install in project root..."
-  npm install # New command: run npm install in the current directory (project root)
+  echo "Changes detected in project root package.json or node_modules missing. Running npm install in project root..."
+  npm install # Installs dependencies for the main TEST_PROJECT shell, if any
   if [ $? -ne 0 ]; then
-    echo "Error: npm install failed. Aborting build."
+    echo "Error: npm install failed for project root. Aborting build."
     exit 1
   fi
 else
-  echo "Dependencies appear up to date. Skipping npm install."
+  echo "Project root dependencies appear up to date. Skipping npm install."
 fi
 
-# --- 2. Generate Table of Contents ---
+# --- 3. Generate Table of Contents ---
 echo "Generating Table of Contents..."
 # Correctly specify output for TEST_PROJECT
 node ../generate-toc.js --expressDir ./EXPRESS --htmlOutputFile ./toc.html --htmlBaseDir . --all
@@ -45,7 +79,7 @@ if [ $? -ne 0 ]; then
 fi
 echo "Table of Contents generated successfully."
 
-# --- 3. Run Quality Checks ---
+# --- 4. Run Quality Checks ---
 echo "Running Quality Checks..."
 node run-qc.js
 if [ $? -ne 0 ]; then
@@ -55,7 +89,7 @@ if [ $? -ne 0 ]; then
 fi
 echo "Quality Checks passed."
 
-# --- 4. Placeholder for Vite/React App Build ---
+# --- 5. Placeholder for Vite/React App Build ---
 # If you have React applications managed by Vite, ensure package.json at the root
 # has the necessary build scripts.
 # For example, if the main project is a Vite project:

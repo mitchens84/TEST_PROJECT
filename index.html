@@ -55,10 +55,13 @@
         #content-area {
             flex-grow: 1;
             padding: 20px;
-            overflow-y: auto;
+            overflow-y: auto; /* Keep this if content within iframe might scroll */
             height: 100%;
-            margin-left: 270px; /* Initial margin to account for sidebar width + padding */
+            margin-left: 270px; 
             transition: margin-left 0.3s ease-in-out;
+            display: flex; /* Make content-area a flex container */
+            flex-direction: column; /* Stack children vertically */
+            box-sizing: border-box; /* Ensure padding is included in height calculation */
         }
 
         body.sidebar-collapsed #content-area {
@@ -72,19 +75,31 @@
         #toc-container h2 {
             margin-top: 0;
         }
-        iframe {
-            width: 100%;
-            height: calc(100% - 40px); /* Adjust based on padding or other elements */
-            border: 1px solid #ccc;
+
+        #home-content { /* Added style for home-content */
+            flex-grow: 1; /* Allow home-content to fill available space in content-area */
+            position: relative; 
         }
+
+        #home-content iframe { /* More specific selector and adjusted height */
+            width: 100%;
+            height: 100%; /* Fill the #home-content div */
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
         .hidden {
             display: none;
+        }
+        #navigation-area button.active {
+            background-color: #ddd;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <button id="sidebar-toggle-btn">☰</button>
-    <script src="src/env-config.js"></script>
+    <script type="module" src="src/env-config.js"></script>
     <script>
         // --- Basic Password Protection - Tier 0 ---
         // This is a simple, client-side password protection.
@@ -112,27 +127,23 @@
             if (enteredPassword === sitePassword) {
                 // Password correct, store in session storage
                 try {
-                    sessionStorage.setItem('tier0Password', enteredPassword);
+                    sessionStorage.setItem(sessionKey, enteredPassword); // Use sessionKey here
                 } catch (e) {
                     console.warn("Session storage access denied. Password prompt will appear on each navigation.");
                 }
             } else {
                 // Password incorrect, show access denied and halt further execution
-                // Clear everything and create a completely empty page with only the access denied message
                 document.documentElement.innerHTML = 
                     '<html><head><title>Access Denied</title>' +
                     '<style>' +
-                    'body { font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f5f5f5; }' +
-                    'h1 { color: #333; }' +
-                    'p { color: #666; }' +
-                    '</style></head>' +
-                    '<body>' +
+                    'body { font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f5f5f5; color: #333; }' +
+                    'h1 { color: #d9534f; }' +
+                    '</style></head><body>' +
                     '<h1>Access Denied</h1>' +
-                    '<p>Please refresh and try again if you have the correct password.</p>' +
+                    '<p>Invalid password. Please try again or contact the site administrator.</p>' +
                     '</body></html>';
-                
                 // Prevent any further script execution
-                throw new Error("Access Denied - Halting further script execution.");
+                throw new Error("Access Denied - Halting script execution");
             }
         })();
         // --- End Basic Password Protection ---
@@ -141,136 +152,165 @@
     <div id="sidebar">
         <div id="toc-container">
             <h2>Table of Contents</h2>
-            <!-- toc.html will be loaded here -->
+            <div id="dynamic-toc-content">
+                <!-- toc.html will be loaded here -->
+                <p>Loading Table of Contents...</p> 
+            </div>
         </div>
         <hr>
-        <div>
+        <div id="navigation-area"> <!-- Added id="navigation-area" -->
             <h3>Navigation</h3>
-            <button onclick="showContent('home')">Home</button>
-            <button onclick="showContent('test')">Test Page</button>
+            <button onclick="window.showContent('home')">Home</button>
+            <button onclick="window.showContent('test')">Test Page</button>
         </div>
     </div>
     <div id="content-area">
         <div id="home-content">
-            <h1>Welcome to the Content Hub</h1>
-            <p>Select an item from the Table of Contents to view its content, or use the navigation buttons.</p>
-            <p>This is the main index page. Content from the <code>EXPRESS</code> directory will be loaded into the iframe below when you click links in the Table of Contents.</p>
+            <!-- Iframe will be created here by JavaScript -->
         </div>
-        <div id="test-content" class="hidden">
-            <h2>Test Page Area</h2>
-            <p>This area is for loading <code>test.html</code>.</p>
-            <iframe id="test-iframe" src="test.html" title="Test Page Content"></iframe>
-        </div>
-        <iframe id="content-iframe" title="Express Content"></iframe>
     </div>
 
     <script>
-        async function loadToc() {
-            try {
-                const response = await fetch('toc.html');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const tocHtml = await response.text();
-                const tocContainer = document.getElementById('toc-container');
-                
-                // Create a temporary div to parse the toc.html content
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = tocHtml;
-                
-                // Assuming toc.html contains a <ul> or <ol>
-                const tocList = tempDiv.querySelector('ul, ol');
-                if (tocList) {
-                    tocContainer.appendChild(tocList);
-                    // Add event listeners to TOC links
-                    tocContainer.querySelectorAll('a').forEach(link => {
-                        link.addEventListener('click', function(event) {
-                            event.preventDefault();
-                            const targetUrl = this.getAttribute('href');
-                            if (targetUrl) {
-                                loadContentInIframe(targetUrl);
+        // Core function to load content into the iframe
+        window.loadContent = function(pageUrl, buttonElementToActivate) {
+            const homeContentDiv = document.getElementById('home-content');
+            if (!homeContentDiv) {
+                console.error('Home content area (home-content) not found.');
+                return;
+            }
+
+            const navButtons = document.querySelectorAll('#navigation-area button');
+            navButtons.forEach(btn => btn.classList.remove('active'));
+
+            if (buttonElementToActivate) {
+                buttonElementToActivate.classList.add('active');
+            }
+
+            let iframe = homeContentDiv.querySelector('iframe');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                // Styles for iframe are expected to be in CSS
+                homeContentDiv.innerHTML = ''; 
+                homeContentDiv.appendChild(iframe);
+            }
+            iframe.src = pageUrl;
+        };
+
+        // Function for static navigation buttons in the sidebar
+        window.showContent = function(pageKey) {
+            let pageUrl; // Will be assigned now
+            let buttonToActivate = null;
+            const navButtons = document.querySelectorAll('#navigation-area button');
+
+            if (pageKey === 'home') {
+                pageUrl = 'test.html'; // Assign the URL
+                buttonToActivate = Array.from(navButtons).find(btn => btn.textContent.toLowerCase() === 'home');
+            } else if (pageKey === 'test') {
+                pageUrl = 'test.html'; // Assign the URL
+                buttonToActivate = Array.from(navButtons).find(btn => btn.textContent.toLowerCase() === 'test page');
+            }
+            // This function is primarily for the static buttons, pageUrl must be resolved here.
+
+            if (pageUrl) {
+                window.loadContent(pageUrl, buttonToActivate);
+                sessionStorage.setItem('currentPage', pageUrl);
+            } else {
+                console.warn('showContent called with unknown pageKey:', pageKey);
+            }
+        };
+
+        // Function called by toc.html links (e.g., parent.loadContentIntoIframe('path/to/page.html', this))
+        window.loadContentIntoIframe = function(pageUrl, tocLinkElement) {
+            // tocLinkElement is the <a> from toc.html. We don't activate static nav buttons from ToC clicks.
+            window.loadContent(pageUrl, null); 
+            sessionStorage.setItem('currentPage', pageUrl);
+
+            // Optional: Auto-collapse sidebar after clicking a ToC link
+            /*
+            const sidebar = document.getElementById('sidebar');
+            const toggleButton = document.getElementById('sidebar-toggle-btn');
+            if (sidebar && toggleButton && !sidebar.classList.contains('sidebar-collapsed')) {
+                toggleButton.click(); // Simulate a click on the toggle button
+            }
+            */
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const tocTargetDiv = document.getElementById('dynamic-toc-content');
+            if (tocTargetDiv) {
+                fetch('toc.html')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok for toc.html: ' + response.status + ' ' + response.statusText);
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        tocTargetDiv.innerHTML = html;
+                        // Add event delegation for ToC links AFTER content is loaded
+                        tocTargetDiv.addEventListener('click', function(event) {
+                            let targetElement = event.target;
+                            // Traverse up the DOM to find an anchor tag if the click was on a child element (e.g., <span> inside <a>)
+                            while (targetElement && targetElement !== this && targetElement.tagName !== 'A') {
+                                targetElement = targetElement.parentElement;
+                            }
+
+                            if (targetElement && targetElement.tagName === 'A' && targetElement.hasAttribute('href')) {
+                                event.preventDefault(); // Prevent full page navigation
+                                const pageUrl = targetElement.getAttribute('href'); 
+                                if (pageUrl) {
+                                    // Call the existing function designed for ToC links
+                                    window.loadContentIntoIframe(pageUrl, targetElement);
+                                }
                             }
                         });
+                    })
+                    .catch(error => {
+                        console.error('Error loading Table of Contents:', error);
+                        if (tocTargetDiv) {
+                           tocTargetDiv.innerHTML = '<p style="color: red;">Error loading Table of Contents. See console for details.</p>';
+                        }
                     });
-                } else {
-                    tocContainer.innerHTML += '<p>Table of Contents not found or in unexpected format.</p>';
-                }
-            } catch (error) {
-                console.error('Failed to load Table of Contents:', error);
-                document.getElementById('toc-container').innerHTML += '<p>Error loading Table of Contents. See console for details.</p>';
-            }
-        }
-
-        function loadContentInIframe(url) {
-            const contentIframe = document.getElementById('content-iframe');
-            const homeContent = document.getElementById('home-content');
-            const testContent = document.getElementById('test-content');
-            
-            contentIframe.src = url;
-            contentIframe.classList.remove('hidden');
-            homeContent.classList.add('hidden');
-            testContent.classList.add('hidden');
-        }
-
-        function showContent(contentType) {
-            const contentIframe = document.getElementById('content-iframe');
-            const homeContent = document.getElementById('home-content');
-            const testContent = document.getElementById('test-content');
-
-            contentIframe.classList.add('hidden'); // Hide iframe by default
-            homeContent.classList.add('hidden');
-            testContent.classList.add('hidden');
-
-            if (contentType === 'home') {
-                homeContent.classList.remove('hidden');
-                contentIframe.src = 'about:blank'; // Clear iframe
-            } else if (contentType === 'test') {
-                testContent.classList.remove('hidden');
-                // test-iframe is already set with src="test.html"
-            } 
-            // TOC links will call loadContentInIframe directly
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadToc();
-            showContent('home'); // Show home content by default
-
-            const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
-            const sidebar = document.getElementById('sidebar');
-            // const contentArea = document.getElementById('content-area'); // Not strictly needed for this version
-            const body = document.body;
-
-            // Function to apply state
-            function applySidebarState(state) {
-                if (state === 'collapsed') {
-                    sidebar.classList.add('sidebar-collapsed');
-                    body.classList.add('sidebar-collapsed');
-                    sidebarToggleBtn.textContent = '»'; 
-                } else {
-                    sidebar.classList.remove('sidebar-collapsed');
-                    body.classList.remove('sidebar-collapsed');
-                    sidebarToggleBtn.textContent = '«'; 
-                }
-            }
-
-            // Check localStorage for saved state
-            const savedState = localStorage.getItem('sidebarState_TEST_PROJECT'); // Use a project-specific key
-            if (savedState) {
-                applySidebarState(savedState);
             } else {
-                applySidebarState('expanded'); // Default to expanded
+                console.error('Error: Target div for ToC (dynamic-toc-content) not found.');
             }
 
-            sidebarToggleBtn.addEventListener('click', () => {
-                const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+            // Sidebar Toggle Functionality
+            const sidebar = document.getElementById('sidebar');
+            const toggleButton = document.getElementById('sidebar-toggle-btn');
+            if (sidebar && toggleButton) {
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
                 if (isCollapsed) {
-                    applySidebarState('expanded');
-                    localStorage.setItem('sidebarState_TEST_PROJECT', 'expanded');
-                } else {
-                    applySidebarState('collapsed');
-                    localStorage.setItem('sidebarState_TEST_PROJECT', 'collapsed');
+                    document.body.classList.add('sidebar-collapsed');
+                    sidebar.classList.add('sidebar-collapsed');
                 }
-            });
+
+                toggleButton.addEventListener('click', function() {
+                    sidebar.classList.toggle('sidebar-collapsed');
+                    document.body.classList.toggle('sidebar-collapsed');
+                    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+                });
+            } else {
+                console.error('Sidebar or toggle button element not found. Toggle functionality will not work.');
+            }
+
+            // Initial page load logic
+            const lastPage = sessionStorage.getItem('currentPage');
+            if (lastPage) {
+                let buttonToActivate = null;
+                const navButtons = document.querySelectorAll('#navigation-area button');
+                // Try to find if a static button corresponds to the lastPage
+                if (lastPage === 'test.html') { // Example, assuming test.html is what Home/Test Page load
+                    const homeLoadsTest = Array.from(navButtons).find(btn => btn.textContent.toLowerCase() === 'home' && btn.getAttribute('onclick')?.includes('home'));
+                    const testLoadsTest = Array.from(navButtons).find(btn => btn.textContent.toLowerCase() === 'test page' && btn.getAttribute('onclick')?.includes('test'));
+                    if (homeLoadsTest) buttonToActivate = homeLoadsTest;
+                    else if (testLoadsTest) buttonToActivate = testLoadsTest;
+                }
+                // For pages loaded from ToC, buttonToActivate will likely remain null, which is fine.
+                window.loadContent(lastPage, buttonToActivate);
+            } else {
+                window.showContent('home'); // Load default 'home' content (which loads test.html)
+            }
         });
     </script>
 </body>
