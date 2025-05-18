@@ -10,6 +10,7 @@ This project serves as both a working example and a template for creating conten
 - Table of Contents for easy content discovery
 - Support for both static HTML content and interactive React components
 - Simple password protection for access control
+- Deployment-ready for GitHub Pages or Netlify
 
 ## Getting Started
 
@@ -109,6 +110,28 @@ cd src_react/career-proposal
 npm install
 npm run build
 ```
+
+## Deployment
+
+### GitHub Pages
+
+To deploy to GitHub Pages:
+
+1. Ensure you have the `.nojekyll` file in the root directory (already included)
+2. Push your changes to GitHub
+3. Enable GitHub Pages in your repository settings
+4. Choose the branch you want to deploy (usually `main` or `master`)
+
+Note: The `.nojekyll` file is crucial as it tells GitHub not to process your files with Jekyll, preventing Liquid template syntax errors.
+
+### Netlify
+
+To deploy to Netlify:
+
+1. Connect your GitHub repository to Netlify
+2. The included `netlify.toml` file already has the correct settings:
+   - Build command: `./scripts/build-all.sh`
+   - Publish directory: `.` (the project root)
 
 ## Best Practices
 

@@ -1,18 +1,17 @@
 # Netlify deployment configuration
 
 [build]
-  command = "npm run build" # Your build command
-  publish = "dist"          # Your publish directory (output of build)
-  environment = { # Environment variables can be set here or in Netlify UI
-    # NODE_VERSION = "18",
-    # VITE_BASE_URL = "/" # Usually root for Netlify, unless deploying to a subpath
+  command = "./scripts/build-all.sh" # Script to build all React components
+  publish = "."                      # The root directory contains our static site
+  environment = { 
+    NODE_VERSION = "18"
   }
 
-# Example redirect rule (optional)
-# [[redirects]]
-#   from = "/*"
-#   to = "/index.html"
-#   status = 200
+# Handle SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
 
 # Example headers rule (optional)
 # [[headers]]
