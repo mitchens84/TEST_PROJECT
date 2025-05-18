@@ -6,9 +6,13 @@
 BASE_DIR="$(dirname "$0")/.."
 cd "$BASE_DIR" || exit
 
-# Create a log file for build output
+# Create necessary directories
 mkdir -p ./build_logs
+mkdir -p ./EXPRESS/career/full-proposal-component
+
+# Create a log file for build output
 BUILD_LOG="./build_logs/build-$(date +%Y%m%d-%H%M%S).log"
+touch "$BUILD_LOG"
 
 echo "Building all React components..." | tee -a "$BUILD_LOG"
 
