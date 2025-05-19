@@ -92,6 +92,7 @@ body {
   background-color: var(--gray-light);
 }
 
+/*
 .tab-content {
   display: none;
 }
@@ -99,6 +100,7 @@ body {
 .tab-content.active {
   display: block;
 }
+*/
 
 .section {
   margin-bottom: 2rem;

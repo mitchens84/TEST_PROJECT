@@ -77,9 +77,6 @@ function App() {
     );
   };
 
-  // For debugging, let's temporarily force one tab to render
-  const forcedTabForDebugging = 'resources'; // Or 'overview', 'details', 'timeline'
-
   return (
     <div className="proposal-app">
       {renderNotifications()}
@@ -117,16 +114,10 @@ function App() {
       </div>
       
       <div className="tab-content">
-        {/* Conditional rendering replaced with forced rendering for debugging */}
-        {/* {activeTab === 'overview' && <ProposalOverview triggerNotification={triggerNotification} />} */}
-        {/* {activeTab === 'details' && <ProposalDetails triggerNotification={triggerNotification} />} */}
-        {/* {activeTab === 'timeline' && <ProposalTimeline triggerNotification={triggerNotification} />} */}
-        {/* {activeTab === 'resources' && <ProposalResources triggerNotification={triggerNotification} />} */}
-
-        {/* --- DEBUGGING: Force render ProposalResources --- */}
-        {forcedTabForDebugging === 'resources' && <ProposalResources triggerNotification={triggerNotification} />}
-        {/* You could also try forcing another component to see if it renders, e.g.: */}
-        {/* {forcedTabForDebugging === 'overview' && <ProposalOverview triggerNotification={triggerNotification} />} */}
+        {activeTab === 'overview' && <ProposalOverview triggerNotification={triggerNotification} />}
+        {activeTab === 'details' && <ProposalDetails triggerNotification={triggerNotification} />}
+        {activeTab === 'timeline' && <ProposalTimeline triggerNotification={triggerNotification} />}
+        {activeTab === 'resources' && <ProposalResources triggerNotification={triggerNotification} />}
       </div>
     </div>
   );
