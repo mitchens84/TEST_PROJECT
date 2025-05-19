@@ -1,0 +1,203 @@
+
+.proposal-resources .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.proposal-resources h2 {
+  margin: 0;
+  color: var(--primary-color, #1a56db);
+}
+
+.proposal-resources .button-reset-section {
+  background-color: var(--secondary-button-bg, #6b7280);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.proposal-resources .button-reset-section:hover {
+  background-color: var(--secondary-button-hover-bg, #4b5563);
+}
+
+.details-card {
+  background-color: #fff;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.details-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.details-card .card-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-strong-color, #1f2937);
+}
+
+.details-card .expand-toggle {
+  font-size: 1rem;
+  color: var(--icon-color, #6b7280);
+}
+
+.details-card .card-content {
+  padding: 1rem;
+}
+
+/* Budget Section Specifics */
+.budget-section .budget-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+.budget-section .budget-item label {
+  font-weight: 500;
+  color: var(--text-medium-color, #374151);
+}
+
+.budget-section .budget-item input[type="number"] {
+  width: 100px;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--input-border-color, #d1d5db);
+  border-radius: 4px;
+  text-align: right;
+}
+
+.budget-section .budget-item span {
+  font-weight: bold;
+  color: var(--text-strong-color, #1f2937);
+}
+
+.budget-progress-bar-container {
+  width: 100%;
+  background-color: var(--border-light-color, #e5e7eb);
+  border-radius: 4px;
+  height: 12px;
+  overflow: hidden;
+  margin-top: 0.75rem;
+}
+
+.budget-progress-bar {
+  height: 100%;
+  background-color: var(--success-color, #22c55e);
+  border-radius: 4px;
+  transition: width 0.3s ease-in-out;
+}
+
+/* Resource Item Specifics */
+.resource-item {
+  border: 1px solid var(--border-light-color, #f3f4f6);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  background-color: var(--background-alt, #f9fafb);
+}
+
+.resource-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.resource-name-input {
+  flex-grow: 1;
+  font-weight: 500;
+  font-size: 1rem;
+  border: none;
+  padding: 0.25rem;
+  background-color: transparent;
+}
+.resource-name-input:focus {
+  outline: none;
+  background-color: #fff;
+  box-shadow: 0 0 0 1px var(--input-border-color, #d1d5db);
+  border-radius: 3px;
+}
+
+.button-remove-item {
+  background: none;
+  border: none;
+  color: var(--danger-color, #ef4444);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+.button-remove-item:hover {
+  color: var(--danger-hover-color, #dc2626);
+}
+
+.resource-item-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr; /* Label, Input, Label, Input */
+  gap: 0.5rem 1rem; /* Row gap, Column gap */
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.resource-item label {
+  font-size: 0.85rem;
+  color: var(--text-muted-color, #6b7280);
+  white-space: nowrap;
+}
+
+.resource-item input[type="text"],
+.resource-item input[type="number"],
+.resource-item select,
+.resource-item textarea {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--input-border-color, #d1d5db);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.resource-item textarea {
+  grid-column: span 4; /* Textarea spans full width */
+  resize: vertical;
+  min-height: 40px;
+}
+
+.resource-item input:focus,
+.resource-item select:focus,
+.resource-item textarea:focus {
+  outline: none;
+  border-color: var(--primary-color, #2563eb);
+  box-shadow: 0 0 0 1px var(--primary-focus-ring, rgba(37, 99, 235, 0.1));
+}
+
+.button-add-item {
+  background-color: var(--primary-light-color, #dbeafe);
+  color: var(--primary-color, #2563eb);
+  border: 1px dashed var(--primary-color, #2563eb);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  display: block; /* Make it block to take full width or style as inline-block */
+  width: 100%;
+}
+
+.button-add-item:hover {
+  background-color: var(--primary-color, #2563eb);
+  color: white;
+}

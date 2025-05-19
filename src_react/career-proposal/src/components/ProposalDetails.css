@@ -1,0 +1,146 @@
+
+.proposal-details .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.proposal-details h2 {
+  margin: 0;
+  color: var(--primary-color, #1a56db);
+}
+
+.proposal-details .button-reset-section {
+  background-color: var(--secondary-button-bg, #6b7280);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.proposal-details .button-reset-section:hover {
+  background-color: var(--secondary-button-hover-bg, #4b5563);
+}
+
+.proposal-details .subsection-title {
+  font-size: 1.25rem;
+  color: var(--text-strong-color, #1f2937);
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary-light-color, #93c5fd);
+}
+
+.details-card {
+  background-color: #fff;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.details-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.details-card .card-header h4 {
+  margin: 0;
+  font-size: 1.05rem; /* Slightly smaller than overview h3 */
+  color: var(--text-medium-color, #374151);
+}
+
+.details-card .expand-toggle {
+  font-size: 1rem;
+  color: var(--icon-color, #6b7280);
+}
+
+.details-card .card-content {
+  padding: 1rem;
+}
+
+.skill-item {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed var(--border-light-color, #f3f4f6);
+}
+
+.skill-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.skill-item label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  color: var(--text-medium-color, #374151);
+  font-size: 0.9rem;
+}
+
+.skill-item input[type="text"],
+.skill-item textarea,
+.project-card input[type="text"],
+.project-card textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--input-border-color, #d1d5db);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  margin-bottom: 0.75rem;
+}
+
+.skill-item input[type="text"]:focus,
+.skill-item textarea:focus,
+.project-card input[type="text"]:focus,
+.project-card textarea:focus {
+  outline: none;
+  border-color: var(--primary-color, #2563eb);
+  box-shadow: 0 0 0 2px var(--primary-focus-ring, rgba(37, 99, 235, 0.2));
+}
+
+.skill-item .skill-name-input {
+  font-weight: bold;
+}
+
+.proficiency-slider {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.proficiency-slider input[type="range"] {
+  flex-grow: 1;
+  margin-right: 1rem;
+  accent-color: var(--primary-color, #2563eb);
+}
+
+.proficiency-slider span {
+  font-weight: 500;
+  color: var(--primary-color, #2563eb);
+  min-width: 35px; /* Ensure alignment */
+  text-align: right;
+}
+
+.project-card .card-content label {
+  display: block;
+  font-weight: 500;
+  margin-top: 0.75rem; /* Space between fields */
+  margin-bottom: 0.3rem;
+  color: var(--text-medium-color, #374151);
+  font-size: 0.9rem;
+}
+
+.project-card .card-content label:first-of-type {
+  margin-top: 0;
+}

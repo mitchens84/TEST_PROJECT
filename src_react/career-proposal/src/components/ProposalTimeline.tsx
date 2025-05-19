@@ -1,220 +1,193 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
+import { LOCAL_STORAGE_KEYS, getStoredValue, setStoredValue } from '../utils/localStorageUtils';
+import './ProposalTimeline.css'; // Assuming you will create this CSS file
 
-interface TimelineItem {
+// Types
+interface TimelinePhase {
   id: string;
-  phase: string;
-  tasks: {
-    id: string;
-    name: string;
-    completed: boolean;
-  }[];
+  name: string;
   startDate: string;
   endDate: string;
-  status: 'planned' | 'in-progress' | 'completed';
+  tasks: Task[];
+  isExpanded: boolean;
 }
 
-// Initial timeline data
-const initialTimelineItems: TimelineItem[] = [
+interface Task {
+  id: string;
+  name: string;
+  isCompleted: boolean;
+  notes: string;
+}
+
+interface ProposalTimelineProps {
+  triggerNotification: (message: string, type?: 'info' | 'success' | 'error') => void;
+}
+
+// Initial Data
+const initialTimelinePhases: TimelinePhase[] = [
   {
     id: 'phase1',
-    phase: 'Phase 1: Requirements & Planning',
+    name: 'Phase 1: Research & Skill Inventory (Q3 2025)',
+    startDate: '2025-07-01',
+    endDate: '2025-09-30',
+    isExpanded: true,
     tasks: [
-      { id: 'task1_1', name: 'Stakeholder interviews', completed: true },
-      { id: 'task1_2', name: 'Current workflow analysis', completed: true },
-      { id: 'task1_3', name: 'Requirements documentation', completed: false },
-      { id: 'task1_4', name: 'Technical architecture planning', completed: false },
+      { id: 't1_1', name: 'Identify 3-5 target roles/companies', isCompleted: false, notes: '' },
+      { id: 't1_2', name: 'Analyze job descriptions for required skills', isCompleted: false, notes: '' },
+      { id: 't1_3', name: 'Complete current skills self-assessment', isCompleted: false, notes: '' },
+      { id: 't1_4', name: 'Identify skill gaps for target roles', isCompleted: false, notes: '' },
     ],
-    startDate: '2025-06-01',
-    endDate: '2025-06-30',
-    status: 'in-progress'
   },
   {
     id: 'phase2',
-    phase: 'Phase 2: Design & Development',
+    name: 'Phase 2: Learning & Portfolio Development (Q4 2025)',
+    startDate: '2025-10-01',
+    endDate: '2025-12-31',
+    isExpanded: true,
     tasks: [
-      { id: 'task2_1', name: 'User interface design', completed: false },
-      { id: 'task2_2', name: 'Backend API development', completed: false },
-      { id: 'task2_3', name: 'AI model training', completed: false },
-      { id: 'task2_4', name: 'Integration with existing systems', completed: false },
+      { id: 't2_1', name: 'Enroll in 1-2 courses for key skills', isCompleted: false, notes: '' },
+      { id: 't2_2', name: 'Develop 2 new portfolio projects', isCompleted: false, notes: '' },
+      { id: 't2_3', name: 'Update resume and LinkedIn profile', isCompleted: false, notes: '' },
+      { id: 't2_4', name: 'Network with professionals in target field', isCompleted: false, notes: '' },
     ],
-    startDate: '2025-07-01',
-    endDate: '2025-08-31',
-    status: 'planned'
   },
   {
     id: 'phase3',
-    phase: 'Phase 3: Testing & Validation',
+    name: 'Phase 3: Application & Interviewing (Q1 2026)',
+    startDate: '2026-01-01',
+    endDate: '2026-03-31',
+    isExpanded: false,
     tasks: [
-      { id: 'task3_1', name: 'User acceptance testing', completed: false },
-      { id: 'task3_2', name: 'Performance testing', completed: false },
-      { id: 'task3_3', name: 'Security audit', completed: false },
-      { id: 'task3_4', name: 'Bug fixes and refinements', completed: false },
+      { id: 't3_1', name: 'Apply to 10-15 targeted positions', isCompleted: false, notes: '' },
+      { id: 't3_2', name: 'Prepare for common interview questions', isCompleted: false, notes: '' },
+      { id: 't3_3', name: 'Conduct mock interviews', isCompleted: false, notes: '' },
     ],
-    startDate: '2025-09-01',
-    endDate: '2025-09-30',
-    status: 'planned'
   },
-  {
-    id: 'phase4',
-    phase: 'Phase 4: Deployment & Training',
-    tasks: [
-      { id: 'task4_1', name: 'Production deployment', completed: false },
-      { id: 'task4_2', name: 'User training sessions', completed: false },
-      { id: 'task4_3', name: 'Documentation finalization', completed: false },
-      { id: 'task4_4', name: 'Transition to support team', completed: false },
-    ],
-    startDate: '2025-10-01',
-    endDate: '2025-10-31',
-    status: 'planned'
-  }
 ];
 
-// Unique key for storing data in localStorage
-const STORAGE_KEY = 'careerProposal_timeline';
+function ProposalTimeline({ triggerNotification }: ProposalTimelineProps) {
+  const [phases, setPhases] = useState<TimelinePhase[]>(() =>
+    getStoredValue(LOCAL_STORAGE_KEYS.timelineData, initialTimelinePhases)
+  );
 
-const ProposalTimeline = () => {
-  // Initialize state from localStorage or fall back to initial data
-  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(() => {
-    if (typeof window === 'undefined') return initialTimelineItems;
-    
-    try {
-      const savedItems = localStorage.getItem(STORAGE_KEY);
-      return savedItems ? JSON.parse(savedItems) : initialTimelineItems;
-    } catch (error) {
-      console.error('Error loading timeline data from localStorage:', error);
-      return initialTimelineItems;
-    }
-  });
-  
-  // Save to localStorage whenever timelineItems changes
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(timelineItems));
-    } catch (error) {
-      console.error('Error saving timeline data to localStorage:', error);
-    }
-  }, [timelineItems]);
-  
-  const toggleTask = (phaseId: string, taskId: string) => {
-    setTimelineItems(timelineItems.map(item => {
-      if (item.id === phaseId) {
-        return {
-          ...item,
-          tasks: item.tasks.map(task => {
-            if (task.id === taskId) {
-              return { ...task, completed: !task.completed }
-            }
-            return task
-          })
+    setStoredValue(LOCAL_STORAGE_KEYS.timelineData, phases);
+  }, [phases]);
+
+  const handleTaskChange = (phaseId: string, taskId: string, field: keyof Task, value: string | boolean) => {
+    setPhases(prevPhases =>
+      prevPhases.map(phase => {
+        if (phase.id === phaseId) {
+          return {
+            ...phase,
+            tasks: phase.tasks.map(task => {
+              if (task.id === taskId) {
+                if (field === 'isCompleted') {
+                  triggerNotification(
+                    `Task "${task.name}" marked as ${value ? 'complete' : 'incomplete'}.`,
+                    value ? 'success' : 'info'
+                  );
+                }
+                return { ...task, [field]: value };
+              }
+              return task;
+            }),
+          };
         }
-      }
-      return item
-    }));
+        return phase;
+      })
+    );
+  };
+
+  const handlePhaseChange = (phaseId: string, field: keyof Omit<TimelinePhase, 'tasks' | 'isExpanded'>, value: string) => {
+    setPhases(prevPhases =>
+      prevPhases.map(phase =>
+        phase.id === phaseId ? { ...phase, [field]: value } : phase
+      )
+    );
+  };
+
+  const togglePhaseExpand = (phaseId: string) => {
+    setPhases(prevPhases =>
+      prevPhases.map(phase =>
+        phase.id === phaseId ? { ...phase, isExpanded: !phase.isExpanded } : phase
+      )
+    );
+  };
+
+  const resetTimelineData = () => {
+    setPhases(initialTimelinePhases);
+    triggerNotification('Timeline data has been reset to defaults.', 'info');
   };
   
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'completed': return '#10b981';
-      case 'in-progress': return '#f59e0b';
-      case 'planned': return '#6b7280';
-      default: return '#6b7280';
-    }
-  };
-  
-  const calculateProgress = (tasks: { completed: boolean }[]) => {
+  const calculatePhaseProgress = (tasks: Task[]) => {
     if (tasks.length === 0) return 0;
-    const completedTasks = tasks.filter(task => task.completed).length;
+    const completedTasks = tasks.filter(task => task.isCompleted).length;
     return Math.round((completedTasks / tasks.length) * 100);
   };
-  
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
 
-  // Reset all task states to initial values
-  const resetTasks = () => {
-    if (confirm('Reset all tasks to their initial state?')) {
-      setTimelineItems(initialTimelineItems);
-    }
-  };
-  
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2>Project Timeline</h2>
-        <button 
-          onClick={resetTasks} 
-          style={{ 
-            backgroundColor: '#6b7280', 
-            fontSize: '0.8rem',
-            padding: '0.4rem 0.8rem' 
-          }}
-        >
-          Reset All Tasks
+    <div className="proposal-timeline proposal-section">
+      <div className="section-header">
+        <h2>Project Timeline & Milestones</h2>
+        <button onClick={resetTimelineData} className="button-reset-section">
+          Reset Timeline Data
         </button>
       </div>
-      
-      <div className="section">
-        {timelineItems.map(item => {
-          const progress = calculateProgress(item.tasks);
-          
-          return (
-            <div key={item.id} className="card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3>{item.phase}</h3>
-                <span 
-                  className="status" 
-                  style={{ 
-                    backgroundColor: `${getStatusColor(item.status)}20`, 
-                    color: getStatusColor(item.status)
-                  }}
-                >
-                  {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                </span>
+
+      {phases.map(phase => {
+        const progress = calculatePhaseProgress(phase.tasks);
+        return (
+          <div key={phase.id} className={`timeline-card phase-card ${progress === 100 ? 'phase-completed' : ''}`}>
+            <div className="card-header" onClick={() => togglePhaseExpand(phase.id)}>
+              <div className="phase-header-info">
+                <h4>{phase.name}</h4>
+                <div className="phase-dates">
+                  <input type="date" value={phase.startDate} onChange={(e) => handlePhaseChange(phase.id, 'startDate', e.target.value)} onClick={(e) => e.stopPropagation()} />
+                  <span> - </span>
+                  <input type="date" value={phase.endDate} onChange={(e) => handlePhaseChange(phase.id, 'endDate', e.target.value)} onClick={(e) => e.stopPropagation()} />
+                </div>
               </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <span>{formatDate(item.startDate)} - {formatDate(item.endDate)}</span>
-                <span>{progress}% Complete</span>
+              <div className="phase-header-actions">
+                <span className="phase-progress">{progress}%</span>
+                <span className="expand-toggle">{phase.isExpanded ? '▼' : '►'}</span>
               </div>
-              
-              <div className="progress-bar-container">
-                <div 
-                  className="progress-bar"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-              
-              <ul className="task-list">
-                {item.tasks.map(task => (
-                  <li key={task.id} className="task-item">
-                    <input 
-                      type="checkbox" 
-                      className="task-checkbox" 
-                      checked={task.completed}
-                      onChange={() => toggleTask(item.id, task.id)}
-                    />
-                    <span style={{ textDecoration: task.completed ? 'line-through' : 'none' }}>
-                      {task.name}
-                    </span>
-                  </li>
-                ))}
-              </ul>
             </div>
-          )
-        })}
-      </div>
-      
-      <div style={{ marginTop: '2rem', fontSize: '0.85rem', color: '#6b7280' }}>
-        <p>Note: Your task progress is saved locally in your browser.</p>
-      </div>
+            {phase.isExpanded && (
+              <div className="card-content">
+                <div className="progress-bar-container" style={{ marginBottom: '1rem' }}>
+                  <div className="progress-bar" style={{ width: `${progress}%`, backgroundColor: 'var(--primary-color)' }}></div>
+                </div>
+                {phase.tasks.map(task => (
+                  <div key={task.id} className={`task-item ${task.isCompleted ? 'task-completed' : ''}`}>
+                    <input
+                      type="checkbox"
+                      checked={task.isCompleted}
+                      onChange={(e) => handleTaskChange(phase.id, task.id, 'isCompleted', e.target.checked)}
+                      className="task-checkbox"
+                    />
+                    <input 
+                        type="text" 
+                        value={task.name} 
+                        onChange={(e) => handleTaskChange(phase.id, task.id, 'name', e.target.value)} 
+                        className="task-name-input"
+                    />
+                    <textarea
+                      value={task.notes}
+                      onChange={(e) => handleTaskChange(phase.id, task.id, 'notes', e.target.value)}
+                      rows={1}
+                      placeholder="Notes..."
+                      className="task-notes-input"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
-  )
+  );
 }
 
-export default ProposalTimeline
+export default ProposalTimeline;

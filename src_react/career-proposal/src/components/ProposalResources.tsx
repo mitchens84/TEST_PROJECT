@@ -1,363 +1,278 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
+import { LOCAL_STORAGE_KEYS, getStoredValue, setStoredValue } from '../utils/localStorageUtils';
+import './ProposalResources.css'; // Assuming you will create this CSS file
 
-interface Resource {
+// Types
+interface ResourceCategory {
   id: string;
   name: string;
-  role: string;
-  allocationPercent: number;
-  availability: {
-    q3_2025: boolean;
-    q4_2025: boolean;
-    q1_2026: boolean;
-    q2_2026: boolean;
-  };
+  resources: ResourceItem[];
+  isExpanded: boolean;
+}
+
+interface ResourceItem {
+  id: string;
+  name: string;
+  type: 'Course' | 'Book' | 'Mentor' | 'Tool' | 'Community' | 'Other';
+  status: 'Not Started' | 'In Progress' | 'Completed' | 'Ongoing';
+  notes: string;
+  cost?: number; // Optional
+  link?: string; // Optional
 }
 
 interface Budget {
-  category: string;
-  amount: number;
+  allocated: number;
   spent: number;
 }
 
-// Initial resources data
-const initialResources: Resource[] = [
-  {
-    id: 'res1',
-    name: 'Alex Johnson',
-    role: 'Project Manager',
-    allocationPercent: 50,
-    availability: {
-      q3_2025: true,
-      q4_2025: true,
-      q1_2026: true,
-      q2_2026: false
-    }
-  },
-  {
-    id: 'res2',
-    name: 'Jamie Smith',
-    role: 'AI Engineer',
-    allocationPercent: 100,
-    availability: {
-      q3_2025: true,
-      q4_2025: true,
-      q1_2026: true,
-      q2_2026: true
-    }
-  },
-  {
-    id: 'res3',
-    name: 'Taylor Wilson',
-    role: 'Frontend Developer',
-    allocationPercent: 80,
-    availability: {
-      q3_2025: false,
-      q4_2025: true,
-      q1_2026: true,
-      q2_2026: true
-    }
-  },
-  {
-    id: 'res4',
-    name: 'Morgan Lee',
-    role: 'Content Strategist',
-    allocationPercent: 60,
-    availability: {
-      q3_2025: true,
-      q4_2025: true,
-      q1_2026: false,
-      q2_2026: true
-    }
-  },
-  {
-    id: 'res5',
-    name: 'Casey Brown',
-    role: 'UX Designer',
-    allocationPercent: 70,
-    availability: {
-      q3_2025: true,
-      q4_2025: false,
-      q1_2026: true,
-      q2_2026: true
-    }
-  }
-];
-
-// Initial budget data
-const initialBudget: Budget[] = [
-  {
-    category: 'Development',
-    amount: 250000,
-    spent: 62500
-  },
-  {
-    category: 'Infrastructure',
-    amount: 100000,
-    spent: 15000
-  },
-  {
-    category: 'Training',
-    amount: 50000,
-    spent: 5000
-  },
-  {
-    category: 'Licenses & Tools',
-    amount: 75000,
-    spent: 30000
-  },
-  {
-    category: 'Contingency',
-    amount: 50000,
-    spent: 0
-  }
-];
-
-// Storage keys
-const RESOURCES_STORAGE_KEY = 'careerProposal_resources';
-const BUDGET_STORAGE_KEY = 'careerProposal_budget';
-
-const ProposalResources = () => {
-  // Initialize resources from localStorage or fall back to initial data
-  const [resources, setResources] = useState<Resource[]>(() => {
-    if (typeof window === 'undefined') return initialResources;
-    
-    try {
-      const savedResources = localStorage.getItem(RESOURCES_STORAGE_KEY);
-      return savedResources ? JSON.parse(savedResources) : initialResources;
-    } catch (error) {
-      console.error('Error loading resources from localStorage:', error);
-      return initialResources;
-    }
-  });
-  
-  // Initialize budget from localStorage or fall back to initial data
-  const [budget, setBudget] = useState<Budget[]>(() => {
-    if (typeof window === 'undefined') return initialBudget;
-    
-    try {
-      const savedBudget = localStorage.getItem(BUDGET_STORAGE_KEY);
-      return savedBudget ? JSON.parse(savedBudget) : initialBudget;
-    } catch (error) {
-      console.error('Error loading budget from localStorage:', error);
-      return initialBudget;
-    }
-  });
-  
-  // Save resources to localStorage when they change
-  useEffect(() => {
-    try {
-      localStorage.setItem(RESOURCES_STORAGE_KEY, JSON.stringify(resources));
-    } catch (error) {
-      console.error('Error saving resources to localStorage:', error);
-    }
-  }, [resources]);
-  
-  // Save budget to localStorage when it changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(BUDGET_STORAGE_KEY, JSON.stringify(budget));
-    } catch (error) {
-      console.error('Error saving budget to localStorage:', error);
-    }
-  }, [budget]);
-  
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-  
-  const getTotalBudget = () => {
-    return budget.reduce((total, item) => total + item.amount, 0);
-  };
-  
-  const getTotalSpent = () => {
-    return budget.reduce((total, item) => total + item.spent, 0);
-  };
-  
-  const getBudgetProgress = () => {
-    const totalBudget = getTotalBudget();
-    const totalSpent = getTotalSpent();
-    return Math.round((totalSpent / totalBudget) * 100);
-  };
-  
-  const handleAllocationChange = (id: string, value: number) => {
-    setResources(resources.map(resource => {
-      if (resource.id === id) {
-        return { ...resource, allocationPercent: value };
-      }
-      return resource;
-    }));
-  };
-  
-  const toggleAvailability = (resourceId: string, quarter: 'q3_2025' | 'q4_2025' | 'q1_2026' | 'q2_2026') => {
-    setResources(resources.map(resource => {
-      if (resource.id === resourceId) {
-        return {
-          ...resource,
-          availability: {
-            ...resource.availability,
-            [quarter]: !resource.availability[quarter]
-          }
-        };
-      }
-      return resource;
-    }));
-  };
-  
-  const updateBudgetSpent = (index: number, newSpent: number) => {
-    const newBudget = [...budget];
-    newBudget[index].spent = Math.min(newSpent, newBudget[index].amount);
-    setBudget(newBudget);
-  };
-  
-  // Reset all data to initial values
-  const resetData = () => {
-    if (confirm('Reset all resource allocation and budget data to initial values?')) {
-      setResources(initialResources);
-      setBudget(initialBudget);
-    }
-  };
-  
-  return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2>Resources & Budget</h2>
-        <button 
-          onClick={resetData} 
-          style={{ 
-            backgroundColor: '#6b7280', 
-            fontSize: '0.8rem',
-            padding: '0.4rem 0.8rem' 
-          }}
-        >
-          Reset Data
-        </button>
-      </div>
-      
-      <div className="section">
-        <h3>Team Allocation</h3>
-        <p>
-          The following team members have been identified for this project.
-          Their allocation and availability are outlined below.
-        </p>
-        
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2rem' }}>
-          <thead>
-            <tr style={{ backgroundColor: 'var(--gray-light)', textAlign: 'left' }}>
-              <th style={{ padding: '0.75rem', borderBottom: '1px solid var(--gray)' }}>Name</th>
-              <th style={{ padding: '0.75rem', borderBottom: '1px solid var(--gray)' }}>Role</th>
-              <th style={{ padding: '0.75rem', borderBottom: '1px solid var(--gray)' }}>Allocation</th>
-              <th style={{ padding: '0.75rem', borderBottom: '1px solid var(--gray)' }}>Q3 2025</th>
-              <th style={{ padding: '0.75rem', borderBottom: '1px solid var(--gray)' }}>Q4 2025</th>
-              <th style={{ padding: '0.75rem', borderBottom: '1px solid var(--gray)' }}>Q1 2026</th>
-              <th style={{ padding: '0.75rem', borderBottom: '1px solid var(--gray)' }}>Q2 2026</th>
-            </tr>
-          </thead>
-          <tbody>
-            {resources.map(resource => (
-              <tr key={resource.id} style={{ borderBottom: '1px solid var(--gray-light)' }}>
-                <td style={{ padding: '0.75rem' }}>{resource.name}</td>
-                <td style={{ padding: '0.75rem' }}>{resource.role}</td>
-                <td style={{ padding: '0.75rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="100" 
-                      value={resource.allocationPercent}
-                      onChange={(e) => handleAllocationChange(resource.id, Number(e.target.value))}
-                      style={{ marginRight: '10px' }}
-                    />
-                    <span>{resource.allocationPercent}%</span>
-                  </div>
-                </td>
-                <td 
-                  style={{ padding: '0.75rem', textAlign: 'center', cursor: 'pointer' }}
-                  onClick={() => toggleAvailability(resource.id, 'q3_2025')}
-                >
-                  {resource.availability.q3_2025 ? '✅' : '❌'}
-                </td>
-                <td 
-                  style={{ padding: '0.75rem', textAlign: 'center', cursor: 'pointer' }}
-                  onClick={() => toggleAvailability(resource.id, 'q4_2025')}
-                >
-                  {resource.availability.q4_2025 ? '✅' : '❌'}
-                </td>
-                <td 
-                  style={{ padding: '0.75rem', textAlign: 'center', cursor: 'pointer' }}
-                  onClick={() => toggleAvailability(resource.id, 'q1_2026')}
-                >
-                  {resource.availability.q1_2026 ? '✅' : '❌'}
-                </td>
-                <td 
-                  style={{ padding: '0.75rem', textAlign: 'center', cursor: 'pointer' }}
-                  onClick={() => toggleAvailability(resource.id, 'q2_2026')}
-                >
-                  {resource.availability.q2_2026 ? '✅' : '❌'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      
-      <div className="section">
-        <h3>Budget Allocation</h3>
-        <p>
-          The total budget for this project is {formatCurrency(getTotalBudget())}.
-          Current spending is at {formatCurrency(getTotalSpent())} ({getBudgetProgress()}% of total).
-        </p>
-        
-        <div className="progress-bar-container">
-          <div 
-            className="progress-bar"
-            style={{ width: `${getBudgetProgress()}%` }}
-          ></div>
-        </div>
-        
-        <div style={{ marginTop: '2rem' }}>
-          {budget.map((item, index) => (
-            <div key={index} className="card" style={{ marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <h4 style={{ margin: '0' }}>{item.category}</h4>
-                <div>
-                  <span>{formatCurrency(item.spent)} / {formatCurrency(item.amount)}</span>
-                  <span style={{ marginLeft: '10px' }}>
-                    ({Math.round((item.spent / item.amount) * 100)}%)
-                  </span>
-                </div>
-              </div>
-              
-              <div className="progress-bar-container" style={{ marginTop: '0.5rem' }}>
-                <div 
-                  className="progress-bar"
-                  style={{ width: `${(item.spent / item.amount) * 100}%` }}
-                ></div>
-              </div>
-              
-              <input 
-                type="range" 
-                min="0" 
-                max={item.amount} 
-                step={item.amount / 100}
-                value={item.spent}
-                onChange={(e) => updateBudgetSpent(index, Number(e.target.value))}
-                style={{ width: '100%', marginTop: '0.5rem' }}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div style={{ marginTop: '2rem', fontSize: '0.85rem', color: '#6b7280' }}>
-        <p>Note: Your resource allocation and budget changes are saved locally in your browser.</p>
-      </div>
-    </div>
-  )
+interface ProposalResourcesProps {
+  triggerNotification: (message: string, type?: 'info' | 'success' | 'error') => void;
 }
 
-export default ProposalResources
+// Initial Data
+const initialResourceCategories: ResourceCategory[] = [
+  {
+    id: 'learning',
+    name: 'Learning & Development',
+    isExpanded: true,
+    resources: [
+      { id: 'lr1', name: 'Advanced TypeScript Course', type: 'Course', status: 'Not Started', notes: 'Focus on advanced patterns and performance.', cost: 199, link: '' },
+      { id: 'lr2', name: 'Python for AI/ML Specialization', type: 'Course', status: 'In Progress', notes: 'Completing module 3 of 5.', cost: 499, link: '' },
+      { id: 'lr3', name: '"Designing Data-Intensive Applications" by Martin Kleppmann', type: 'Book', status: 'Not Started', notes: 'Recommended for system design.', cost: 50, link: '' },
+    ],
+  },
+  {
+    id: 'networking',
+    name: 'Networking & Mentorship',
+    isExpanded: true,
+    resources: [
+      { id: 'nm1', name: 'Industry Mentor (TBD)', type: 'Mentor', status: 'Not Started', notes: 'Seek mentor in target AI/ML field.' },
+      { id: 'nm2', name: 'Local Tech Meetup Group', type: 'Community', status: 'Ongoing', notes: 'Attend monthly meetings.', link: '' },
+    ],
+  },
+  {
+    id: 'tools',
+    name: 'Tools & Software',
+    isExpanded: true,
+    resources: [
+      { id: 'tl1', name: 'VS Code Pro Subscription', type: 'Tool', status: 'Ongoing', notes: 'For advanced features.', cost: 100, link: '' }, // Assuming annual
+      { id: 'tl2', name: 'Cloud Computing Credits (AWS/Azure)', type: 'Tool', status: 'Ongoing', notes: 'For portfolio projects.', cost: 50, link: '' }, // Assuming monthly
+    ],
+  },
+];
+
+const initialBudget: Budget = {
+  allocated: 1000, // Example initial budget
+  spent: 0, // Calculated from resource costs
+};
+
+function ProposalResources({ triggerNotification }: ProposalResourcesProps) {
+  const [resourceCategories, setResourceCategories] = useState<ResourceCategory[]>(() =>
+    getStoredValue(LOCAL_STORAGE_KEYS.resourcesData + '_categories', initialResourceCategories)
+  );
+  const [budget, setBudget] = useState<Budget>(() =>
+    getStoredValue(LOCAL_STORAGE_KEYS.resourcesData + '_budget', initialBudget)
+  );
+
+  useEffect(() => {
+    setStoredValue(LOCAL_STORAGE_KEYS.resourcesData + '_categories', resourceCategories);
+    // Recalculate spent budget whenever resources change
+    const totalSpent = resourceCategories.reduce((acc, category) => 
+      acc + category.resources.reduce((catAcc, resource) => catAcc + (resource.cost || 0), 0)
+    , 0);
+    setBudget(prevBudget => ({ ...prevBudget, spent: totalSpent }));
+  }, [resourceCategories]);
+
+  useEffect(() => {
+    setStoredValue(LOCAL_STORAGE_KEYS.resourcesData + '_budget', budget);
+  }, [budget]);
+
+  const handleResourceChange = (categoryId: string, resourceId: string, field: keyof ResourceItem, value: string | number) => {
+    setResourceCategories(prev => prev.map(category => {
+      if (category.id === categoryId) {
+        return {
+          ...category,
+          resources: category.resources.map(resource => {
+            if (resource.id === resourceId) {
+              const updatedResource = { ...resource, [field]: value };
+              if (field === 'status') {
+                triggerNotification(
+                  `Status of "${resource.name}" updated to ${value}.`,
+                  value === 'Completed' ? 'success' : 'info'
+                );
+              }
+              return updatedResource;
+            }
+            return resource;
+          }),
+        };
+      }
+      return category;
+    }));
+  };
+
+  const handleBudgetChange = (field: keyof Budget, value: number) => {
+    setBudget(prev => ({ ...prev, [field]: value }));
+    triggerNotification(`Budget ${field} updated to ${value}.`, 'info');
+  };
+
+  const toggleCategoryExpand = (categoryId: string) => {
+    setResourceCategories(prev => prev.map(category =>
+      category.id === categoryId ? { ...category, isExpanded: !category.isExpanded } : category
+    ));
+  };
+
+  const resetResourcesData = () => {
+    setResourceCategories(initialResourceCategories);
+    setBudget(initialBudget);
+    triggerNotification('Resources and budget data have been reset.', 'info');
+  };
+
+  const addResourceItem = (categoryId: string) => {
+    const newId = `new_${Date.now()}`;
+    const newItem: ResourceItem = { 
+        id: newId, 
+        name: 'New Resource', 
+        type: 'Other', 
+        status: 'Not Started', 
+        notes: '', 
+    };
+    setResourceCategories(prev => prev.map(category => 
+        category.id === categoryId ? { ...category, resources: [...category.resources, newItem] } : category
+    ));
+    triggerNotification('New resource item added.', 'success');
+  };
+
+  const removeResourceItem = (categoryId: string, resourceId: string) => {
+    setResourceCategories(prev => prev.map(category => 
+        category.id === categoryId ? 
+        { ...category, resources: category.resources.filter(r => r.id !== resourceId) } 
+        : category
+    ));
+    triggerNotification('Resource item removed.', 'info');
+  };
+
+  return (
+    <div className="proposal-resources proposal-section">
+      <div className="section-header">
+        <h2>Resources & Budget</h2>
+        <button onClick={resetResourcesData} className="button-reset-section">
+          Reset Resources Data
+        </button>
+      </div>
+
+      {/* Budget Section */}
+      <div className="budget-section details-card">
+        <div className="card-header"><h4>Budget Overview</h4></div>
+        <div className="card-content">
+          <div className="budget-item">
+            <label htmlFor="allocatedBudget">Allocated Budget:</label>
+            <input 
+              type="number" 
+              id="allocatedBudget" 
+              value={budget.allocated} 
+              onChange={(e) => handleBudgetChange('allocated', parseInt(e.target.value))}
+            />
+          </div>
+          <div className="budget-item">
+            <label>Spent Budget:</label>
+            <span>£{budget.spent.toFixed(2)}</span>
+          </div>
+          <div className="budget-item">
+            <label>Remaining Budget:</label>
+            <span>£{(budget.allocated - budget.spent).toFixed(2)}</span>
+          </div>
+          <div className="budget-progress-bar-container">
+            <div 
+              className="budget-progress-bar" 
+              style={{ width: `${budget.allocated > 0 ? (budget.spent / budget.allocated) * 100 : 0}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Resource Categories Section */}
+      {resourceCategories.map(category => (
+        <div key={category.id} className="details-card resource-category-card">
+          <div className="card-header" onClick={() => toggleCategoryExpand(category.id)}>
+            <h4>{category.name}</h4>
+            <span className="expand-toggle">{category.isExpanded ? '▼' : '►'}</span>
+          </div>
+          {category.isExpanded && (
+            <div className="card-content">
+              {category.resources.map(resource => (
+                <div key={resource.id} className="resource-item">
+                  <div className="resource-item-header">
+                    <input 
+                        type="text" 
+                        value={resource.name} 
+                        onChange={(e) => handleResourceChange(category.id, resource.id, 'name', e.target.value)} 
+                        className="resource-name-input"
+                        placeholder="Resource Name"
+                    />
+                    <button onClick={() => removeResourceItem(category.id, resource.id)} className="button-remove-item">×</button>
+                  </div>
+                  
+                  <div className="resource-item-row">
+                    <label htmlFor={`${resource.id}-type`}>Type:</label>
+                    <select 
+                        id={`${resource.id}-type`} 
+                        value={resource.type} 
+                        onChange={(e) => handleResourceChange(category.id, resource.id, 'type', e.target.value as ResourceItem['type'])}
+                    >
+                        {['Course', 'Book', 'Mentor', 'Tool', 'Community', 'Other'].map(type => 
+                            <option key={type} value={type}>{type}</option>
+                        )}
+                    </select>
+
+                    <label htmlFor={`${resource.id}-status`}>Status:</label>
+                    <select 
+                        id={`${resource.id}-status`} 
+                        value={resource.status} 
+                        onChange={(e) => handleResourceChange(category.id, resource.id, 'status', e.target.value as ResourceItem['status'])}
+                    >
+                        {['Not Started', 'In Progress', 'Completed', 'Ongoing'].map(status => 
+                            <option key={status} value={status}>{status}</option>
+                        )}
+                    </select>
+                  </div>
+
+                  <div className="resource-item-row">
+                    <label htmlFor={`${resource.id}-cost`}>Cost (£):</label>
+                    <input 
+                        type="number" 
+                        id={`${resource.id}-cost`} 
+                        value={resource.cost || ''} 
+                        onChange={(e) => handleResourceChange(category.id, resource.id, 'cost', parseInt(e.target.value) || 0)}
+                        placeholder="0.00"
+                    />
+                    <label htmlFor={`${resource.id}-link`}>Link:</label>
+                    <input 
+                        type="text" 
+                        id={`${resource.id}-link`} 
+                        value={resource.link || ''} 
+                        onChange={(e) => handleResourceChange(category.id, resource.id, 'link', e.target.value)}
+                        placeholder="http://example.com"
+                    />
+                  </div>
+                  
+                  <label htmlFor={`${resource.id}-notes`}>Notes:</label>
+                  <textarea 
+                    id={`${resource.id}-notes`} 
+                    value={resource.notes} 
+                    onChange={(e) => handleResourceChange(category.id, resource.id, 'notes', e.target.value)} 
+                    rows={2} 
+                    placeholder="Additional notes..."
+                  />
+                </div>
+              ))}
+              <button onClick={() => addResourceItem(category.id)} className="button-add-item">+ Add Resource</button>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default ProposalResources;

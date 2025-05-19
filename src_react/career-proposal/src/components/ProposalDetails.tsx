@@ -1,262 +1,215 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
+import { LOCAL_STORAGE_KEYS, getStoredValue, setStoredValue } from '../utils/localStorageUtils';
+import './ProposalDetails.css'; // Assuming you will create this CSS file
 
-interface TechComponent {
+// Types
+interface SkillCategory {
+  id: string;
   name: string;
-  description: string;
-  implementation: number;
+  skills: Skill[];
+  isExpanded: boolean;
 }
 
-// Initial components data
-const initialTechComponents: TechComponent[] = [
+interface Skill {
+  id: string;
+  name: string;
+  proficiency: number; // 0-100 scale
+  description: string;
+}
+
+interface ProjectHighlight {
+  id: string;
+  title: string;
+  description: string;
+  technologies: string;
+  outcome: string;
+  isExpanded: boolean;
+}
+
+interface ProposalDetailsProps {
+  triggerNotification: (message: string, type?: 'info' | 'success' | 'error') => void;
+}
+
+// Initial Data
+const initialSkillCategories: SkillCategory[] = [
   {
-    name: 'Content Analysis Engine',
-    description: 'Analyzes content for readability, SEO optimization, brand compliance, and overall quality.',
-    implementation: 65
+    id: 'technicalSkills',
+    name: 'Technical Skills',
+    isExpanded: true,
+    skills: [
+      { id: 'ts1', name: 'React & TypeScript', proficiency: 90, description: 'Building complex UIs, state management, component architecture.' },
+      { id: 'ts2', name: 'Node.js & Express', proficiency: 80, description: 'Developing RESTful APIs, server-side logic.' },
+      { id: 'ts3', name: 'Python (Data Analysis & AI)', proficiency: 75, description: 'Pandas, NumPy, Scikit-learn, basic model implementation.' },
+      { id: 'ts4', name: 'Cloud Platforms (AWS/Azure)', proficiency: 65, description: 'Basic deployment, serverless functions, storage solutions.' },
+    ],
   },
   {
-    name: 'Workflow Automation',
-    description: 'Routes content to appropriate stakeholders based on content type, priority, and other factors.',
-    implementation: 40
+    id: 'softSkills',
+    name: 'Soft Skills & Competencies',
+    isExpanded: true,
+    skills: [
+      { id: 'ss1', name: 'Problem Solving', proficiency: 95, description: 'Analytical thinking, identifying root causes, developing solutions.' },
+      { id: 'ss2', name: 'Communication', proficiency: 85, description: 'Clear articulation, active listening, technical and non-technical audiences.' },
+      { id: 'ss3', name: 'Team Collaboration', proficiency: 90, description: 'Working effectively in agile teams, knowledge sharing.' },
+    ],
   },
-  {
-    name: 'Smart Content Suggestions',
-    description: 'Uses existing content to suggest related materials, references, and reusable components.',
-    implementation: 25
-  },
-  {
-    name: 'Automated Tagging System',
-    description: 'Automatically generates and applies tags to content for better organization and discoverability.',
-    implementation: 80
-  },
-  {
-    name: 'Quality Assurance Module',
-    description: 'Performs automated checks for content quality, consistency, and compliance with guidelines.',
-    implementation: 55
-  }
 ];
 
-// Initial metrics data
-const initialMetrics = {
-  timeReduction: 35,
-  qualityImprovement: 25,
-  publishSpeed: 40,
-  contentReuse: 50
-};
+const initialProjectHighlights: ProjectHighlight[] = [
+  {
+    id: 'proj1',
+    title: 'AI-Powered Content Recommendation Engine',
+    description: 'Led the development of a system that increased user engagement by 25%.',
+    technologies: 'Python, Scikit-learn, React, AWS Lambda',
+    outcome: 'Successfully launched, exceeded engagement targets.',
+    isExpanded: true,
+  },
+  {
+    id: 'proj2',
+    title: 'Enterprise CRM Platform UI Overhaul',
+    description: 'Redesigned and implemented a new user interface, improving usability scores by 40%.',
+    technologies: 'TypeScript, React, Figma, Storybook',
+    outcome: 'Positive user feedback, reduced support tickets.',
+    isExpanded: false,
+  },
+];
 
-// Storage keys
-const COMPONENTS_STORAGE_KEY = 'careerProposal_components';
-const METRICS_STORAGE_KEY = 'careerProposal_metrics';
+function ProposalDetails({ triggerNotification }: ProposalDetailsProps) {
+  const [skillCategories, setSkillCategories] = useState<SkillCategory[]>(() =>
+    getStoredValue(LOCAL_STORAGE_KEYS.detailsData + '_skills', initialSkillCategories)
+  );
+  const [projectHighlights, setProjectHighlights] = useState<ProjectHighlight[]>(() =>
+    getStoredValue(LOCAL_STORAGE_KEYS.detailsData + '_projects', initialProjectHighlights)
+  );
 
-const ProposalDetails = () => {
-  // Initialize tech components from localStorage or fall back to initial data
-  const [techComponents, setTechComponents] = useState<TechComponent[]>(() => {
-    if (typeof window === 'undefined') return initialTechComponents;
-    
-    try {
-      const savedComponents = localStorage.getItem(COMPONENTS_STORAGE_KEY);
-      return savedComponents ? JSON.parse(savedComponents) : initialTechComponents;
-    } catch (error) {
-      console.error('Error loading component data from localStorage:', error);
-      return initialTechComponents;
-    }
-  });
-  
-  // Initialize metrics from localStorage or fall back to initial data
-  const [metrics, setMetrics] = useState(() => {
-    if (typeof window === 'undefined') return initialMetrics;
-    
-    try {
-      const savedMetrics = localStorage.getItem(METRICS_STORAGE_KEY);
-      return savedMetrics ? JSON.parse(savedMetrics) : initialMetrics;
-    } catch (error) {
-      console.error('Error loading metrics data from localStorage:', error);
-      return initialMetrics;
-    }
-  });
-  
-  // Save to localStorage whenever techComponents changes
   useEffect(() => {
-    try {
-      localStorage.setItem(COMPONENTS_STORAGE_KEY, JSON.stringify(techComponents));
-    } catch (error) {
-      console.error('Error saving component data to localStorage:', error);
-    }
-  }, [techComponents]);
-  
-  // Save to localStorage whenever metrics changes
+    setStoredValue(LOCAL_STORAGE_KEYS.detailsData + '_skills', skillCategories);
+  }, [skillCategories]);
+
   useEffect(() => {
-    try {
-      localStorage.setItem(METRICS_STORAGE_KEY, JSON.stringify(metrics));
-    } catch (error) {
-      console.error('Error saving metrics data to localStorage:', error);
-    }
-  }, [metrics]);
-  
-  const handleImplementationChange = (index: number, value: number) => {
-    const newComponents = [...techComponents];
-    newComponents[index].implementation = value;
-    setTechComponents(newComponents);
+    setStoredValue(LOCAL_STORAGE_KEYS.detailsData + '_projects', projectHighlights);
+  }, [projectHighlights]);
+
+  const handleSkillChange = (categoryId: string, skillId: string, field: keyof Skill, value: string | number) => {
+    setSkillCategories(prev => prev.map(category => {
+      if (category.id === categoryId) {
+        return {
+          ...category,
+          skills: category.skills.map(skill =>
+            skill.id === skillId ? { ...skill, [field]: value } : skill
+          ),
+        };
+      }
+      return category;
+    }));
   };
-  
-  // Reset all data to initial values
-  const resetData = () => {
-    if (confirm('Reset all implementation progress and metrics to their initial values?')) {
-      setTechComponents(initialTechComponents);
-      setMetrics(initialMetrics);
-    }
+
+  const handleProjectChange = (projectId: string, field: keyof ProjectHighlight, value: string) => {
+    setProjectHighlights(prev => prev.map(project =>
+      project.id === projectId ? { ...project, [field]: value } : project
+    ));
   };
-  
+
+  const toggleCategoryExpand = (categoryId: string) => {
+    setSkillCategories(prev => prev.map(category =>
+      category.id === categoryId ? { ...category, isExpanded: !category.isExpanded } : category
+    ));
+  };
+
+  const toggleProjectExpand = (projectId: string) => {
+    setProjectHighlights(prev => prev.map(project =>
+      project.id === projectId ? { ...project, isExpanded: !project.isExpanded } : project
+    ));
+  };
+
+  const resetDetailsData = () => {
+    setSkillCategories(initialSkillCategories);
+    setProjectHighlights(initialProjectHighlights);
+    triggerNotification('Proposal details (skills and projects) have been reset.', 'info');
+  };
+
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2>Proposal Details</h2>
-        <button 
-          onClick={resetData} 
-          style={{ 
-            backgroundColor: '#6b7280', 
-            fontSize: '0.8rem',
-            padding: '0.4rem 0.8rem' 
-          }}
-        >
-          Reset Progress
+    <div className="proposal-details proposal-section">
+      <div className="section-header">
+        <h2>Detailed Profile</h2>
+        <button onClick={resetDetailsData} className="button-reset-section">
+          Reset Details Data
         </button>
       </div>
-      
-      <div className="section">
-        <h3>Technical Components</h3>
-        <p>
-          The proposed AI workflow system consists of several key components that work together
-          to streamline the content creation and management process.
-        </p>
-        
-        {techComponents.map((component, index) => (
-          <div key={index} className="card">
-            <h3>{component.name}</h3>
-            <p>{component.description}</p>
-            
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Implementation Progress:</span>
-                <span>{component.implementation}%</span>
-              </div>
-              <div className="progress-bar-container">
-                <div 
-                  className="progress-bar"
-                  style={{ width: `${component.implementation}%` }}
-                ></div>
-              </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="100" 
-                value={component.implementation}
-                onChange={(e) => handleImplementationChange(index, Number(e.target.value))}
-                style={{ width: '100%' }}
-              />
-            </div>
+
+      {/* Skills Section */}
+      <h3 className="subsection-title">Skills & Proficiencies</h3>
+      {skillCategories.map(category => (
+        <div key={category.id} className="details-card category-card">
+          <div className="card-header" onClick={() => toggleCategoryExpand(category.id)}>
+            <h4>{category.name}</h4>
+            <span className="expand-toggle">{category.isExpanded ? '▼' : '►'}</span>
           </div>
-        ))}
-      </div>
-      
-      <div className="section">
-        <h3>Key Performance Indicators</h3>
-        <p>
-          The success of this proposal will be measured against the following key metrics.
-          Initial targets are shown below but can be adjusted as the project progresses.
-        </p>
-        
-        <div className="card">
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Reduction in Manual Tasks:</span>
-              <span>{metrics.timeReduction}%</span>
+          {category.isExpanded && (
+            <div className="card-content">
+              {category.skills.map(skill => (
+                <div key={skill.id} className="skill-item">
+                  <label htmlFor={`${skill.id}-name`}>{skill.name}</label>
+                  <input 
+                    type="text" 
+                    id={`${skill.id}-name`} 
+                    value={skill.name} 
+                    onChange={(e) => handleSkillChange(category.id, skill.id, 'name', e.target.value)} 
+                    className="skill-name-input"
+                  />
+                  <div className="proficiency-slider">
+                    <input
+                      type="range"
+                      id={`${skill.id}-proficiency`}
+                      min="0"
+                      max="100"
+                      value={skill.proficiency}
+                      onChange={(e) => handleSkillChange(category.id, skill.id, 'proficiency', parseInt(e.target.value))}
+                    />
+                    <span>{skill.proficiency}%</span>
+                  </div>
+                  <textarea
+                    id={`${skill.id}-description`}
+                    value={skill.description}
+                    onChange={(e) => handleSkillChange(category.id, skill.id, 'description', e.target.value)}
+                    rows={2}
+                    placeholder="Brief description of skill/experience..."
+                    className="skill-description-input"
+                  />
+                </div>
+              ))}
             </div>
-            <div className="progress-bar-container">
-              <div 
-                className="progress-bar"
-                style={{ width: `${metrics.timeReduction}%` }}
-              ></div>
-            </div>
-            <input 
-              type="range" 
-              min="0" 
-              max="100" 
-              value={metrics.timeReduction}
-              onChange={(e) => setMetrics({...metrics, timeReduction: Number(e.target.value)})}
-              style={{ width: '100%' }}
-            />
-          </div>
-          
-          <div style={{ marginTop: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Content Quality Improvement:</span>
-              <span>{metrics.qualityImprovement}%</span>
-            </div>
-            <div className="progress-bar-container">
-              <div 
-                className="progress-bar"
-                style={{ width: `${metrics.qualityImprovement}%` }}
-              ></div>
-            </div>
-            <input 
-              type="range" 
-              min="0" 
-              max="100" 
-              value={metrics.qualityImprovement}
-              onChange={(e) => setMetrics({...metrics, qualityImprovement: Number(e.target.value)})}
-              style={{ width: '100%' }}
-            />
-          </div>
-          
-          <div style={{ marginTop: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Publishing Speed Increase:</span>
-              <span>{metrics.publishSpeed}%</span>
-            </div>
-            <div className="progress-bar-container">
-              <div 
-                className="progress-bar"
-                style={{ width: `${metrics.publishSpeed}%` }}
-              ></div>
-            </div>
-            <input 
-              type="range" 
-              min="0" 
-              max="100" 
-              value={metrics.publishSpeed}
-              onChange={(e) => setMetrics({...metrics, publishSpeed: Number(e.target.value)})}
-              style={{ width: '100%' }}
-            />
-          </div>
-          
-          <div style={{ marginTop: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Content Reuse Improvement:</span>
-              <span>{metrics.contentReuse}%</span>
-            </div>
-            <div className="progress-bar-container">
-              <div 
-                className="progress-bar"
-                style={{ width: `${metrics.contentReuse}%` }}
-              ></div>
-            </div>
-            <input 
-              type="range" 
-              min="0" 
-              max="100" 
-              value={metrics.contentReuse}
-              onChange={(e) => setMetrics({...metrics, contentReuse: Number(e.target.value)})}
-              style={{ width: '100%' }}
-            />
-          </div>
+          )}
         </div>
-      </div>
-      
-      <div style={{ marginTop: '2rem', fontSize: '0.85rem', color: '#6b7280' }}>
-        <p>Note: Your implementation progress and metrics are saved locally in your browser.</p>
-      </div>
+      ))}
+
+      {/* Project Highlights Section */}
+      <h3 className="subsection-title">Project Highlights</h3>
+      {projectHighlights.map(project => (
+        <div key={project.id} className="details-card project-card">
+          <div className="card-header" onClick={() => toggleProjectExpand(project.id)}>
+            <h4>{project.title}</h4>
+            <span className="expand-toggle">{project.isExpanded ? '▼' : '►'}</span>
+          </div>
+          {project.isExpanded && (
+            <div className="card-content">
+              <label htmlFor={`${project.id}-title`}>Project Title:</label>
+              <input type="text" id={`${project.id}-title`} value={project.title} onChange={(e) => handleProjectChange(project.id, 'title', e.target.value)} />
+              
+              <label htmlFor={`${project.id}-description`}>Description:</label>
+              <textarea id={`${project.id}-description`} value={project.description} onChange={(e) => handleProjectChange(project.id, 'description', e.target.value)} rows={3} />
+              
+              <label htmlFor={`${project.id}-technologies`}>Technologies Used:</label>
+              <input type="text" id={`${project.id}-technologies`} value={project.technologies} onChange={(e) => handleProjectChange(project.id, 'technologies', e.target.value)} />
+              
+              <label htmlFor={`${project.id}-outcome`}>Outcome/Impact:</label>
+              <textarea id={`${project.id}-outcome`} value={project.outcome} onChange={(e) => handleProjectChange(project.id, 'outcome', e.target.value)} rows={2} />
+            </div>
+          )}
+        </div>
+      ))}
     </div>
-  )
+  );
 }
 
-export default ProposalDetails
+export default ProposalDetails;

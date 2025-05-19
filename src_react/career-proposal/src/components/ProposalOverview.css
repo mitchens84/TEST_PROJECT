@@ -1,0 +1,165 @@
+.proposal-overview {
+  margin-bottom: 30px;
+}
+
+.proposal-overview .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.proposal-overview h2 {
+  margin: 0;
+  color: var(--primary-color, #1a56db);
+}
+
+.proposal-section h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.collapsible-section {
+  margin-bottom: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.collapsible-section h3 {
+  margin: 0;
+  padding: 12px 16px;
+  background-color: #f9fafb;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  font-size: 18px;
+  color: #4b5563;
+}
+
+.collapsible-section textarea {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 100px;
+}
+
+.button-reset-section {
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+.button-reset-section:hover {
+  background-color: #e5e7eb;
+}
+
+.proposal-overview .button-reset-section {
+  background-color: var(--secondary-button-bg, #6b7280);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.proposal-overview .button-reset-section:hover {
+  background-color: var(--secondary-button-hover-bg, #4b5563);
+}
+
+.overview-card {
+  background-color: #fff;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.overview-card.completed {
+  border-left: 4px solid var(--success-color, #22c55e);
+  background-color: var(--completed-bg-color, #f0fdf4); /* Light green background for completed */
+}
+
+.overview-card.completed .card-header h3 {
+  text-decoration: line-through;
+  color: var(--text-muted-color, #6b7280);
+}
+
+.overview-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.overview-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.overview-card .card-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-strong-color, #1f2937);
+  transition: color 0.2s ease-in-out, text-decoration 0.2s ease-in-out;
+}
+
+.overview-card .card-actions {
+  display: flex;
+  align-items: center;
+}
+
+.overview-card .section-checkbox {
+  margin-right: 0.75rem;
+  width: 18px; /* Custom size */
+  height: 18px; /* Custom size */
+  cursor: pointer;
+  accent-color: var(--success-color, #22c55e); /* Style the checkbox color */
+}
+
+.overview-card .expand-toggle {
+  font-size: 1rem;
+  color: var(--icon-color, #6b7280);
+}
+
+.overview-card .card-content {
+  padding: 1rem;
+  border-top: none; /* Ensure no double border when header has one */
+}
+
+.overview-card .card-content textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--input-border-color, #d1d5db);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 80px;
+  box-sizing: border-box; /* Ensure padding doesn't increase width */
+}
+
+.overview-card .card-content textarea:focus {
+  outline: none;
+  border-color: var(--primary-color, #2563eb);
+  box-shadow: 0 0 0 2px var(--primary-focus-ring, rgba(37, 99, 235, 0.2));
+}
+
+/* General proposal section styling (can be in a more global CSS if preferred) */
+.proposal-section {
+  padding: 1rem;
+}

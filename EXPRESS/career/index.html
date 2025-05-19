@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Career Proposal</title>
-    <!-- Include React and ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Include Lucide icons -->
+    <title>Career Proposal - Interactive</title>
+    <!-- Lucide icons can remain if used by this host page, or be removed if not -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
@@ -17,65 +13,46 @@
             margin: 0;
             padding: 0;
             color: #333;
-            max-width: 100%;
-            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* Full viewport height */
+            overflow: hidden; /* Prevent scrolling on body if iframe handles it */
         }
-        #app {
+        header {
+            background-color: #1a56db;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            color: white; /* Ensure h1 color is white */
+            font-size: 1.5em;
+        }
+        #interactive-content-frame {
+            flex-grow: 1; /* Allows iframe to take available space */
             width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
+            height: 100%; /* Take full height of its container */
+            border: none; /* No border for the iframe */
+        }
+        .container { /* This class might be from the old setup, can be removed or repurposed */
             padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto; /* If content outside iframe needs scrolling */
         }
-        .container {
-            padding: 20px;
-        }
-        h1, h2, h3 {
-            color: #1a56db;
-        }
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-        }
-        .note {
-            background-color: #f3f4f6;
-            padding: 15px;
-            border-left: 4px solid #3b82f6;
-            margin: 20px 0;
-        }
+        /* Removed styles that were specific to the old React CDN setup */
+        /* Styles for h1, h2, h3, card, note can be removed if not used by this host page */
     </style>
 </head>
 <body>
-    <div id="app">
-        <div class="container">
-            <h1>Career Proposal - Content Viewer</h1>
-            <p>This page is showing embedded content from the original proposal.tsx file.</p>
-            <div class="note">
-                <strong>Note:</strong> This is a simplified static view of the original React component.
-                For the full interactive experience, please <a href="full-proposal-component/index.html" style="color:#1a56db;font-weight:bold;"></a>view the full interactive version</a>.
-            </div>
-            <div class="card">
-                <h2>AI Workflow Proposal</h2>
-                <p>The original file contains a React component for an AI Workflow Proposal.</p>
-                <p>Key sections from the proposal include:</p>
-                <ul>
-                    <li>Overview</li>
-                    <li>Problem Statement</li>
-                    <li>Goals</li>
-                    <li>Metrics</li>
-                    <li>Graphic Design</li>
-                    <li>Content Brief</li>
-                    <li>Case Management</li>
-                    <li>Listings Upload</li>
-                    <li>Knowledge Base</li>
-                    <li>Capability Assessment</li>
-                    <li>Implementation Plan</li>
-                    <li>References</li>
-                </ul>
-            </div>
-        </div>
-    </div>
+    <header>
+        <h1>Interactive Career Proposal</h1>
+    </header>
+    <iframe id="interactive-content-frame" src="./full-proposal-component/index.html" title="Interactive Career Proposal Application"></iframe>
+
+    <script>
+        // Optional: if Lucide icons are used on this host page
+        // lucide.createIcons(); 
+    </script>
 </body>
 </html>

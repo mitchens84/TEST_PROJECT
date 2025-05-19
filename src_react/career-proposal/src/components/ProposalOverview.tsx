@@ -1,234 +1,139 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
+import { LOCAL_STORAGE_KEYS, getStoredValue, setStoredValue } from '../utils/localStorageUtils';
+import './ProposalOverview.css'; // Assuming you will create this CSS file
 
-interface Section {
+// Types
+interface OverviewSection {
   id: string;
   title: string;
   content: string;
-  status: 'pending' | 'approved' | 'rejected';
+  isExpanded: boolean;
+  isCompleted: boolean; // For checkbox
 }
 
-// Initial sections data
-const initialSections: Section[] = [
+interface ProposalOverviewProps {
+  triggerNotification: (message: string, type?: 'info' | 'success' | 'error') => void;
+}
+
+// Initial Data
+const initialOverviewSections: OverviewSection[] = [
   {
-    id: 'intro',
-    title: 'Introduction',
-    content: `This proposal outlines the implementation of AI-powered workflows across our content management systems. 
-    The primary goal is to enhance efficiency, reduce manual workload, and improve the quality of our outputs through smart automation.
-    
-    Our team has identified several opportunities where AI can significantly improve our processes.`,
-    status: 'approved'
+    id: 'currentRole',
+    title: 'Current Role & Responsibilities',
+    content: 'Describe your current role, key responsibilities, and typical projects.',
+    isExpanded: true,
+    isCompleted: false,
   },
   {
-    id: 'problem',
-    title: 'Problem Statement',
-    content: `Current content creation and management workflows are heavily manual, leading to:
-    - Inconsistent content quality
-    - Bottlenecks in review and approval processes
-    - Difficulty maintaining content across multiple platforms
-    - Challenges in content discoverability and reuse
-    - Limited ability to scale content production`,
-    status: 'approved'
+    id: 'aspirations',
+    title: 'Career Aspirations & Goals',
+    content: 'Outline your short-term and long-term career goals. What kind of role are you seeking?',
+    isExpanded: true,
+    isCompleted: false,
   },
   {
-    id: 'solution',
-    title: 'Proposed Solution',
-    content: `We propose implementing an AI-enhanced content workflow that includes:
-    1. AI-powered content analysis for quality, readability, and SEO
-    2. Automated tagging and categorization of content
-    3. Smart content suggestions based on existing materials
-    4. Intelligent workflow routing based on content type and priority
-    5. Automated quality checks at each stage of content development`,
-    status: 'pending'
+    id: 'skillAlignment',
+    title: 'Skill Alignment & Value Proposition',
+    content: 'How do your current skills and experience align with your desired role? What unique value can you bring?',
+    isExpanded: true,
+    isCompleted: false,
   },
   {
-    id: 'benefits',
-    title: 'Expected Benefits',
-    content: `The implementation of this system is expected to yield:
-    - 35% reduction in time spent on manual content tasks
-    - 25% improvement in content quality metrics
-    - 40% faster time-to-publish for standard content
-    - 50% increase in content reuse through better discoverability
-    - Improved consistency across all content channels`,
-    status: 'pending'
-  }
+    id: 'learningObjectives',
+    title: 'Learning & Development Objectives',
+    content: 'What new skills or knowledge do you aim to acquire in your next role?',
+    isExpanded: false,
+    isCompleted: false,
+  },
 ];
 
-// Storage keys
-const SECTIONS_STORAGE_KEY = 'careerProposal_sections';
-const EXPANDED_SECTIONS_STORAGE_KEY = 'careerProposal_expandedSections';
+function ProposalOverview({ triggerNotification }: ProposalOverviewProps) {
+  const [sections, setSections] = useState<OverviewSection[]>(() =>
+    getStoredValue(LOCAL_STORAGE_KEYS.overviewData, initialOverviewSections)
+  );
 
-const ProposalOverview = () => {
-  // Initialize sections from localStorage or fall back to initial data
-  const [sections, setSections] = useState<Section[]>(() => {
-    if (typeof window === 'undefined') return initialSections;
-    
-    try {
-      const savedSections = localStorage.getItem(SECTIONS_STORAGE_KEY);
-      return savedSections ? JSON.parse(savedSections) : initialSections;
-    } catch (error) {
-      console.error('Error loading sections from localStorage:', error);
-      return initialSections;
-    }
-  });
-  
-  // Initialize expanded sections from localStorage or default to only first section
-  const [expandedSections, setExpandedSections] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return ['intro'];
-    
-    try {
-      const savedExpandedSections = localStorage.getItem(EXPANDED_SECTIONS_STORAGE_KEY);
-      return savedExpandedSections ? JSON.parse(savedExpandedSections) : ['intro'];
-    } catch (error) {
-      console.error('Error loading expanded sections from localStorage:', error);
-      return ['intro'];
-    }
-  });
-  
-  // Save sections to localStorage when they change
   useEffect(() => {
-    try {
-      localStorage.setItem(SECTIONS_STORAGE_KEY, JSON.stringify(sections));
-    } catch (error) {
-      console.error('Error saving sections to localStorage:', error);
-    }
+    setStoredValue(LOCAL_STORAGE_KEYS.overviewData, sections);
   }, [sections]);
-  
-  // Save expanded sections to localStorage when they change
-  useEffect(() => {
-    try {
-      localStorage.setItem(EXPANDED_SECTIONS_STORAGE_KEY, JSON.stringify(expandedSections));
-    } catch (error) {
-      console.error('Error saving expanded sections to localStorage:', error);
-    }
-  }, [expandedSections]);
-  
-  const toggleSection = (id: string) => {
-    if (expandedSections.includes(id)) {
-      setExpandedSections(expandedSections.filter(sectionId => sectionId !== id));
-    } else {
-      setExpandedSections([...expandedSections, id]);
-    }
+
+  const handleContentChange = (id: string, newContent: string) => {
+    setSections(prevSections =>
+      prevSections.map(section =>
+        section.id === id ? { ...section, content: newContent } : section
+      )
+    );
   };
-  
-  const getStatusLabel = (status: string) => {
-    switch(status) {
-      case 'approved': return 'Approved';
-      case 'rejected': return 'Needs Revision';
-      default: return 'Pending Review';
-    }
+
+  const toggleSectionExpand = (id: string) => {
+    setSections(prevSections =>
+      prevSections.map(section =>
+        section.id === id ? { ...section, isExpanded: !section.isExpanded } : section
+      )
+    );
   };
-  
-  // Update section status
-  const updateSectionStatus = (sectionId: string, newStatus: 'pending' | 'approved' | 'rejected') => {
-    setSections(sections.map(section => {
-      if (section.id === sectionId) {
-        return { ...section, status: newStatus };
-      }
-      return section;
-    }));
+
+  const toggleSectionComplete = (id: string) => {
+    setSections(prevSections =>
+      prevSections.map(section => {
+        if (section.id === id) {
+          const newCompletedStatus = !section.isCompleted;
+          triggerNotification(
+            `Section "${section.title}" marked as ${newCompletedStatus ? 'complete' : 'incomplete'}.`,
+            newCompletedStatus ? 'success' : 'info'
+          );
+          return { ...section, isCompleted: newCompletedStatus };
+        }
+        return section;
+      })
+    );
   };
-  
-  // Reset all data to initial values
-  const resetData = () => {
-    if (confirm('Reset all section data to initial values?')) {
-      setSections(initialSections);
-      setExpandedSections(['intro']);
-    }
+
+  const resetOverviewData = () => {
+    setSections(initialOverviewSections);
+    triggerNotification('Overview data has been reset to initial values.', 'info');
   };
-  
+
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+    <div className="proposal-overview proposal-section">
+      <div className="section-header">
         <h2>Proposal Overview</h2>
-        <button 
-          onClick={resetData} 
-          style={{ 
-            backgroundColor: '#6b7280', 
-            fontSize: '0.8rem',
-            padding: '0.4rem 0.8rem' 
-          }}
-        >
-          Reset Data
+        <button onClick={resetOverviewData} className="button-reset-section">
+          Reset Overview Data
         </button>
       </div>
-      
+
       {sections.map(section => (
-        <div 
-          key={section.id}
-          className={`card ${!expandedSections.includes(section.id) ? 'collapsed' : ''}`}
-        >
-          <div className="card-header" onClick={() => toggleSection(section.id)}>
+        <div key={section.id} className={`overview-card ${section.isCompleted ? 'completed' : ''}`}>
+          <div className="card-header" onClick={() => toggleSectionExpand(section.id)}>
             <h3>{section.title}</h3>
-            <div>
-              <span className={`status ${section.status}`}>{getStatusLabel(section.status)}</span>
-              <span style={{ marginLeft: '10px' }}>
-                {expandedSections.includes(section.id) ? '▼' : '►'}
-              </span>
+            <div className="card-actions">
+              <input 
+                type="checkbox" 
+                checked={section.isCompleted}
+                onChange={(e) => {
+                  e.stopPropagation(); // Prevent card from expanding/collapsing
+                  toggleSectionComplete(section.id);
+                }}
+                title={section.isCompleted ? 'Mark as Incomplete' : 'Mark as Complete'}
+                className="section-checkbox"
+              />
+              <span className="expand-toggle">{section.isExpanded ? '▼' : '►'}</span>
             </div>
           </div>
-          <div className="card-content" style={{ 
-            maxHeight: expandedSections.includes(section.id) ? '500px' : '0'
-          }}>
-            <p style={{ whiteSpace: 'pre-line' }}>{section.content}</p>
-            
-            <div style={{ marginTop: '1rem' }}>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  updateSectionStatus(section.id, 'approved');
-                }}
-                style={{ 
-                  backgroundColor: section.status === 'approved' ? '#10b981' : undefined,
-                  marginRight: '0.5rem'
-                }}
-              >
-                Approve
-              </button>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  updateSectionStatus(section.id, 'rejected');
-                }}
-                style={{ 
-                  backgroundColor: section.status === 'rejected' ? '#ef4444' : undefined,
-                  marginRight: '0.5rem'
-                }}
-              >
-                Needs Revision
-              </button>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  updateSectionStatus(section.id, 'pending');
-                }}
-                style={{ 
-                  backgroundColor: section.status === 'pending' ? '#f59e0b' : undefined 
-                }}
-              >
-                Mark Pending
-              </button>
+          {section.isExpanded && (
+            <div className="card-content">
+              <textarea
+                value={section.content}
+                onChange={e => handleContentChange(section.id, e.target.value)}
+                rows={5}
+                placeholder={`Enter details for ${section.title}...`}
+              />
             </div>
-          </div>
+          )}
         </div>
       ))}
-      
-      <div style={{ marginTop: '2rem' }}>
-        <button onClick={() => setExpandedSections(sections.map(s => s.id))}>
-          Expand All
-        </button>
-        <button 
-          onClick={() => setExpandedSections([])} 
-          style={{ marginLeft: '10px', backgroundColor: '#6b7280' }}
-        >
-          Collapse All
-        </button>
-      </div>
-      
-      <div style={{ marginTop: '2rem', fontSize: '0.85rem', color: '#6b7280' }}>
-        <p>Note: Your section status changes and expanded sections are saved locally in your browser.</p>
-      </div>
     </div>
-  )
+  );
 }
 
-export default ProposalOverview
+export default ProposalOverview;
