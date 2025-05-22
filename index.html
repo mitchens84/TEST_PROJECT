@@ -120,101 +120,15 @@
     <button id="sidebar-toggle-btn">☰</button>
     <script type="module" src="src/env-config.js"></script>
     <script>
-        // --- Basic Password Protection - Tier 0 (SHA256 Enhanced) ---
-        // This is a simple, client-side password protection.
-        // Note: This is not secure and only deters casual viewers.
-
-        async function sha256(str) {
-            const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-            const hashArray = Array.from(new Uint8Array(buffer));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            return hashHex;
-        }
-
-        (async function() {
-            const PRECALCULATED_HASH = "c44267c8b6a0f19268d96cfd59aa6a42b6ad7571f35bfa6752dce77e04922673";
-            // sitePasswordPlain is used for storing in sessionStorage after successful auth.
-            // The actual authentication check is done against PRECALCULATED_HASH.
-            const sitePasswordPlain = window.envConfig?.authConfig?.password || "TEST_PROJECT";
-            const sessionKey = window.envConfig?.authConfig?.sessionKey || 'tier0Password';
-            
-            // Check if already authenticated in this session
-            let sessionPassword = null;
-            try {
-                sessionPassword = sessionStorage.getItem(sessionKey);
-            } catch (e) {
-                console.warn("Session storage access denied. Password prompt will appear on each navigation.");
-            }
-
-            // If session contains the plain text password, user is considered authenticated for this session.
-            if (sessionPassword === sitePasswordPlain) {
-                // Already authenticated in this session
-                return;
-            }
-
-            const enteredPassword = prompt("Enter password to view content:", "");
-            
-            // Define accessDeniedHTML using CSS variables
-            // Note: These styles will be applied to a page that *replaces* the current document.
-            // It won't have access to main.css unless explicitly linked, which is overkill for an error page.
-            // So, we define the variables directly in the style block.
-            const accessDeniedHTML = `
-                <html><head><title>Access Denied</title>
-                <style>
-                    :root { /* Default to light theme vars for the error page */
-                        --ad-background-color: #f5f5f5;
-                        --ad-text-color: #333;
-                        --ad-header-color: #d9534f;
-                    }
-                    body.dark-theme { /* Dark theme vars for the error page */
-                        --ad-background-color: #2c2c2c;
-                        --ad-text-color: #e0e0e0;
-                        --ad-header-color: #f08080;
-                    }
-                    body { 
-                        font-family: sans-serif; text-align: center; padding-top: 50px; 
-                        background-color: var(--ad-background-color); 
-                        color: var(--ad-text-color); 
-                    }
-                    h1 { color: var(--ad-header-color); }
-                </style>
-                <script>
-                    // Apply dark theme to error page if necessary
-                    try {
-                        if (localStorage.getItem('theme') === 'dark') {
-                            document.body.classList.add('dark-theme');
-                        }
-                    } catch (e) { /* ignore */ }
-                <\/script>
-                </head>
-                <body>
-                    <h1>Access Denied</h1>
-                    <p>Invalid password or action cancelled. Please try again or contact the site administrator.</p>
-                </body></html>`;
-
-            if (enteredPassword === null) { // User cancelled the prompt
-                document.documentElement.innerHTML = accessDeniedHTML;
-                // Prevent any further script execution
-                throw new Error("Access Denied - User cancelled prompt. Halting script execution");
-            }
-
-            const hashedEnteredPassword = await sha256(enteredPassword);
-
-            if (hashedEnteredPassword === PRECALCULATED_HASH) {
-                // Password correct, store the plain password in session storage
-                try {
-                    sessionStorage.setItem(sessionKey, sitePasswordPlain); // Store the plain password
-                } catch (e) {
-                    console.warn("Session storage access denied. Password prompt will appear on each navigation.");
-                }
-            } else {
-                // Password incorrect, show access denied and halt further execution
-                document.documentElement.innerHTML = accessDeniedHTML;
-                // Prevent any further script execution
-                throw new Error("Access Denied - Invalid password. Halting script execution");
+        // Authentication Check and Redirection
+        (function() {
+            const isAuthenticated = sessionStorage.getItem('isAuthenticated');
+            if (isAuthenticated !== 'true') {
+                // Optional: Store the page they were trying to access to redirect back later
+                // sessionStorage.setItem('redirectUrl', window.location.pathname + window.location.search);
+                window.location.href = 'login.html';
             }
         })();
-        // --- End Basic Password Protection ---
     </script>
 
     <div id="sidebar">

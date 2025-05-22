@@ -90,7 +90,7 @@ function createDefaultPageHtml(sectionDirPath, sectionName) {
         .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
     </style>
 </head>
-<body>
+<body style="padding: 20px;">
     <header>
         <nav>
             <!-- Adjust path to index.html based on depth from project root -->
@@ -302,7 +302,7 @@ async function processNewContent(newContentPath) {
         .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
     </style>
 </head>
-<body>
+<body style="padding: 20px;">
     <header>
         <nav>
             <a href="${path.relative(targetSectionDirPath, indexPath).replace(/\\\\/g, '/')}">Home</a>
