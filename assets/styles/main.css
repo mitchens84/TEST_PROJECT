@@ -88,25 +88,63 @@ button:hover {
 
 #dynamic-toc-content li {
     margin-bottom: 0; /* Reset margin, padding on <a> will handle spacing */
-    border-bottom: 1px solid var(--border-color); /* Subtle separator */
+    border-bottom: 1px solid var(--border-color); /* Subtle separator for top-level items */
 }
 
-#dynamic-toc-content li:last-child {
-    border-bottom: none; /* No border for the last item */
+#dynamic-toc-content > ul > li:last-child { /* Target only top-level li for removing border */
+    border-bottom: none; /* No border for the last top-level item */
 }
 
-#dynamic-toc-content a {
+/* Styling for all links and non-clickable spans in the TOC */
+#dynamic-toc-content a,
+#dynamic-toc-content span { /* Apply similar styling to non-clickable section titles */
     text-decoration: none;
     color: var(--sidebar-text); /* Use sidebar text color for default state */
     font-weight: 400;       /* Normal font weight, can be adjusted */
-    display: block;         /* Make the link fill the li for easier clicking */
+    display: block;         /* Make the link/span fill the li for easier clicking */
     padding: 10px 15px;     /* Padding for touch targets and visual spacing (top/bottom, left/right) */
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out; /* Smooth transition for hover */
 }
 
-#dynamic-toc-content a:hover {
+#dynamic-toc-content a:hover { /* Hover effect only for actual links */
     color: var(--link-hover-color); /* Use specific link hover color from variables */
     background-color: var(--background-color); /* Subtle background change on hover, using main background for contrast */
+    text-decoration: none; /* Keep underline off on hover, or set to underline if preferred */
+}
+
+/* Styling for non-clickable section titles (if any) */
+#dynamic-toc-content span {
+    font-weight: bold; /* Make non-clickable section titles (e.g. only sub-items) a bit more prominent */
+    cursor: default;
+}
+
+
+/* Nested list styling */
+#dynamic-toc-content ul ul {
+    padding-left: 20px; /* Indentation for nested lists */
+    margin-top: 0px; /* Space above the nested list */
+    margin-bottom: 0px; /* Space below the nested list */
+    background-color: var(--sidebar-background); /* Ensure nested list background matches sidebar */
+    border-top: 1px solid var(--border-color); /* Separator for nested list from parent */
+}
+
+#dynamic-toc-content ul ul li {
+    border-bottom: 1px dashed var(--border-color); /* Different border for sub-items, or none if preferred */
+}
+
+#dynamic-toc-content ul ul li:last-child {
+    border-bottom: none; /* No border for the last sub-item */
+}
+
+#dynamic-toc-content ul ul li a {
+    padding: 8px 15px; /* Slightly less vertical padding for sub-items */
+    font-size: 0.95em;  /* Slightly smaller font for sub-items */
+    color: var(--sidebar-text); /* Ensure sub-item links also use sidebar text color */
+}
+
+#dynamic-toc-content ul ul li a:hover {
+    color: var(--link-hover-color);
+    background-color: var(--background-color); /* Consistent hover background */
     text-decoration: none; /* Keep underline off on hover, or set to underline if preferred */
 }
 
@@ -114,4 +152,76 @@ button:hover {
 #dynamic-toc-content p {
     padding: 10px 15px;
     color: var(--sidebar-text);
+}
+
+/* Login Page Styling */
+body.login-page-body { /* Add a specific class to body of login.html if needed for full-page centering */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: var(--background-color); /* Ensure body background is themed */
+}
+
+.login-container {
+    background-color: var(--sidebar-background); /* Use sidebar background for the login box for contrast */
+    padding: 30px 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--border-color);
+}
+
+.login-container h1 {
+    color: var(--text-color);
+    margin-bottom: 25px;
+    font-size: 2em;
+}
+
+#login-form div {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+#login-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+#login-form input[type="password"] {
+    width: calc(100% - 22px); /* Account for padding */
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1em;
+    background-color: var(--background-color); /* Input field background */
+    color: var(--text-color); /* Input field text color */
+}
+
+#login-form button[type="submit"] {
+    background-color: var(--primary-color);
+    color: var(--button-text); /* Ensure button text variable is defined or use a specific color like white */
+    border: none;
+    padding: 12px 20px;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+#login-form button[type="submit"]:hover {
+    background-color: var(--link-hover-color); /* Using link-hover for a slightly different shade */
+}
+
+.error-message {
+    color: var(--access-denied-header-text); /* Use a prominent error color variable */
+    margin-top: 15px;
+    min-height: 1.2em; /* Reserve space to prevent layout shift */
+    font-weight: bold;
 }

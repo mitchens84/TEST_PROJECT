@@ -38,13 +38,72 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
 
     for (const section of sections) {
       const sectionPath = path.join(expressDir, section);
-      const pageHtmlPath = path.join(sectionPath, 'page.html');
+      let primaryPagePath = null;
+      let primaryPageFileName = '';
 
-      if (fs.existsSync(pageHtmlPath)) {
-        const title = extractTitle(pageHtmlPath);
-        // Make link relative to the baseOutputDirectory (e.g., TEMPLATE/)
-        const relativeLinkPath = path.relative(baseOutputDirectory, pageHtmlPath).replace(/\\/g, '/');
-        htmlToc += `  <li><a href="${relativeLinkPath}">${title}</a></li>\n`;
+      // Check for page.html first, then index.html as primary
+      const potentialPrimaryPageHtml = path.join(sectionPath, 'page.html');
+      if (fs.existsSync(potentialPrimaryPageHtml)) {
+        primaryPagePath = potentialPrimaryPageHtml;
+        primaryPageFileName = 'page.html';
+      } else {
+        const potentialPrimaryIndexHtml = path.join(sectionPath, 'index.html');
+        if (fs.existsSync(potentialPrimaryIndexHtml)) {
+          primaryPagePath = potentialPrimaryIndexHtml;
+          primaryPageFileName = 'index.html';
+        }
+      }
+
+      // Scan for all HTML files in the section
+      const allHtmlFiles = fs.readdirSync(sectionPath)
+        .filter(file => file.endsWith('.html'));
+
+      if (!primaryPagePath && allHtmlFiles.length === 0) {
+        // Skip section if no primary page and no other HTML files
+        continue;
+      }
+      
+      let sectionTitle = section; // Default to section name
+      let primaryLinkPath = null;
+
+      if (primaryPagePath) {
+        sectionTitle = extractTitle(primaryPagePath);
+        primaryLinkPath = path.relative(baseOutputDirectory, primaryPagePath).replace(/\\/g, '/');
+      }
+
+      // Identify secondary pages
+      const secondaryPages = [];
+      for (const htmlFile of allHtmlFiles) {
+        if (htmlFile === primaryPageFileName) {
+          continue; // Skip the primary page itself
+        }
+        const secondaryFilePath = path.join(sectionPath, htmlFile);
+        const secondaryTitle = extractTitle(secondaryFilePath);
+        const secondaryLinkPath = path.relative(baseOutputDirectory, secondaryFilePath).replace(/\\/g, '/');
+        secondaryPages.push({ title: secondaryTitle, link: secondaryLinkPath });
+      }
+      secondaryPages.sort((a,b) => a.title.localeCompare(b.title)); // Sort secondary pages by title
+
+
+      // Construct HTML for the section
+      if (primaryLinkPath) {
+        htmlToc += `  <li><a href="${primaryLinkPath}">${sectionTitle}</a>`;
+      } else if (secondaryPages.length > 0) {
+        // If no primary link but secondary pages exist, list section title as non-clickable
+        htmlToc += `  <li><span>${sectionTitle}</span>`; // Use span for non-clickable title
+      } else {
+        // No primary page and no secondary pages (should have been caught by 'continue' earlier, but as a safeguard)
+        continue;
+      }
+
+      if (secondaryPages.length > 0) {
+        htmlToc += '\n    <ul>\n';
+        for (const page of secondaryPages) {
+          htmlToc += `      <li><a href="${page.link}">${page.title}</a></li>\n`;
+        }
+        htmlToc += '    </ul>\n  </li>\n';
+      } else {
+        htmlToc += '</li>\n';
       }
     }
     htmlToc += '</ul>\n';

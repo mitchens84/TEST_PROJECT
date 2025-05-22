@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Project Content Hub</title>
+    <link rel="stylesheet" href="assets/styles/main.css">
+    <script>
+        // Apply theme on initial load
+        (function() {
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark-theme');
+                } else {
+                    document.documentElement.classList.remove('dark-theme');
+                }
+            }
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    applyTheme(savedTheme);
+                } else {
+                    // Fallback or default theme (e.g., light)
+                    applyTheme('light'); 
+                }
+            } catch (e) {
+                console.warn('Could not access localStorage for initial theme on login page.');
+                applyTheme('light'); // Default to light if localStorage is inaccessible
+            }
+        })();
+    </script>
+    <style>
+        /* Specific styles for login page FOUC prevention if necessary, though main.css should handle most */
+        .dark-theme body {
+            background-color: #121212; /* Fallback for dark theme body if main.css is slow */
+        }
+    </style>
+</head>
+<body class="login-page-body">
+    <div class="login-container">
+        <h1>Login</h1>
+        <form id="login-form">
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+        <p id="error-message" class="error-message" aria-live="assertive"></p>
+    </div>
+
+    <script>
+        // SHA256 function
+        async function sha256(str) {
+            const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+            const hashArray = Array.from(new Uint8Array(buffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        const PRECALCULATED_HASH = "c44267c8b6a0f19268d96cfd59aa6a42b6ad7571f35bfa6752dce77e04922673";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('login-form');
+            const passwordInput = document.getElementById('password');
+            const errorMessageElement = document.getElementById('error-message');
+
+            loginForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                errorMessageElement.textContent = ''; // Clear previous errors
+                const enteredPassword = passwordInput.value;
+
+                if (!enteredPassword) {
+                    errorMessageElement.textContent = 'Password cannot be empty.';
+                    return;
+                }
+
+                const hashedEnteredPassword = await sha256(enteredPassword);
+
+                if (hashedEnteredPassword === PRECALCULATED_HASH) {
+                    sessionStorage.setItem('isAuthenticated', 'true');
+                    // Optional: Check for a redirect URL
+                    // const redirectUrl = sessionStorage.getItem('redirectUrl') || 'index.html';
+                    // sessionStorage.removeItem('redirectUrl'); // Clean up
+                    window.location.href = 'index.html';
+                } else {
+                    errorMessageElement.textContent = 'Invalid password.';
+                    passwordInput.value = ''; // Clear password field
+                }
+            });
+        });
+    </script>
+</body>
+</html>
