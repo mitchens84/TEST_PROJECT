@@ -2,14 +2,116 @@
 :root {
     --primary-color: #007bff;
     --secondary-color: #6c757d;
-    --background-color: #f8f9fa;
-    --text-color: #212529;
+    --background-color: #ffffff; /* Light theme background */
+    --text-color: #212529;       /* Light theme text */
+    --sidebar-background: #f4f4f4;
+    --sidebar-text: #333;
+    --link-color: #007bff;
+    --link-hover-color: #0056b3;
+    --border-color: #ddd;
+    --button-background: #333;
+    --button-text: white;
+    --button-hover-background: #555;
+    --iframe-border-color: #ccc;
+    --access-denied-background: #f5f5f5;
+    --access-denied-text: #333;
+    --access-denied-header-text: #d9534f;
 }
+
+body.dark-theme {
+    --primary-color: #4dabf7; /* Lighter blue for dark theme */
+    --secondary-color: #adb5bd; /* Lighter grey for dark theme */
+    --background-color: #121212; /* Dark theme background */
+    --text-color: #e0e0e0;       /* Dark theme text */
+    --sidebar-background: #1e1e1e;
+    --sidebar-text: #e0e0e0;
+    --link-color: #64b5f6;
+    --link-hover-color: #90caf9;
+    --border-color: #444;
+    --button-background: #555;
+    --button-text: white;
+    --button-hover-background: #777;
+    --iframe-border-color: #555;
+    --access-denied-background: #2c2c2c;
+    --access-denied-text: #e0e0e0;
+    --access-denied-header-text: #f08080; /* Lighter red for dark theme */
+}
+
 body {
     font-family: sans-serif;
     line-height: 1.6;
     margin: 0;
-    padding: 20px;
+    /* padding: 20px; Removed padding from body as it's handled by content-area */
     background-color: var(--background-color);
     color: var(--text-color);
+    /* Add a transition for smooth theme changes */
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* General link styling */
+a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--link-hover-color);
+    text-decoration: underline;
+}
+
+/* Basic button styling, can be overridden by more specific selectors */
+button {
+    background-color: var(--button-background);
+    color: var(--button-text);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+button:hover {
+    background-color: var(--button-hover-background);
+}
+
+/* Table of Contents Styling */
+#dynamic-toc-content {
+    /* Container styling if needed, for now, direct children styling */
+}
+
+#dynamic-toc-content ul {
+    list-style-type: none; /* Remove default bullets */
+    padding-left: 0;       /* Remove default browser padding for ul */
+    margin-top: 0;
+    margin-bottom: 0; /* Remove default browser margin for ul */
+}
+
+#dynamic-toc-content li {
+    margin-bottom: 0; /* Reset margin, padding on <a> will handle spacing */
+    border-bottom: 1px solid var(--border-color); /* Subtle separator */
+}
+
+#dynamic-toc-content li:last-child {
+    border-bottom: none; /* No border for the last item */
+}
+
+#dynamic-toc-content a {
+    text-decoration: none;
+    color: var(--sidebar-text); /* Use sidebar text color for default state */
+    font-weight: 400;       /* Normal font weight, can be adjusted */
+    display: block;         /* Make the link fill the li for easier clicking */
+    padding: 10px 15px;     /* Padding for touch targets and visual spacing (top/bottom, left/right) */
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out; /* Smooth transition for hover */
+}
+
+#dynamic-toc-content a:hover {
+    color: var(--link-hover-color); /* Use specific link hover color from variables */
+    background-color: var(--background-color); /* Subtle background change on hover, using main background for contrast */
+    text-decoration: none; /* Keep underline off on hover, or set to underline if preferred */
+}
+
+/* Style for the "Loading Table of Contents..." text, if it's within #dynamic-toc-content */
+#dynamic-toc-content p {
+    padding: 10px 15px;
+    color: var(--sidebar-text);
 }

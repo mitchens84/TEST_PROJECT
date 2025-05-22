@@ -5,37 +5,109 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Storage System Test Page</title>
     <link rel="stylesheet" href="assets/styles/main.css">
+    <script>
+        // Apply theme on initial load and listen for changes from parent
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+        }
+        // Initial theme application from localStorage
+        try {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                // Apply theme before body is fully rendered to avoid flash
+                if (savedTheme === 'dark') document.documentElement.classList.add('dark-theme-preload');
+            }
+        } catch (e) {
+            console.warn('Could not access localStorage for initial theme in iframe (test.html)');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Remove preload class after styles are applied
+            if (document.documentElement.classList.contains('dark-theme-preload')) {
+                 document.documentElement.classList.remove('dark-theme-preload');
+                 document.body.classList.add('dark-theme'); // Ensure body class is set
+            } else {
+                 try {
+                    const currentTheme = localStorage.getItem('theme');
+                     if (currentTheme) applyTheme(currentTheme);
+                 } catch(e) { /* ignore */ }
+            }
+
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'themeChange') {
+                    applyTheme(event.data.theme);
+                    try {
+                        localStorage.setItem('theme', event.data.theme);
+                    } catch (e) {
+                        console.warn('Could not set localStorage theme in iframe (test.html)');
+                    }
+                }
+            });
+            
+            // Fallback: Try to sync with parent's theme on load, if accessible
+            if (window.parent && window.parent !== window) {
+                try {
+                    const currentThemeInParent = parent.localStorage.getItem('theme');
+                     if (currentThemeInParent) {
+                        applyTheme(currentThemeInParent);
+                        localStorage.setItem('theme', currentThemeInParent);
+                     }
+                } catch(e) {
+                    console.warn("iframe (test.html) could not access parent's localStorage for theme sync on load.");
+                }
+            }
+        });
+    </script>
     <style>
-        body { padding: 20px; font-family: sans-serif; }
-        .test-section { margin-bottom: 30px; border: 1px solid #ccc; padding: 20px; border-radius: 8px; background-color: #f9f9f9; }
-        .test-section h2 { margin-top: 0; color: var(--primary-color); }
-        label { display: block; margin-bottom: 8px; font-weight: bold; }
+        /* Prevent FOUC (Flash Of Unstyled Content) for dark theme */
+        .dark-theme-preload { background-color: var(--background-color, #121212); color: var(--text-color, #e0e0e0); }
+        /* General body styles are inherited or set by main.css */
+        body { 
+            padding: 20px; 
+            /* font-family is set in main.css */
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        .test-section { 
+            margin-bottom: 30px; 
+            border: 1px solid var(--border-color); 
+            padding: 20px; 
+            border-radius: 8px; 
+            background-color: var(--sidebar-background); /* Using sidebar-background for contrast or a new var if needed */
+        }
+        .test-section h2 { 
+            margin-top: 0; 
+            color: var(--primary-color); 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: bold; 
+            color: var(--text-color);
+        }
         input[type="text"], input[type="password"], input[type="email"], select, textarea { 
             margin-bottom: 15px; 
             padding: 10px; 
-            border: 1px solid #ddd; 
+            border: 1px solid var(--border-color); 
             border-radius: 4px; 
             width: calc(100% - 22px); 
             box-sizing: border-box;
+            background-color: var(--background-color); /* Input background */
+            color: var(--text-color); /* Input text color */
         }
-        button { 
-            padding: 10px 18px; 
-            background-color: var(--primary-color); 
-            color: white; 
-            border: none; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            margin-right: 10px; 
-            margin-bottom: 10px;
-            font-size: 0.9em;
-        }
-        button:hover { opacity: 0.85; }
-        button.secondary { background-color: #6c757d; }
-        button.danger { background-color: #dc3545; }
+        /* Buttons are styled by main.css, specific overrides can go here if needed */
+        /* button { ... } */
+        button.secondary { background-color: var(--secondary-color); }
+        /* button.danger { background-color: #dc3545; } /* Consider a var for danger color */
         pre { 
-            background-color: #e9ecef; 
+            background-color: var(--sidebar-background); /* Or a specific var for code blocks */
+            color: var(--text-color);
             padding: 15px; 
-            border: 1px solid #ced4da; 
+            border: 1px solid var(--border-color); 
             border-radius: 4px;
             white-space: pre-wrap; 
             word-wrap: break-word; 
@@ -44,30 +116,31 @@
             overflow-y: auto;
         }
         .collapsible {
-            background-color: #f1f1f1;
-            color: #444;
+            background-color: var(--secondary-color); /* Button-like, using secondary */
+            color: var(--button-text); /* Assuming text on secondary is light */
             cursor: pointer;
             padding: 18px;
             width: 100%;
-            border: none;
+            border: 1px solid var(--border-color);
             text-align: left;
             outline: none;
             font-size: 15px;
             margin-bottom: 5px;
+            border-radius: 4px; /* Added for consistency */
         }
         .collapsible.active, .collapsible:hover {
-            background-color: #ddd;
+            background-color: var(--primary-color); /* Or a lighter/darker secondary */
         }
         .content {
             padding: 0 18px;
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.2s ease-out;
-            background-color: white;
-            border: 1px solid #f1f1f1;
+            background-color: var(--background-color); /* Content background */
+            border: 1px solid var(--border-color);
             border-top: none;
         }
-        .content p, .content label { margin-top: 10px;}
+        .content p, .content label { margin-top: 10px; color: var(--text-color); }
     </style>
 </head>
 <body>
