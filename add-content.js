@@ -33,6 +33,62 @@ function createDefaultPageHtml(sectionDirPath, sectionName) {
     <title>${sectionTitle}</title>
     <!-- Adjust path to main.css based on depth from project root -->
     <link rel="stylesheet" href="${path.relative(sectionDirPath, assetsPath).replace(/\\\\/g, '/')}">
+    <script>
+        // Apply theme on initial load and listen for changes from parent
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+        }
+        // Initial theme application from localStorage
+        try {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                // Apply theme before body is fully rendered to avoid flash
+                if (savedTheme === 'dark') document.documentElement.classList.add('dark-theme-preload'); 
+            } else {
+                 // Optional: could check prefers-color-scheme
+            }
+        } catch (e) {
+            console.warn('Could not access localStorage for initial theme in iframe');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Remove preload class after styles are applied
+            if (document.documentElement.classList.contains('dark-theme-preload')) {
+                 document.documentElement.classList.remove('dark-theme-preload');
+                 document.body.classList.add('dark-theme'); // Ensure body class is set
+            } else {
+                 // If not preloaded (e.g. no theme in localstorage or it was light)
+                 // still try to apply from localstorage in case it was set to light explicitly
+                 try {
+                    const currentTheme = localStorage.getItem('theme');
+                     if (currentTheme) applyTheme(currentTheme);
+                 } catch(e) { /* ignore */ }
+            }
+
+
+            window.addEventListener('message', function(event) {
+                // Optional: Check event.origin for security if the origin is known and static
+                // if (event.origin !== 'http://your-main-app-origin.com') return; 
+                if (event.data && event.data.type === 'themeChange') {
+                    applyTheme(event.data.theme);
+                    // Also update localStorage in the iframe to keep it synced
+                    try {
+                        localStorage.setItem('theme', event.data.theme);
+                    } catch (e) {
+                        console.warn('Could not set localStorage theme in iframe');
+                    }
+                }
+            });
+        });
+    <\/script>
+    <style>
+        /* Prevent FOUC (Flash Of Unstyled Content) for dark theme */
+        .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
+    </style>
 </head>
 <body>
     <header>
@@ -57,6 +113,21 @@ function createDefaultPageHtml(sectionDirPath, sectionName) {
         <script>
             // Optional: if you need dynamic year update on client side, keep this.
             // document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+            // Request theme from parent on load, in case message was missed or for initial sync
+            // This is an additional measure. The DOMContentLoaded listener above handles initial localStorage.
+            // And the parent is supposed to send the theme on iframe load.
+            if (window.parent && window.parent !== window) {
+                try {
+                    const currentThemeInParent = parent.localStorage.getItem('theme');
+                     if (currentThemeInParent) {
+                        applyTheme(currentThemeInParent);
+                        localStorage.setItem('theme', currentThemeInParent); // Sync iframe's local storage
+                     }
+                } catch(e) {
+                    console.warn("iframe could not access parent's localStorage for theme sync on load.")
+                }
+            }
         </script>
     </footer>
 </body>
@@ -175,6 +246,61 @@ async function processNewContent(newContentPath) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${sectionTitle}</title>
     <link rel="stylesheet" href="${path.relative(targetSectionDirPath, assetsPath).replace(/\\\\/g, '/')}">
+    <script>
+        // Apply theme on initial load and listen for changes from parent
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+        }
+        // Initial theme application from localStorage
+        try {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                // Apply theme before body is fully rendered to avoid flash
+                if (savedTheme === 'dark') document.documentElement.classList.add('dark-theme-preload');
+            } else {
+                 // Optional: could check prefers-color-scheme
+            }
+        } catch (e) {
+            console.warn('Could not access localStorage for initial theme in iframe');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Remove preload class after styles are applied
+            if (document.documentElement.classList.contains('dark-theme-preload')) {
+                 document.documentElement.classList.remove('dark-theme-preload');
+                 document.body.classList.add('dark-theme'); // Ensure body class is set
+            } else {
+                 // If not preloaded (e.g. no theme in localstorage or it was light)
+                 // still try to apply from localstorage in case it was set to light explicitly
+                 try {
+                    const currentTheme = localStorage.getItem('theme');
+                     if (currentTheme) applyTheme(currentTheme);
+                 } catch(e) { /* ignore */ }
+            }
+
+            window.addEventListener('message', function(event) {
+                // Optional: Check event.origin for security if the origin is known and static
+                // if (event.origin !== 'http://your-main-app-origin.com') return;
+                if (event.data && event.data.type === 'themeChange') {
+                    applyTheme(event.data.theme);
+                    // Also update localStorage in the iframe to keep it synced
+                    try {
+                        localStorage.setItem('theme', event.data.theme);
+                    } catch (e) {
+                        console.warn('Could not set localStorage theme in iframe');
+                    }
+                }
+            });
+        });
+    <\/script>
+    <style>
+        /* Prevent FOUC (Flash Of Unstyled Content) for dark theme */
+        .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
+    </style>
 </head>
 <body>
     <header>
@@ -188,12 +314,28 @@ async function processNewContent(newContentPath) {
         
         <h2>Files in this section:</h2>
         <ul>
-            ${fs.readdirSync(targetSectionDirPath).map(file => `<li><a href="./${file}">${file}</a></li>`).join('\\n            ')}
+            ${fs.readdirSync(targetSectionDirPath).map(file => `<li><a href="./${file}">${file}</a></li>`).join('\n            ')}
         </ul>
     </main>
     <footer>
         <p>&copy; <span id="currentYear">${new Date().getFullYear()}</span> Your Project</p>
         <!-- AUTO-STORAGE-INIT -->
+        <script>
+             // Request theme from parent on load, in case message was missed or for initial sync
+            // This is an additional measure. The DOMContentLoaded listener above handles initial localStorage.
+            // And the parent is supposed to send the theme on iframe load.
+            if (window.parent && window.parent !== window) {
+                try {
+                    const currentThemeInParent = parent.localStorage.getItem('theme');
+                     if (currentThemeInParent) {
+                        applyTheme(currentThemeInParent);
+                        localStorage.setItem('theme', currentThemeInParent); // Sync iframe's local storage
+                     }
+                } catch(e) {
+                    console.warn("iframe could not access parent's localStorage for theme sync on load.")
+                }
+            }
+        </script>
     </footer>
 </body>
 </html>`;

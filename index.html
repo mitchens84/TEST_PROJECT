@@ -6,13 +6,16 @@
     <title>Project Content Hub</title>
     <link rel="stylesheet" href="assets/styles/main.css">
     <style>
+        /* General body styles are in main.css */
+        /* These styles are specific to the layout of index.html */
         body {
-            font-family: sans-serif;
+            /* font-family is inherited from main.css */
             margin: 0;
             display: flex;
             height: 100vh;
             overflow: hidden; /* Prevent body scrollbars */
-            transition: margin-left 0.3s ease-in-out; /* For content area shift */
+            /* transition for margin-left is here, background/color transitions are in main.css */
+            transition: margin-left 0.3s ease-in-out; 
         }
 
         #sidebar-toggle-btn {
@@ -20,31 +23,32 @@
             top: 10px;
             left: 10px; /* Initial position */
             z-index: 1001; /* Above sidebar */
-            background-color: #333;
-            color: white;
-            border: none;
+            background-color: var(--button-background);
+            color: var(--button-text);
+            border: 1px solid var(--border-color); /* Use var for border */
             padding: 8px 12px;
             cursor: pointer;
             border-radius: 4px;
             font-size: 16px;
-            transition: left 0.3s ease-in-out;
+            transition: left 0.3s ease-in-out, background-color 0.3s ease, color 0.3s ease;
         }
 
         #sidebar {
             width: 250px;
             min-width: 250px; /* Prevent it from shrinking too much during transition */
-            background-color: #f4f4f4;
+            background-color: var(--sidebar-background);
+            color: var(--sidebar-text); /* Added text color for sidebar */
             padding: 20px;
             padding-top: 50px; /* Space for the toggle button if it were inside */
             overflow-y: auto;
-            border-right: 1px solid #ddd;
+            border-right: 1px solid var(--border-color);
             height: 100%;
             position: fixed; /* Changed to fixed for proper off-screen sliding */
             left: 0;
             top: 0;
             z-index: 1000;
             transform: translateX(0);
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.3s ease-in-out, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
 
         #sidebar.sidebar-collapsed {
@@ -62,6 +66,7 @@
             display: flex; /* Make content-area a flex container */
             flex-direction: column; /* Stack children vertically */
             box-sizing: border-box; /* Ensure padding is included in height calculation */
+            background-color: var(--background-color); /* Ensure content area also uses theme */
         }
 
         body.sidebar-collapsed #content-area {
@@ -74,7 +79,12 @@
 
         #toc-container h2 {
             margin-top: 0;
+            color: var(--sidebar-text); /* Theme TOC header */
         }
+        #navigation-area h3 {
+             color: var(--sidebar-text); /* Theme Navigation header */
+        }
+
 
         #home-content { /* Added style for home-content */
             flex-grow: 1; /* Allow home-content to fill available space in content-area */
@@ -84,7 +94,7 @@
         #home-content iframe { /* More specific selector and adjusted height */
             width: 100%;
             height: 100%; /* Fill the #home-content div */
-            border: 1px solid #ccc;
+            border: 1px solid var(--iframe-border-color);
             box-sizing: border-box;
         }
 
@@ -92,21 +102,40 @@
             display: none;
         }
         #navigation-area button.active {
-            background-color: #ddd;
+            background-color: var(--secondary-color); /* Use a theme variable */
             font-weight: bold;
+            /* color will be var(--button-text) or overridden if needed */
         }
+        #theme-toggle-btn { /* Style for the new theme toggle button */
+            display: block; /* Make it take full width in its container */
+            width: calc(100% - 16px); /* Adjust width considering padding */
+            margin: 10px auto; /* Center it and add some margin */
+            padding: 10px;
+            /* background-color, color, border are inherited from general button styles or overridden by main.css vars */
+        }
+
     </style>
 </head>
 <body>
     <button id="sidebar-toggle-btn">☰</button>
     <script type="module" src="src/env-config.js"></script>
     <script>
-        // --- Basic Password Protection - Tier 0 ---
+        // --- Basic Password Protection - Tier 0 (SHA256 Enhanced) ---
         // This is a simple, client-side password protection.
         // Note: This is not secure and only deters casual viewers.
-        (function() {
-            // Get password from environment config or fall back to hardcoded value
-            const sitePassword = window.envConfig?.authConfig?.password || "TEST_PROJECT";
+
+        async function sha256(str) {
+            const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+            const hashArray = Array.from(new Uint8Array(buffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        (async function() {
+            const PRECALCULATED_HASH = "c44267c8b6a0f19268d96cfd59aa6a42b6ad7571f35bfa6752dce77e04922673";
+            // sitePasswordPlain is used for storing in sessionStorage after successful auth.
+            // The actual authentication check is done against PRECALCULATED_HASH.
+            const sitePasswordPlain = window.envConfig?.authConfig?.password || "TEST_PROJECT";
             const sessionKey = window.envConfig?.authConfig?.sessionKey || 'tier0Password';
             
             // Check if already authenticated in this session
@@ -117,33 +146,72 @@
                 console.warn("Session storage access denied. Password prompt will appear on each navigation.");
             }
 
-            if (sessionPassword === sitePassword) {
+            // If session contains the plain text password, user is considered authenticated for this session.
+            if (sessionPassword === sitePasswordPlain) {
                 // Already authenticated in this session
                 return;
             }
 
             const enteredPassword = prompt("Enter password to view content:", "");
+            
+            // Define accessDeniedHTML using CSS variables
+            // Note: These styles will be applied to a page that *replaces* the current document.
+            // It won't have access to main.css unless explicitly linked, which is overkill for an error page.
+            // So, we define the variables directly in the style block.
+            const accessDeniedHTML = `
+                <html><head><title>Access Denied</title>
+                <style>
+                    :root { /* Default to light theme vars for the error page */
+                        --ad-background-color: #f5f5f5;
+                        --ad-text-color: #333;
+                        --ad-header-color: #d9534f;
+                    }
+                    body.dark-theme { /* Dark theme vars for the error page */
+                        --ad-background-color: #2c2c2c;
+                        --ad-text-color: #e0e0e0;
+                        --ad-header-color: #f08080;
+                    }
+                    body { 
+                        font-family: sans-serif; text-align: center; padding-top: 50px; 
+                        background-color: var(--ad-background-color); 
+                        color: var(--ad-text-color); 
+                    }
+                    h1 { color: var(--ad-header-color); }
+                </style>
+                <script>
+                    // Apply dark theme to error page if necessary
+                    try {
+                        if (localStorage.getItem('theme') === 'dark') {
+                            document.body.classList.add('dark-theme');
+                        }
+                    } catch (e) { /* ignore */ }
+                <\/script>
+                </head>
+                <body>
+                    <h1>Access Denied</h1>
+                    <p>Invalid password or action cancelled. Please try again or contact the site administrator.</p>
+                </body></html>`;
 
-            if (enteredPassword === sitePassword) {
-                // Password correct, store in session storage
+            if (enteredPassword === null) { // User cancelled the prompt
+                document.documentElement.innerHTML = accessDeniedHTML;
+                // Prevent any further script execution
+                throw new Error("Access Denied - User cancelled prompt. Halting script execution");
+            }
+
+            const hashedEnteredPassword = await sha256(enteredPassword);
+
+            if (hashedEnteredPassword === PRECALCULATED_HASH) {
+                // Password correct, store the plain password in session storage
                 try {
-                    sessionStorage.setItem(sessionKey, enteredPassword); // Use sessionKey here
+                    sessionStorage.setItem(sessionKey, sitePasswordPlain); // Store the plain password
                 } catch (e) {
                     console.warn("Session storage access denied. Password prompt will appear on each navigation.");
                 }
             } else {
                 // Password incorrect, show access denied and halt further execution
-                document.documentElement.innerHTML = 
-                    '<html><head><title>Access Denied</title>' +
-                    '<style>' +
-                    'body { font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f5f5f5; color: #333; }' +
-                    'h1 { color: #d9534f; }' +
-                    '</style></head><body>' +
-                    '<h1>Access Denied</h1>' +
-                    '<p>Invalid password. Please try again or contact the site administrator.</p>' +
-                    '</body></html>';
+                document.documentElement.innerHTML = accessDeniedHTML;
                 // Prevent any further script execution
-                throw new Error("Access Denied - Halting script execution");
+                throw new Error("Access Denied - Invalid password. Halting script execution");
             }
         })();
         // --- End Basic Password Protection ---
@@ -162,6 +230,10 @@
             <h3>Navigation</h3>
             <button onclick="window.showContent('home')">Home</button>
             <button onclick="window.showContent('test')">Test Page</button>
+        </div>
+        <hr>
+        <div>
+            <button id="theme-toggle-btn">Toggle Theme</button>
         </div>
     </div>
     <div id="content-area">
@@ -236,6 +308,42 @@
         };
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Theme Toggle Functionality
+            const themeToggleButton = document.getElementById('theme-toggle-btn');
+            const body = document.body;
+            const iframe = document.querySelector('#home-content iframe'); // Get iframe reference early
+
+            function applyTheme(theme) {
+                const newTheme = theme === 'dark' ? 'dark' : 'light'; // Sanitize
+                if (newTheme === 'dark') {
+                    body.classList.add('dark-theme');
+                } else {
+                    body.classList.remove('dark-theme');
+                }
+                localStorage.setItem('theme', newTheme);
+
+                // Send message to iframe
+                const contentIframe = document.querySelector('#home-content iframe'); // Re-query in case it's not loaded initially
+                if (contentIframe && contentIframe.contentWindow) {
+                    contentIframe.contentWindow.postMessage({ type: 'themeChange', theme: newTheme }, '*');
+                }
+            }
+
+            // Load saved theme
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                applyTheme(savedTheme);
+            } else {
+                // Default to light theme or detect OS preference if desired
+                applyTheme('light'); 
+            }
+
+            themeToggleButton.addEventListener('click', function() {
+                const currentTheme = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+                applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            });
+
+
             const tocTargetDiv = document.getElementById('dynamic-toc-content');
             if (tocTargetDiv) {
                 fetch('toc.html')
@@ -310,6 +418,20 @@
                 window.loadContent(lastPage, buttonToActivate);
             } else {
                 window.showContent('home'); // Load default 'home' content (which loads test.html)
+            }
+
+            // Ensure iframe gets theme on initial load if it's already there
+            // This is a bit redundant if loadContent also triggers it, but good for safety
+            const contentIframe = document.querySelector('#home-content iframe');
+            if (contentIframe && contentIframe.contentWindow) {
+                 const currentTheme = localStorage.getItem('theme') || 'light';
+                 contentIframe.onload = function() { // Ensure iframe is loaded before sending message
+                    contentIframe.contentWindow.postMessage({ type: 'themeChange', theme: currentTheme }, '*');
+                 };
+                 // If iframe is already loaded (e.g. navigating back), send message directly
+                 if (contentIframe.contentDocument && contentIframe.contentDocument.readyState === 'complete') {
+                    contentIframe.contentWindow.postMessage({ type: 'themeChange', theme: currentTheme }, '*');
+                 }
             }
         });
     </script>
