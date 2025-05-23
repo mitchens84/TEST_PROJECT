@@ -2,22 +2,31 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * Extracts the title from an HTML file.
+ * Extracts the title from an HTML file and applies specified casing.
  * @param {string} filePath - Absolute path to the HTML file.
- * @returns {string|null} The content of the <title> tag, or the section directory name as a fallback.
+ * @param {boolean} isPrimaryPage - True if the page is a primary section page, false otherwise.
+ * @returns {string|null} The cased content of the <title> tag, or the cased section directory name as a fallback.
  */
-function extractTitle(filePath) {
+function extractTitle(filePath, isPrimaryPage) {
+  let title = '';
   try {
     const content = fs.readFileSync(filePath, 'utf8');
-    const titleMatch = content.match(/<title>(.*?)<\/title>/i); // Corrected regex
+    const titleMatch = content.match(/<title>(.*?)<\/title>/i);
     if (titleMatch && titleMatch[1]) {
-      return titleMatch[1].trim();
+      title = titleMatch[1].trim();
+    } else {
+      // Fallback to the parent directory name of the file (i.e., the section name)
+      title = path.basename(path.dirname(filePath));
     }
-    // Fallback to the parent directory name of page.html (i.e., the section name)
-    return path.basename(path.dirname(filePath));
   } catch (err) {
     console.error(`Error reading or parsing title from ${filePath}:`, err);
-    return path.basename(path.dirname(filePath)); // Fallback to section directory name on error
+    title = path.basename(path.dirname(filePath)); // Fallback on error
+  }
+
+  if (isPrimaryPage) {
+    return title.toUpperCase();
+  } else {
+    return title.toLowerCase();
   }
 }
 
@@ -25,23 +34,32 @@ function extractTitle(filePath) {
  * Generates an HTML Table of Contents from the EXPRESS directory structure.
  * @param {string} expressDir - Absolute path to the EXPRESS directory.
  * @param {string} outputFilePath - Absolute path for the output HTML ToC file.
- * @param {string} baseOutputDirectory - Absolute path to the base directory from which links in ToC should be relative (e.g., TEMPLATE/).
+ * @param {string} baseOutputDirectory - Absolute path to the base directory from which links in ToC should be relative.
  */
 function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
+  const preferredOrder = [
+    "INTRODUCTION",
+    "FEATURES",
+    "CONTENT DEMONSTRATIONS", // was "section"
+    "ADVANCED SHOWCASES",   // was "new-test-section"
+    "COMPREHENSIVE STORAGE TEST", // for test.html (assuming test.html is moved into EXPRESS/comprehensive-storage-test/index.html)
+    "CAREER PROPOSAL - INTERACTIVE", // was "career"
+    "COMPLEX CONTENT SHOWCASE", // was "complex-showcase"
+    "SITRUNA KNOWLEDGE MAP" // was "sitruna"
+  ];
   let htmlToc = '<ul>\n';
   try {
-    const sections = fs.readdirSync(expressDir, { withFileTypes: true })
+    const sectionNames = fs.readdirSync(expressDir, { withFileTypes: true })
       .filter(dirent => dirent.isDirectory())
       .map(dirent => dirent.name);
 
-    sections.sort(); // Sort sections alphabetically
+    const sectionDetails = [];
 
-    for (const section of sections) {
-      const sectionPath = path.join(expressDir, section);
+    for (const sectionName of sectionNames) {
+      const sectionPath = path.join(expressDir, sectionName);
       let primaryPagePath = null;
       let primaryPageFileName = '';
 
-      // Check for page.html first, then index.html as primary
       const potentialPrimaryPageHtml = path.join(sectionPath, 'page.html');
       if (fs.existsSync(potentialPrimaryPageHtml)) {
         primaryPagePath = potentialPrimaryPageHtml;
@@ -53,23 +71,56 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
           primaryPageFileName = 'index.html';
         }
       }
+      
+      let displayTitle = sectionName.toUpperCase(); // Default if no primary page or title
+      if (primaryPagePath) {
+        displayTitle = extractTitle(primaryPagePath, true);
+      } else {
+         // If no primary page, use section name, uppercased for sorting, but might be displayed differently if only sub-pages
+         const allHtmlFilesCheck = fs.readdirSync(sectionPath).filter(file => file.endsWith('.html'));
+         if (allHtmlFilesCheck.length === 0) continue; // Skip if no HTML files at all
+      }
+      sectionDetails.push({ name: sectionName, path: sectionPath, displayTitle, primaryPagePath, primaryPageFileName });
+    }
+
+    // Sort sections:
+    const preferredSections = [];
+    const otherSections = [];
+
+    for (const section of sectionDetails) {
+      const orderIndex = preferredOrder.indexOf(section.displayTitle);
+      if (orderIndex !== -1) {
+        preferredSections[orderIndex] = section; // Place in correct order
+      } else {
+        otherSections.push(section);
+      }
+    }
+    
+    const finalSortedSections = preferredSections.filter(s => s) // Remove empty slots if any preferred item wasn't found
+                                .concat(otherSections.sort((a, b) => a.displayTitle.localeCompare(b.displayTitle)));
+
+
+    for (const section of finalSortedSections) {
+      const sectionPath = section.path; // Already absolute
+      let primaryPagePath = section.primaryPagePath;
+      let primaryPageFileName = section.primaryPageFileName;
 
       // Scan for all HTML files in the section
       const allHtmlFiles = fs.readdirSync(sectionPath)
         .filter(file => file.endsWith('.html'));
 
-      if (!primaryPagePath && allHtmlFiles.length === 0) {
-        // Skip section if no primary page and no other HTML files
-        continue;
-      }
-      
-      let sectionTitle = section; // Default to section name
+      // Section title for display (already uppercased from sorting prep)
+      let sectionDisplayTitle = section.displayTitle;
       let primaryLinkPath = null;
 
       if (primaryPagePath) {
-        sectionTitle = extractTitle(primaryPagePath);
+        // sectionDisplayTitle is already correct from section.displayTitle
         primaryLinkPath = path.relative(baseOutputDirectory, primaryPagePath).replace(/\\/g, '/');
+      } else if (allHtmlFiles.length === 0) {
+        // Should be caught by earlier continue, but defensive check
+        continue;
       }
+
 
       // Identify secondary pages
       const secondaryPages = [];
@@ -78,28 +129,30 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
           continue; // Skip the primary page itself
         }
         const secondaryFilePath = path.join(sectionPath, htmlFile);
-        const secondaryTitle = extractTitle(secondaryFilePath);
+        const secondaryTitle = extractTitle(secondaryFilePath, false); // false for secondary page (lowercase)
         const secondaryLinkPath = path.relative(baseOutputDirectory, secondaryFilePath).replace(/\\/g, '/');
         secondaryPages.push({ title: secondaryTitle, link: secondaryLinkPath });
       }
-      secondaryPages.sort((a,b) => a.title.localeCompare(b.title)); // Sort secondary pages by title
+      secondaryPages.sort((a,b) => a.title.localeCompare(b.title)); // Sort secondary pages by (lowercase) title
 
 
       // Construct HTML for the section
       if (primaryLinkPath) {
-        htmlToc += `  <li><a href="${primaryLinkPath}">${sectionTitle}</a>`;
+        htmlToc += `  <li><a href="${primaryLinkPath}">${sectionDisplayTitle}</a>`;
       } else if (secondaryPages.length > 0) {
         // If no primary link but secondary pages exist, list section title as non-clickable
-        htmlToc += `  <li><span>${sectionTitle}</span>`; // Use span for non-clickable title
+        // Use the section name (original casing, or uppercased based on directory name)
+        // For consistency with sorting logic, section.displayTitle (which is an uppercased title or section name) is used.
+        htmlToc += `  <li><span>${section.displayTitle}</span>`; 
       } else {
-        // No primary page and no secondary pages (should have been caught by 'continue' earlier, but as a safeguard)
+        // No primary page and no secondary pages (should have been caught by 'continue' earlier)
         continue;
       }
 
       if (secondaryPages.length > 0) {
         htmlToc += '\n    <ul>\n';
         for (const page of secondaryPages) {
-          htmlToc += `      <li><a href="${page.link}">${page.title}</a></li>\n`;
+          htmlToc += `      <li><a href="${page.link}">${page.title}</a></li>\n`; // page.title is already lowercased
         }
         htmlToc += '    </ul>\n  </li>\n';
       } else {

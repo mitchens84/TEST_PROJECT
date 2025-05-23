@@ -96,15 +96,24 @@ button:hover {
 }
 
 /* Styling for all links and non-clickable spans in the TOC */
-#dynamic-toc-content a,
-#dynamic-toc-content span { /* Apply similar styling to non-clickable section titles */
+/* Styling for all links and non-clickable spans in the TOC */
+/* Top-level items (primary sections) */
+#dynamic-toc-content > ul > li > a,
+#dynamic-toc-content > ul > li > span {
     text-decoration: none;
-    color: var(--sidebar-text); /* Use sidebar text color for default state */
-    font-weight: 400;       /* Normal font weight, can be adjusted */
-    display: block;         /* Make the link/span fill the li for easier clicking */
-    padding: 10px 15px;     /* Padding for touch targets and visual spacing (top/bottom, left/right) */
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out; /* Smooth transition for hover */
+    color: var(--sidebar-text);
+    font-weight: 500; /* Slightly bolder for uppercase primary titles */
+    display: block;
+    padding: 10px 15px;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
+
+/* Specific styling for top-level non-clickable spans (if different from links) */
+#dynamic-toc-content > ul > li > span {
+    cursor: default; /* Already non-clickable, so default cursor is appropriate */
+    /* font-weight: 500; is inherited from above, so it matches linked primary titles */
+}
+
 
 #dynamic-toc-content a:hover { /* Hover effect only for actual links */
     color: var(--link-hover-color); /* Use specific link hover color from variables */
@@ -112,11 +121,11 @@ button:hover {
     text-decoration: none; /* Keep underline off on hover, or set to underline if preferred */
 }
 
-/* Styling for non-clickable section titles (if any) */
-#dynamic-toc-content span {
-    font-weight: bold; /* Make non-clickable section titles (e.g. only sub-items) a bit more prominent */
+/* Non-clickable section titles (general span, if any deeper) - This might be redundant now */
+/* #dynamic-toc-content span {
+    font-weight: bold; 
     cursor: default;
-}
+} */
 
 
 /* Nested list styling */

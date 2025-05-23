@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Test Section</title>
+    <title>Advanced Showcases</title>
     <link rel="stylesheet" href="../../assets/styles/main.css">
     <script>
         // Apply theme on initial load and listen for changes from parent
@@ -61,41 +61,26 @@
         .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
     </style>
 </head>
-<body>
+<body style="padding: 20px;">
     <header>
         <nav>
             <a href="../../index.html">Home</a>
         </nav>
-        <h1>New Test Section</h1>
+        <h1>Advanced Showcases</h1>
     </header>
     <main>
-        <p>Content for the "new-test-section" section.</p>
-        
-        <h2>Files in this section:</h2>
+        <p>This section is intended for demonstrating more complex content, interactive elements, or JavaScript-driven applications embedded within the Content Hub template.</p>
+        <p>Examples could include:</p>
         <ul>
-            <li><a href="./extra.html">extra.html</a></li>
-            <li><a href="./page.html">page.html</a></li>
+            <li>Custom JavaScript components with specific styling.</li>
+            <li>Small single-page applications (SPAs) or widgets.</li>
+            <li>Integrations with third-party libraries or APIs.</li>
+            <li>Advanced CSS animations or interactive graphics.</li>
         </ul>
+        <p>Explore the <a href="./extra.html">JavaScript and CSS Showcase</a> for a simple interactive example.</p>
     </main>
     <footer>
         <p>&copy; <span id="currentYear">2025</span> Your Project</p>
-        <!-- AUTO-STORAGE-INIT -->
-        <script>
-             // Request theme from parent on load, in case message was missed or for initial sync
-            // This is an additional measure. The DOMContentLoaded listener above handles initial localStorage.
-            // And the parent is supposed to send the theme on iframe load.
-            if (window.parent && window.parent !== window) {
-                try {
-                    const currentThemeInParent = parent.localStorage.getItem('theme');
-                     if (currentThemeInParent) {
-                        applyTheme(currentThemeInParent);
-                        localStorage.setItem('theme', currentThemeInParent); // Sync iframe's local storage
-                     }
-                } catch(e) {
-                    console.warn("iframe could not access parent's localStorage for theme sync on load.")
-                }
-            }
-        </script>
     </footer>
 </body>
 </html>

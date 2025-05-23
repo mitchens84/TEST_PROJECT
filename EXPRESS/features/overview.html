@@ -3,27 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Features Overview</title>
+    <title>Features Overview</title> <!-- generate-toc.js will lowercase this -->
     <link rel="stylesheet" href="../../assets/styles/main.css">
+    <script>
+        // Apply theme on initial load and listen for changes from parent
+        (function() { // Standard theme handling script
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark-theme-preload');
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.documentElement.classList.remove('dark-theme-preload');
+                    document.body.classList.remove('dark-theme');
+                }
+            }
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) applyTheme(savedTheme); else applyTheme('light');
+            } catch (e) { applyTheme('light'); }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                if (document.documentElement.classList.contains('dark-theme-preload')) {
+                     document.documentElement.classList.remove('dark-theme-preload');
+                }
+                 // Fallback for initial theme sync if message was missed
+                if (window.parent && window.parent !== window) {
+                    try {
+                        const parentTheme = parent.localStorage.getItem('theme');
+                        if (parentTheme) applyTheme(parentTheme);
+                    } catch(e) { console.warn("iframe could not access parent's localStorage for theme.");}
+                }
+            });
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'themeChange') {
+                    applyTheme(event.data.theme);
+                    try { localStorage.setItem('theme', event.data.theme); } catch (e) { /* ignore */ }
+                }
+            });
+        })();
+    <\/script>
+    <style>
+        /* Prevent FOUC (Flash Of Unstyled Content) for dark theme */
+        .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
+        /* Ensure links in header are visible in dark theme if not covered by main.css */
+        header a { color: var(--link-color); }
+        header a:hover { color: var(--link-hover-color); }
+    </style>
 </head>
-<body>
+<body style="padding: 20px;">
     <header>
         <nav>
             <a href="../../index.html">Home</a>
-            <a href="./page.html">Back to Features Section</a>
+            <a href="./page.html">Back to Full Features Details</a>
         </nav>
-        <h1>Features Overview</h1>
+        <h1>Quick Features Overview</h1>
     </header>
     <main>
-        <p>This is the overview page for the features of this project.</p>
+        <p>This page provides a brief summary of the Content Hub Template's main features. For more detailed information, please see the <a href="./page.html">full features page</a>.</p>
         <ul>
-            <li>Feature 1: Amazingness</li>
-            <li>Feature 2: Awesomeness</li>
-            <li>Feature 3: Stupendousness</li>
+            <li>Dynamic & Sortable Table of Contents</li>
+            <li>Light/Dark Theme Support (persisted)</li>
+            <li>Client-Side SHA256 Hashed Login</li>
+            <li>Organized Content in <code>EXPRESS/</code> Directory</li>
+            <li>Helper Scripts (<code>add-content.js</code>, <code>generate-toc.js</code>)</li>
         </ul>
     </main>
     <footer>
-        <p>&copy; 2024 Your Project</p>
+        <p>&copy; <span id="currentYear">2025</span> Your Project</p>
     </footer>
 </body>
 </html>

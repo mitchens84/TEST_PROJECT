@@ -140,12 +140,6 @@
             </div>
         </div>
         <hr>
-        <div id="navigation-area"> <!-- Added id="navigation-area" -->
-            <h3>Navigation</h3>
-            <button onclick="window.showContent('home')">Home</button>
-            <button onclick="window.showContent('test')">Test Page</button>
-        </div>
-        <hr>
         <div>
             <button id="theme-toggle-btn">Toggle Theme</button>
         </div>
@@ -184,24 +178,32 @@
 
         // Function for static navigation buttons in the sidebar
         window.showContent = function(pageKey) {
-            let pageUrl; // Will be assigned now
-            let buttonToActivate = null;
-            const navButtons = document.querySelectorAll('#navigation-area button');
-
+            // This function is now effectively deprecated as static nav buttons are removed.
+            // However, it's kept for potential future use or if any part of the app still calls it.
+            // The default page load is handled by the 'Initial page load logic' block.
+            console.warn('window.showContent is deprecated. Navigation should occur via TOC.', pageKey);
+            // Default behavior could be to load the first item from TOC or a specific known page.
+            // For now, let's make it load the introduction page if 'home' is requested.
             if (pageKey === 'home') {
-                pageUrl = 'test.html'; // Assign the URL
-                buttonToActivate = Array.from(navButtons).find(btn => btn.textContent.toLowerCase() === 'home');
-            } else if (pageKey === 'test') {
-                pageUrl = 'test.html'; // Assign the URL
-                buttonToActivate = Array.from(navButtons).find(btn => btn.textContent.toLowerCase() === 'test page');
-            }
-            // This function is primarily for the static buttons, pageUrl must be resolved here.
-
-            if (pageUrl) {
-                window.loadContent(pageUrl, buttonToActivate);
-                sessionStorage.setItem('currentPage', pageUrl);
+                 // Attempt to find "INTRODUCTION" in toc.html and load it
+                const introLink = document.querySelector('#dynamic-toc-content a[href*="introduction/page.html"]');
+                if (introLink && introLink.href) {
+                    window.loadContentIntoIframe(introLink.getAttribute('href'), introLink);
+                } else {
+                     // Fallback if intro link not found, load a default known page from EXPRESS.
+                     // This should ideally match one of the preferredOrder items.
+                     window.loadContentIntoIframe('EXPRESS/introduction/page.html', null);
+                }
+            } else if (pageKey === 'test') { // 'test' key is also deprecated
+                 // Attempt to find "COMPREHENSIVE STORAGE TEST" in toc.html and load it
+                const testLink = document.querySelector('#dynamic-toc-content a[href*="comprehensive-storage-test/index.html"]');
+                if (testLink && testLink.href) {
+                    window.loadContentIntoIframe(testLink.getAttribute('href'), testLink);
+                } else {
+                    window.loadContentIntoIframe('EXPRESS/comprehensive-storage-test/index.html', null);
+                }
             } else {
-                console.warn('showContent called with unknown pageKey:', pageKey);
+                console.warn('showContent called with unknown or unhandled pageKey:', pageKey);
             }
         };
 
@@ -319,19 +321,21 @@
             // Initial page load logic
             const lastPage = sessionStorage.getItem('currentPage');
             if (lastPage) {
-                let buttonToActivate = null;
-                const navButtons = document.querySelectorAll('#navigation-area button');
-                // Try to find if a static button corresponds to the lastPage
-                if (lastPage === 'test.html') { // Example, assuming test.html is what Home/Test Page load
-                    const homeLoadsTest = Array.from(navButtons).find(btn => btn.textContent.toLowerCase() === 'home' && btn.getAttribute('onclick')?.includes('home'));
-                    const testLoadsTest = Array.from(navButtons).find(btn => btn.textContent.toLowerCase() === 'test page' && btn.getAttribute('onclick')?.includes('test'));
-                    if (homeLoadsTest) buttonToActivate = homeLoadsTest;
-                    else if (testLoadsTest) buttonToActivate = testLoadsTest;
-                }
-                // For pages loaded from ToC, buttonToActivate will likely remain null, which is fine.
-                window.loadContent(lastPage, buttonToActivate);
+                // Try to find the corresponding link in TOC to "activate" it visually if needed
+                // This part is more complex as navButtons are gone.
+                // For now, just load the lastPage URL. Visual activation of TOC link can be enhanced later.
+                window.loadContent(lastPage, null); 
             } else {
-                window.showContent('home'); // Load default 'home' content (which loads test.html)
+                // Default to loading the "INTRODUCTION" page
+                // Look for the introduction link in the dynamically loaded TOC
+                // This needs to wait for TOC to be loaded or handle it more robustly
+                const introLink = document.querySelector('#dynamic-toc-content a[href*="introduction/page.html"]');
+                if (introLink && introLink.href) {
+                    window.loadContentIntoIframe(introLink.getAttribute('href'), introLink);
+                } else {
+                     // Fallback if TOC not loaded yet or intro link not found
+                     window.loadContent('EXPRESS/introduction/page.html', null);
+                }
             }
 
             // Ensure iframe gets theme on initial load if it's already there

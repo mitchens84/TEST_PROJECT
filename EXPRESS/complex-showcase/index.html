@@ -3,8 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complex Content Showcase</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Complex Content Showcase</title> <!-- generate-toc.js will uppercase this -->
+    <link rel="stylesheet" href="../../assets/styles/main.css"> <!-- Link to main.css -->
+    <link rel="stylesheet" href="style.css"> <!-- Local styles -->
+    <script>
+        // Apply theme on initial load and listen for changes from parent
+        (function() { // Standard theme handling script
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark-theme-preload');
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.documentElement.classList.remove('dark-theme-preload');
+                    document.body.classList.remove('dark-theme');
+                }
+                // Inform complex components about theme change if they have their own theme logic
+                window.dispatchEvent(new CustomEvent('appThemeChanged', { detail: { theme } }));
+            }
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) applyTheme(savedTheme); else applyTheme('light');
+            } catch (e) { applyTheme('light'); }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                if (document.documentElement.classList.contains('dark-theme-preload')) {
+                     document.documentElement.classList.remove('dark-theme-preload');
+                }
+                if (window.parent && window.parent !== window) {
+                    try {
+                        const parentTheme = parent.localStorage.getItem('theme');
+                        if (parentTheme) applyTheme(parentTheme);
+                    } catch(e) { console.warn("iframe could not access parent's localStorage for theme.");}
+                }
+            });
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'themeChange') {
+                    applyTheme(event.data.theme);
+                    try { localStorage.setItem('theme', event.data.theme); } catch (e) { /* ignore */ }
+                }
+            });
+        })();
+    <\/script>
+    <style>
+        /* Prevent FOUC (Flash Of Unstyled Content) for dark theme */
+        .dark-theme-preload { background-color: var(--background-color, #121212); color: var(--text-color, #e0e0e0); }
+        /* Basic header styling to ensure it's themed if not covered by its own style.css */
+        header { background-color: var(--primary-color); color: var(--button-text); padding: 10px 0; }
+        header h1 { color: var(--button-text); margin:0; padding-bottom: 5px; }
+        header nav a { color: var(--link-color); }
+        header nav a:hover { color: var(--link-hover-color); }
+        hr { border-color: var(--border-color); } /* Theme hr elements */
+    </style>
     <!-- D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <!-- Three.js -->
@@ -15,7 +64,7 @@
     <!-- Babel for JSX (optional, for inline JSX or separate .jsx files if not pre-compiled) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body>
+<body style="padding: 20px;"> <!-- Added padding for consistency -->
     <header>
         <h1>Complex Content Showcase</h1>
         <nav>

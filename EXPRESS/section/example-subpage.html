@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript and CSS Showcase</title> <!-- generate-toc.js will lowercase this -->
+    <title>Example Sub-Page</title> <!-- generate-toc.js will lowercase this -->
     <link rel="stylesheet" href="../../assets/styles/main.css">
     <script>
         // Apply theme on initial load and listen for changes from parent
@@ -46,68 +45,25 @@
     <style>
         /* Prevent FOUC (Flash Of Unstyled Content) for dark theme */
         .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
-        header a { color: var(--link-color); } /* Ensure header links are themed */
+        header a { color: var(--link-color); }
         header a:hover { color: var(--link-hover-color); }
-
-        /* Distinct CSS for this page */
-        .interactive-box {
-            background-color: var(--secondary-color);
-            color: var(--button-text); /* Assuming button-text is contrasting for secondary-color */
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-            text-align: center;
-            transition: transform 0.3s ease-in-out;
-        }
-        .interactive-box:hover {
-            transform: scale(1.05);
-        }
-        #demoButton {
-            background-color: var(--primary-color);
-            color: var(--button-text); /* Ensure this contrasts with primary-color */
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-        }
-        #demoText {
-            margin-top: 15px;
-            font-weight: bold;
-            min-height: 1.2em; /* Prevent layout shift */
-        }
     </style>
 </head>
 <body style="padding: 20px;">
     <header>
         <nav>
             <a href="../../index.html">Home</a>
-            <a href="./page.html">Back to Advanced Showcases</a>
+            <a href="./page.html">Back to Content Demonstrations</a>
         </nav>
-        <h1>JavaScript and CSS Showcase</h1>
+        <h1>Example Sub-Page</h1>
     </header>
     <main>
-        <p>This page demonstrates simple JavaScript interactivity and distinct CSS styling.</p>
-        
-        <div class="interactive-box">
-            <button id="demoButton">Click Me</button>
-            <p id="demoText">Hello!</p>
-        </div>
-
+        <p>This is an example of a sub-page within the "Content Demonstrations" section.</p>
+        <p>It demonstrates how secondary pages are linked and displayed in the Table of Contents.</p>
+        <p><a href="./page.html">Go back to the main Content Demonstrations page.</a></p>
     </main>
     <footer>
         <p>&copy; <span id="currentYear">2025</span> Your Project</p>
     </footer>
-
-    <script>
-        document.getElementById('demoButton').addEventListener('click', () => {
-            const demoText = document.getElementById('demoText');
-            if (demoText.textContent === 'Hello!') {
-                demoText.textContent = 'Button Clicked!';
-            } else {
-                demoText.textContent = 'Hello!';
-            }
-        });
-    </script>
 </body>
 </html>
