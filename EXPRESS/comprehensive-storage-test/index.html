@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Storage System Test Page</title>
-    <link rel="stylesheet" href="assets/styles/main.css">
+    <title>Comprehensive Storage Test</title>
+    <link rel="stylesheet" href="../../assets/styles/main.css">
     <script>
         // Apply theme on initial load and listen for changes from parent
         function applyTheme(theme) {
@@ -210,7 +210,7 @@
         <input type="text" id="simpleStorageKey" placeholder="e.g., myTestData">
         
         <label for="simpleStorageValue">Storage Value (JSON):</label>
-        <textarea id="simpleStorageValue" rows="3" placeholder=\'e.g., {"name": "Test", "value": 123} or "a simple string"\'></textarea>
+        <textarea id="simpleStorageValue" rows="3" placeholder='e.g., {"name": "Test", "value": 123} or "a simple string"'></textarea>
         
         <button id="saveSimpleBtn">Save with SimpleStorage</button>
         <button id="loadSimpleBtn">Load with SimpleStorage</button>
@@ -230,17 +230,11 @@
         <pre id="storageContent">Prefixed storage content will appear here.</pre>
     </div>
 
-    <!-- 
-        For this test page, we directly import auto-storage.js.
-        In a real application page, you would typically include the <!-- AUTO-STORAGE-INIT --> marker
-        and run `node setup-storage.js` to inject the script tag.
-        Or, if it's a Vite/React app, you'd import it in your main application entry point.
-    -->
     <script type="module">
         // Import storage systems
-        import autoStorage from './src/auto-storage.js'; // Initialize auto-storage for elements above
-        import SimpleStorage from './src/simple-storage.js';
-        import StorageManager from './src/storage-manager.js';
+        import autoStorage from '../../src/auto-storage.js'; // Adjusted path
+        import SimpleStorage from '../../src/simple-storage.js'; // Adjusted path
+        import StorageManager from '../../src/storage-manager.js'; // Adjusted path
 
         const simpleKeyInput = document.getElementById('simpleStorageKey');
         const simpleValueInput = document.getElementById('simpleStorageValue');
@@ -258,14 +252,14 @@
             try {
                 const value = JSON.parse(rawValue); // Assume JSON, or handle as string if parse fails
                 if (SimpleStorage.save(key, value)) {
-                    simpleResultsEl.textContent = `Saved to key "${key}":\\n${JSON.stringify(value, null, 2)}`;
+                    simpleResultsEl.textContent = `Saved to key "${key}":\n${JSON.stringify(value, null, 2)}`;
                 } else {
                     simpleResultsEl.textContent = `Failed to save to key "${key}". Check console.`;
                 }
             } catch (e) {
                  // If not valid JSON, try to save as string
                 if (SimpleStorage.save(key, rawValue)) {
-                    simpleResultsEl.textContent = `Saved to key "${key}" (as string):\\n${rawValue}`;
+                    simpleResultsEl.textContent = `Saved to key "${key}" (as string):\n${rawValue}`;
                 } else {
                     simpleResultsEl.textContent = `Failed to save to key "${key}" (as string). Check console.`;
                 }
@@ -281,7 +275,7 @@
             }
             const value = SimpleStorage.load(key);
             if (value !== null) {
-                simpleResultsEl.textContent = `Loaded from key "${key}":\\n${JSON.stringify(value, null, 2)}`;
+                simpleResultsEl.textContent = `Loaded from key "${key}":\n${JSON.stringify(value, null, 2)}`;
             } else {
                 simpleResultsEl.textContent = `No data found for key "${key}".`;
             }
@@ -293,8 +287,7 @@
                 simpleResultsEl.textContent = 'Error: Key is required for SimpleStorage.';
                 return;
             }
-            // if (SimpleStorage.remove(key)) { // Incorrect: method is named delete
-            if (SimpleStorage.delete(key)) { // Corrected to use .delete()
+            if (SimpleStorage.delete(key)) { 
                 simpleResultsEl.textContent = `Removed key "${key}" using SimpleStorage.`;
             } else {
                 simpleResultsEl.textContent = `Failed to remove key "${key}" or key not found.`;
@@ -315,7 +308,6 @@
                 StorageManager.clearAllPrefixed();
                 simpleResultsEl.textContent = 'All StorageManager prefixed items have been cleared.';
                 inspectPrefixedStorage(); // Update inspection view
-                // Optionally, alert and reload to see effect on auto-storage
                 alert("All StorageManager prefixed items have been cleared. Reloading page to see effect on auto-saved fields.");
                 location.reload();
             }
@@ -331,14 +323,9 @@
             }
         });
         
-        // --- Collapsible Sections Logic (from original template, ensure it works with auto-storage) ---
         document.addEventListener('DOMContentLoaded', function() {
             var collapsibles = document.getElementsByClassName("collapsible");
             for (var i = 0; i < collapsibles.length; i++) {
-                // Restore state for collapsibles handled by autoStorage
-                // autoStorage should handle this if data-storage-key or id is present.
-                // For manual collapsibles (if any), you might add specific load logic here.
-
                 collapsibles[i].addEventListener("click", function() {
                     this.classList.toggle("active");
                     var content = this.nextElementSibling;
@@ -347,27 +334,17 @@
                     } else {
                         content.style.maxHeight = content.scrollHeight + "px";
                     } 
-                    // autoStorage should pick up this change if the collapsible is configured for it.
                 });
 
-                // Initialize open state for non-auto-managed or if needed before autoStorage runs
-                // This part is tricky if autoStorage also manages it.
-                // Generally, autoStorage should handle the initial state based on stored data.
-                // If a collapsible is active (expanded) by default via autoStorage, reflect that.
                 const content = collapsibles[i].nextElementSibling;
-                if (collapsibles[i].classList.contains('active') && content) { // If autoStorage made it active
+                if (collapsibles[i].classList.contains('active') && content) { 
                      if (content.style.maxHeight !== content.scrollHeight + "px") {
                         content.style.maxHeight = content.scrollHeight + "px";
                      }
-                } else if (content) {
-                    // content.style.maxHeight = null; // Ensure it's closed if not active
                 }
             }
-            
-            // Initial inspection of storage
             inspectPrefixedStorage();
         });
-
     </script>
 </body>
 </html>

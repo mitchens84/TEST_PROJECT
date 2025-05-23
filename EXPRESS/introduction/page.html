@@ -3,28 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Introduction</title>
+    <title>Introduction</title> <!-- generate-toc.js will uppercase this -->
     <link rel="stylesheet" href="../../assets/styles/main.css">
+    <script>
+        // Apply theme on initial load and listen for changes from parent
+        (function() { // Standard theme handling script
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark-theme-preload');
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.documentElement.classList.remove('dark-theme-preload');
+                    document.body.classList.remove('dark-theme');
+                }
+            }
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) applyTheme(savedTheme); else applyTheme('light');
+            } catch (e) { applyTheme('light'); }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                if (document.documentElement.classList.contains('dark-theme-preload')) {
+                     document.documentElement.classList.remove('dark-theme-preload');
+                }
+                 // Fallback for initial theme sync if message was missed
+                if (window.parent && window.parent !== window) {
+                    try {
+                        const parentTheme = parent.localStorage.getItem('theme');
+                        if (parentTheme) applyTheme(parentTheme);
+                    } catch(e) { console.warn("iframe could not access parent's localStorage for theme.");}
+                }
+            });
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'themeChange') {
+                    applyTheme(event.data.theme);
+                    try { localStorage.setItem('theme', event.data.theme); } catch (e) { /* ignore */ }
+                }
+            });
+        })();
+    <\/script>
+    <style>
+        /* Prevent FOUC (Flash Of Unstyled Content) for dark theme */
+        .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
+        /* Ensure links in header are visible in dark theme if not covered by main.css */
+        header a { color: var(--link-color); }
+        header a:hover { color: var(--link-hover-color); }
+    </style>
 </head>
-<body>
+<body style="padding: 20px;">
     <header>
         <nav>
             <a href="../../index.html">Home</a>
         </nav>
-        <h1>Introduction</h1>
+        <h1>Welcome to the Content Hub Template!</h1>
     </header>
     <main>
-        <p>Content for the "introduction" section.</p>
-        
-        <h2>Files in this section:</h2>
-        <ul>
-            <li><a href="./page.html">page.html</a></li>
-        </ul>
+        <p>This project serves as a ready-to-use framework for creating modular content hubs. It's designed to help you organize and present a diverse collection of web content, such as static HTML pages, interactive components, or even small web applications, all within a consistent and user-friendly interface.</p>
+        <p>Key features include a collapsible sidebar for navigation, dynamic Table of Contents generation, user-selectable light/dark themes, and a basic password protection system.</p>
+        <p>Explore the different sections to see various features and content types in action!</p>
     </main>
     <footer>
         <p>&copy; <span id="currentYear">2025</span> Your Project</p>
-        <!-- AUTO-STORAGE-INIT -->
-  <script type="module" src="../../src/auto-storage.js"></script>
-  </footer>
+    </footer>
 </body>
 </html>

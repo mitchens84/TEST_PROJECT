@@ -21,3 +21,12 @@ dist/
 *.njsproj
 *.sln
 *.sw?
+
+# macOS
+**/.DS_Store
+
+# Windows
+Thumbs.db
+
+# Build logs
+build_logs/

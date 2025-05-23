@@ -3,13 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sample Page</title>
+    <title>Content Demonstrations</title>
     <link rel="stylesheet" href="../../assets/styles/main.css">
+    <script>
+        // Apply theme on initial load and listen for changes from parent
+        (function() { // Standard theme handling script
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark-theme-preload');
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.documentElement.classList.remove('dark-theme-preload');
+                    document.body.classList.remove('dark-theme');
+                }
+            }
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) applyTheme(savedTheme); else applyTheme('light');
+            } catch (e) { applyTheme('light'); }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                if (document.documentElement.classList.contains('dark-theme-preload')) {
+                     document.documentElement.classList.remove('dark-theme-preload');
+                }
+                 // Fallback for initial theme sync if message was missed
+                if (window.parent && window.parent !== window) {
+                    try {
+                        const parentTheme = parent.localStorage.getItem('theme');
+                        if (parentTheme) applyTheme(parentTheme);
+                    } catch(e) { console.warn("iframe could not access parent's localStorage for theme.");}
+                }
+            });
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'themeChange') {
+                    applyTheme(event.data.theme);
+                    try { localStorage.setItem('theme', event.data.theme); } catch (e) { /* ignore */ }
+                }
+            });
+        })();
+    <\/script>
+    <style>
+        /* Prevent FOUC (Flash Of Unstyled Content) for dark theme */
+        .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
+        header a { color: var(--link-color); }
+        header a:hover { color: var(--link-hover-color); }
+        .content-image { max-width: 300px; height: auto; border: 1px solid var(--border-color); padding: 5px; margin-top:15px; }
+    </style>
 </head>
-<body>
-    <h1>Sample Page</h1>
-    <p>This is a sample page within a section.</p>
-    <!-- AUTO-STORAGE-INIT -->
-    <script type="module" src="../../src/auto-storage.js"></script>
+<body style="padding: 20px;">
+    <header>
+        <nav>
+            <a href="../../index.html">Home</a>
+        </nav>
+        <h1>Content Demonstrations</h1>
+    </header>
+    <main>
+        <p>This page demonstrates various HTML elements and content types within the template.</p>
+        
+        <h2>Text Formatting</h2>
+        <p>This is a <strong>bold paragraph</strong>. <em>This is italic text.</em> <code>This is inline code.</code></p>
+        <p>You can also use <mark>marked text</mark> or <small>small text</small>.</p>
+        
+        <h2>Lists</h2>
+        <h3>Unordered List</h3>
+        <ul>
+            <li>Item A</li>
+            <li>Item B
+                <ul>
+                    <li>Sub-item B1</li>
+                    <li>Sub-item B2</li>
+                </ul>
+            </li>
+            <li>Item C</li>
+        </ul>
+
+        <h3>Ordered List</h3>
+        <ol>
+            <li>First step</li>
+            <li>Second step</li>
+            <li>Third step</li>
+        </ol>
+
+        <h2>Image Demonstration</h2>
+        <p>Below is a sample image (placeholder, as actual image creation is not possible here):</p>
+        <figure>
+            <!-- Placeholder for actual image. In a real scenario, sample-image.png would exist. -->
+            <div style="width:300px; height:200px; background-color:var(--secondary-color); color:var(--text-color); display:flex; align-items:center; justify-content:center; border:1px solid var(--border-color); text-align:center;">
+                Sample Image (300x200)
+            </div>
+            <figcaption>Fig.1 - A sample placeholder image.</figcaption>
+        </figure>
+        <p><em>(Note: The image above is a styled div acting as a placeholder. You would replace it with an <code>&lt;img src="sample-image.png" alt="Sample Demonstration Image" class="content-image"&gt;</code> tag if `sample-image.png` existed in this directory.)</em></p>
+        
+        <h2>Sub-Page Link</h2>
+        <p><a href="example-subpage.html">See an example sub-page</a> for more content.</p>
+    </main>
+    <footer>
+        <p>&copy; <span id="currentYear">2025</span> Your Project</p>
+    </footer>
 </body>
 </html>

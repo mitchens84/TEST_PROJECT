@@ -5,14 +5,14 @@
     "description": "A template for frontend projects with HTML, optional React/Vite, and utility scripts.",
     "main": "index.html",
     "scripts": {
-        "start": "echo \"No explicit start command for the root template. Serve TEMPLATE/index.html or specific content manually.\"",
-        "dev": "echo \"Run 'npm run dev' from within a specific Vite project if applicable, or serve TEMPLATE/index.html.\"",
-        "build": "sh ../build.sh",
-        "generate-toc": "node ../generate-toc.js",
-        "add-content": "node ../add-content.js",
-        "setup-storage": "node ../setup-storage.js",
-        "run-qc": "node ../run-qc.js",
-        "test": "echo \"Open TEMPLATE/test.html in a browser to run manual tests.\""
+        "start": "echo \"No explicit start command for the root template. Serve index.html or specific content manually.\"",
+        "dev": "echo \"Run 'npm run dev' from within a specific Vite project if applicable, or serve index.html.\"",
+        "build": "sh build.sh",
+        "generate-toc": "node generate-toc.js",
+        "add-content": "node add-content.js",
+        "setup-storage": "node setup-storage.js",
+        "run-qc": "node run-qc.js",
+        "test": "echo \"Open EXPRESS/comprehensive-storage-test/index.html in a browser to run manual tests.\""
     },
     "repository": {
         "type": "git",

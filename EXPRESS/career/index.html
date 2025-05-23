@@ -6,45 +6,101 @@
     <title>Career Proposal - Interactive</title>
     <!-- Lucide icons can remain if used by this host page, or be removed if not -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../../assets/styles/main.css"> <!-- Added link to main.css -->
+    <script>
+        // Apply theme on initial load and listen for changes from parent
+        (function() { // Standard theme handling script
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark-theme-preload');
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.documentElement.classList.remove('dark-theme-preload');
+                    document.body.classList.remove('dark-theme');
+                }
+            }
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) applyTheme(savedTheme); else applyTheme('light');
+            } catch (e) { applyTheme('light'); }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                if (document.documentElement.classList.contains('dark-theme-preload')) {
+                     document.documentElement.classList.remove('dark-theme-preload');
+                }
+                 // Fallback for initial theme sync if message was missed
+                if (window.parent && window.parent !== window) { // This page itself might be in an iframe
+                    try {
+                        const parentTheme = parent.localStorage.getItem('theme');
+                        if (parentTheme) applyTheme(parentTheme);
+                    } catch(e) { console.warn("iframe host could not access parent's localStorage for theme.");}
+                }
+                // Send theme to its own iframe content
+                const nestedIframe = document.getElementById('interactive-content-frame');
+                if (nestedIframe && nestedIframe.contentWindow) {
+                    try {
+                         const currentTheme = localStorage.getItem('theme') || 'light';
+                         nestedIframe.onload = function() {
+                            nestedIframe.contentWindow.postMessage({ type: 'themeChange', theme: currentTheme }, '*');
+                         };
+                         if (nestedIframe.contentDocument && nestedIframe.contentDocument.readyState === 'complete') {
+                            nestedIframe.contentWindow.postMessage({ type: 'themeChange', theme: currentTheme }, '*');
+                         }
+                    } catch(e) { console.warn("Could not postMessage theme to nested iframe on load."); }
+                }
+            });
+            window.addEventListener('message', function(event) { // For messages from its parent (index.html)
+                if (event.data && event.data.type === 'themeChange') {
+                    applyTheme(event.data.theme);
+                    try { localStorage.setItem('theme', event.data.theme); } catch (e) { /* ignore */ }
+
+                    // Relay theme change to its own iframe content
+                    const nestedIframe = document.getElementById('interactive-content-frame');
+                    if (nestedIframe && nestedIframe.contentWindow) {
+                         try {
+                            nestedIframe.contentWindow.postMessage({ type: 'themeChange', theme: event.data.theme }, '*');
+                         } catch(e) { console.warn("Could not relay theme to nested iframe.");}
+                    }
+                }
+            });
+        })();
+    <\/script>
     <style>
+        /* Prevent FOUC (Flash Of Unstyled Content) for dark theme */
+        .dark-theme-preload { background-color: var(--background-color, #121212); color: var(--text-color, #e0e0e0); }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: var(--font-sans-serif, sans-serif); /* Use CSS var from main.css or fallback */
             line-height: 1.6;
             margin: 0;
             padding: 0;
-            color: #333;
+            color: var(--text-color); /* Use CSS var */
             display: flex;
             flex-direction: column;
             height: 100vh; /* Full viewport height */
             overflow: hidden; /* Prevent scrolling on body if iframe handles it */
+            /* Padding is applied to body by default for consistency, adjust if iframe needs full bleed */
         }
         header {
-            background-color: #1a56db;
-            color: white;
+            background-color: var(--primary-color); /* Use CSS var */
+            color: var(--button-text); /* Use CSS var for contrast */
             padding: 10px 20px;
             text-align: center;
         }
         header h1 {
             margin: 0;
-            color: white; /* Ensure h1 color is white */
+            color: var(--button-text); /* Ensure h1 color contrasts with primary-color */
             font-size: 1.5em;
         }
         #interactive-content-frame {
             flex-grow: 1; /* Allows iframe to take available space */
             width: 100%;
             height: 100%; /* Take full height of its container */
-            border: none; /* No border for the iframe */
+            border: 1px solid var(--iframe-border-color); /* Use CSS var, or none if preferred */
         }
-        .container { /* This class might be from the old setup, can be removed or repurposed */
-            padding: 20px;
-            flex-grow: 1;
-            overflow-y: auto; /* If content outside iframe needs scrolling */
-        }
-        /* Removed styles that were specific to the old React CDN setup */
-        /* Styles for h1, h2, h3, card, note can be removed if not used by this host page */
+        /* .container class can be removed if not used */
     </style>
 </head>
-<body>
+<body style="padding: 20px;"> <!-- Added padding for consistency -->
     <header>
         <h1>Interactive Career Proposal</h1>
     </header>
