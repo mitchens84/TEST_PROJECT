@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Content Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/styles/main.css">
     <style>
         /* General body styles are in main.css */
@@ -122,6 +123,7 @@
     <script>
         // Authentication Check and Redirection
         (function() {
+            // console.log("Checking authentication status..."); // Log can be removed or kept
             const isAuthenticated = sessionStorage.getItem('isAuthenticated');
             if (isAuthenticated !== 'true') {
                 // Optional: Store the page they were trying to access to redirect back later
@@ -132,16 +134,21 @@
     </script>
 
     <div id="sidebar">
+        <div> <!-- Wrapper for theme button -->
+            <button id="theme-toggle-btn">Toggle Theme</button>
+        </div>
+        <hr>
+        <div id="search-container" style="padding: 10px 0;">
+            <input type="search" id="toc-search" placeholder="Search content..." style="width: 100%; box-sizing: border-box; padding: 8px;">
+        </div>
+        <hr>
         <div id="toc-container">
             <h2>Table of Contents</h2>
             <div id="dynamic-toc-content">
                 <!-- toc.html will be loaded here -->
                 <p>Loading Table of Contents...</p> 
             </div>
-        </div>
-        <hr>
-        <div>
-            <button id="theme-toggle-btn">Toggle Theme</button>
+            <!-- Removed extra closing div from here -->
         </div>
     </div>
     <div id="content-area">
@@ -321,22 +328,60 @@
             // Initial page load logic
             const lastPage = sessionStorage.getItem('currentPage');
             if (lastPage) {
-                // Try to find the corresponding link in TOC to "activate" it visually if needed
-                // This part is more complex as navButtons are gone.
-                // For now, just load the lastPage URL. Visual activation of TOC link can be enhanced later.
                 window.loadContent(lastPage, null); 
             } else {
-                // Default to loading the "INTRODUCTION" page
-                // Look for the introduction link in the dynamically loaded TOC
-                // This needs to wait for TOC to be loaded or handle it more robustly
                 const introLink = document.querySelector('#dynamic-toc-content a[href*="introduction/page.html"]');
                 if (introLink && introLink.href) {
                     window.loadContentIntoIframe(introLink.getAttribute('href'), introLink);
                 } else {
-                     // Fallback if TOC not loaded yet or intro link not found
                      window.loadContent('EXPRESS/introduction/page.html', null);
                 }
             }
+
+            // TOC Search Functionality
+            const searchInput = document.getElementById('toc-search');
+            const tocContentDiv = document.getElementById('dynamic-toc-content');
+
+            searchInput.addEventListener('input', function(event) {
+                const searchTerm = event.target.value.toUpperCase();
+
+                if (!tocContentDiv.querySelector('ul')) {
+                    return; 
+                }
+
+                const allTopLevelLi = tocContentDiv.querySelectorAll(':scope > ul > li');
+
+                allTopLevelLi.forEach(mainLi => {
+                    let mainLiVisible = false;
+                    const mainLink = mainLi.querySelector(':scope > a, :scope > span'); 
+                    
+                    if (mainLink && mainLink.textContent.toUpperCase().includes(searchTerm)) {
+                        mainLiVisible = true;
+                    }
+
+                    const subUl = mainLi.querySelector(':scope > ul');
+                    let hasVisibleSubItem = false;
+                    if (subUl) {
+                        const allSubLevelLi = subUl.querySelectorAll(':scope > li');
+                        allSubLevelLi.forEach(subLi => {
+                            const subLink = subLi.querySelector(':scope > a');
+                            if (subLink && subLink.textContent.toUpperCase().includes(searchTerm)) {
+                                subLi.style.display = ''; 
+                                hasVisibleSubItem = true;
+                            } else {
+                                subLi.style.display = 'none'; 
+                            }
+                        });
+                    }
+
+                    if (mainLiVisible || hasVisibleSubItem) {
+                        mainLi.style.display = ''; 
+                        if (subUl) subUl.style.display = ''; 
+                    } else {
+                        mainLi.style.display = 'none'; 
+                    }
+                });
+            });
 
             // Ensure iframe gets theme on initial load if it's already there
             // This is a bit redundant if loadContent also triggers it, but good for safety
