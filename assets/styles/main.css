@@ -16,6 +16,7 @@
     --access-denied-background: #f5f5f5;
     --access-denied-text: #333;
     --access-denied-header-text: #d9534f;
+    --primary-color-transparent: rgba(0, 123, 255, 0.25); /* For light theme focus rings */
 }
 
 body.dark-theme {
@@ -35,10 +36,11 @@ body.dark-theme {
     --access-denied-background: #2c2c2c;
     --access-denied-text: #e0e0e0;
     --access-denied-header-text: #f08080; /* Lighter red for dark theme */
+    --primary-color-transparent: rgba(77, 171, 247, 0.3); /* For dark theme focus rings (adjust as needed) */
 }
 
 body {
-    font-family: sans-serif;
+    font-family: 'Lato', sans-serif;
     line-height: 1.6;
     margin: 0;
     /* padding: 20px; Removed padding from body as it's handled by content-area */
@@ -60,6 +62,10 @@ a:hover {
 }
 
 /* Basic button styling, can be overridden by more specific selectors */
+input, select, textarea, button { /* Apply Lato to form elements as well */
+    font-family: 'Lato', sans-serif;
+}
+
 button {
     background-color: var(--button-background);
     color: var(--button-text);
@@ -102,22 +108,23 @@ button:hover {
 #dynamic-toc-content > ul > li > span {
     text-decoration: none;
     color: var(--sidebar-text);
-    font-weight: 500; /* Slightly bolder for uppercase primary titles */
+    font-weight: 700; /* Bolder for primary titles */
+    font-size: 0.9rem; /* Base size for primary titles */
     display: block;
     padding: 10px 15px;
     transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    /* text-transform: uppercase; /* Reinforced, though JS already does it */
 }
 
 /* Specific styling for top-level non-clickable spans (if different from links) */
 #dynamic-toc-content > ul > li > span {
     cursor: default; /* Already non-clickable, so default cursor is appropriate */
-    /* font-weight: 500; is inherited from above, so it matches linked primary titles */
 }
 
 
 #dynamic-toc-content a:hover { /* Hover effect only for actual links */
-    color: var(--link-hover-color); /* Use specific link hover color from variables */
-    background-color: var(--background-color); /* Subtle background change on hover, using main background for contrast */
+    color: var(--link-hover-color); 
+    background-color: var(--background-color); 
     text-decoration: none; /* Keep underline off on hover, or set to underline if preferred */
 }
 
@@ -146,15 +153,17 @@ button:hover {
 }
 
 #dynamic-toc-content ul ul li a {
-    padding: 8px 15px; /* Slightly less vertical padding for sub-items */
-    font-size: 0.95em;  /* Slightly smaller font for sub-items */
-    color: var(--sidebar-text); /* Ensure sub-item links also use sidebar text color */
+    padding: 8px 15px 8px 20px; /* Adjusted padding for deeper indent visual */
+    font-size: 0.8rem;  /* Smaller font for sub-items */
+    font-weight: 400; /* Normal weight for sub-items */
+    color: var(--sidebar-text); 
+    /* text-transform: uppercase; /* Reinforced, though JS already does it */
 }
 
 #dynamic-toc-content ul ul li a:hover {
     color: var(--link-hover-color);
-    background-color: var(--background-color); /* Consistent hover background */
-    text-decoration: none; /* Keep underline off on hover, or set to underline if preferred */
+    background-color: var(--background-color); 
+    text-decoration: none; 
 }
 
 /* Style for the "Loading Table of Contents..." text, if it's within #dynamic-toc-content */
@@ -199,6 +208,30 @@ body.login-page-body { /* Add a specific class to body of login.html if needed f
     margin-bottom: 8px;
     color: var(--text-color);
     font-weight: bold;
+}
+
+/* TOC Search Input Styling */
+#toc-search {
+    /* width: 100%; is set inline in index.html via style attribute */
+    /* padding: 8px; is set inline in index.html via style attribute */
+    /* box-sizing: border-box; is set inline in index.html via style attribute */
+    margin-bottom: 10px; /* Space below search bar, before next hr or TOC */
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.9em; /* Slightly smaller font for search input */
+}
+
+#toc-search::placeholder {
+    color: var(--secondary-color);
+    opacity: 0.7;
+}
+
+#toc-search:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color-transparent, rgba(0,123,255,0.25)); /* Define --primary-color-transparent if not already */
 }
 
 #login-form input[type="password"] {

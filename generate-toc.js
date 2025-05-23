@@ -23,11 +23,8 @@ function extractTitle(filePath, isPrimaryPage) {
     title = path.basename(path.dirname(filePath)); // Fallback on error
   }
 
-  if (isPrimaryPage) {
-    return title.toUpperCase();
-  } else {
-    return title.toLowerCase();
-  }
+  // Ensure all titles are uppercase for TOC display
+  return title.toUpperCase();
 }
 
 /**
