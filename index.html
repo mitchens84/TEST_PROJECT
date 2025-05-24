@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Content Hub</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- 
     <script>
-      // Theme pre-application for documentElement to prevent FOUC
+      // Theme pre-application for documentElement to prevent FOUC - REMOVED
       (function() {
         try {
           const savedTheme = localStorage.getItem('theme');
@@ -23,7 +24,8 @@
           console.warn('Initial theme pre-application script failed:', e);
         }
       })();
-    </script>
+    </script> 
+    -->
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/styles/main.css">
     <style>
@@ -139,7 +141,7 @@
 </head>
 <body>
     <button id="sidebar-toggle-btn">☰</button>
-    <script type="module" src="src/env-config.js" defer></script>
+    <!-- <script type="module" src="src/env-config.js" defer></script> -->
     <script>
         // Authentication Check and Redirection
         (function() {
@@ -253,24 +255,43 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Theme Toggle Functionality
             const themeToggleButton = document.getElementById('theme-toggle-btn');
-            const body = document.body;
-            const iframe = document.querySelector('#home-content iframe'); // Get iframe reference early
+            // const body = document.body; // Define body inside DOMContentLoaded or pass to applyTheme
+            // const iframe = document.querySelector('#home-content iframe'); // Get iframe reference early
 
             function applyTheme(theme) {
-                const newTheme = theme === 'dark' ? 'dark' : 'light'; // Sanitize
-                if (!body) { 
-                    console.error('Theme application: document.body is not available.'); 
+                // Ensure document.body is available before proceeding.
+                if (!document.body) { 
+                    console.error('Theme application (DOMContentLoaded): document.body is not available.');
                     return; 
                 }
+                // If document.documentElement is also styled by this function, check it too:
+                // if (!document.documentElement) {
+                //     console.error('Theme application (DOMContentLoaded): document.documentElement is not available.');
+                //     return;
+                // }
+
+                const newTheme = theme === 'dark' ? 'dark' : 'light';
+
+                // Apply to body
                 if (newTheme === 'dark') {
-                    body.classList.add('dark-theme');
+                    document.body.classList.add('dark-theme');
                 } else {
-                    body.classList.remove('dark-theme');
+                    document.body.classList.remove('dark-theme');
                 }
+                
+                // If you also want to manage classes on document.documentElement from here:
+                // For example, if the main.css expects html.dark-theme for some global styles
+                if (document.documentElement) {
+                   if (newTheme === 'dark') {
+                       document.documentElement.classList.add('dark-theme'); // Optional: if your CSS uses html.dark-theme
+                   } else {
+                       document.documentElement.classList.remove('dark-theme'); // Optional
+                   }
+                }
+
                 localStorage.setItem('theme', newTheme);
 
-                // Send message to iframe
-                const contentIframe = document.querySelector('#home-content iframe'); // Re-query in case it's not loaded initially
+                const contentIframe = document.querySelector('#home-content iframe');
                 if (contentIframe && contentIframe.contentWindow) {
                     contentIframe.contentWindow.postMessage({ type: 'themeChange', theme: newTheme }, '*');
                 }
@@ -290,6 +311,7 @@
                 applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
             });
 
+            /*
             const tocTargetDiv = document.getElementById('dynamic-toc-content');
 
             if (typeof window.envConfig === 'undefined') {
@@ -361,7 +383,7 @@
                     }, 100); // 100ms delay, adjust as needed or use MutationObserver for robustness
                 }
             }
-
+            */
             // Sidebar Toggle Functionality
             const sidebar = document.getElementById('sidebar');
             const toggleButton = document.getElementById('sidebar-toggle-btn');
@@ -440,6 +462,113 @@
                  }
             }
         });
+    </script>
+    <script type="module">
+      async function loadConfigAndInitialize() {
+        const tocTargetDiv = document.getElementById('dynamic-toc-content');
+        const homeContentDiv = document.getElementById('home-content');
+        const searchInput = document.getElementById('toc-search');
+        // const initialLoadLogicContainer = document.getElementById('initial-page-load-logic-container'); // Assuming you move initial load logic here
+
+        function showFatalError(message) {
+          if (tocTargetDiv) tocTargetDiv.innerHTML = `<p style="color: red; font-weight: bold;">${message}</p>`;
+          if (homeContentDiv) homeContentDiv.innerHTML = `<p style="padding:20px; color:red;">Application failed to initialize: ${message}</p>`;
+          if (searchInput) searchInput.disabled = true;
+          // Consider disabling other interactive elements too, like theme toggle
+          const themeToggleButton = document.getElementById('theme-toggle-btn');
+          if (themeToggleButton) themeToggleButton.disabled = true;
+        }
+
+        try {
+          // Attempt to import env-config.js. Ensure the path is correct.
+          // If index.html is at the root, and src is a top-level folder, './src/env-config.js' is correct.
+          const configModule = await import('./src/env-config.js'); 
+          window.envConfig = configModule.default; 
+          console.log('env-config.js loaded successfully via dynamic import:', window.envConfig);
+
+          // Clear any previous error shown in TOC area if it was there from a different script
+          if (tocTargetDiv && tocTargetDiv.innerHTML.includes("Critical Error")) {
+            tocTargetDiv.innerHTML = '<p>Loading Table of Contents...</p>'; 
+          }
+          if (searchInput) searchInput.disabled = false;
+          const themeToggleButton = document.getElementById('theme-toggle-btn');
+          if (themeToggleButton) themeToggleButton.disabled = false;
+          
+          // ----- Start: TOC and Initial Page Load Logic -----
+          if (tocTargetDiv) {
+            fetch('toc.html')
+              .then(response => {
+                if (!response.ok) {
+                  throw new Error('Network response was not ok for toc.html: ' + response.status + ' ' + response.statusText);
+                }
+                return response.text();
+              })
+              .then(html => {
+                tocTargetDiv.innerHTML = html;
+                tocTargetDiv.addEventListener('click', function(event) {
+                  let targetElement = event.target;
+                  while (targetElement && targetElement !== this && targetElement.tagName !== 'A') {
+                    targetElement = targetElement.parentElement;
+                  }
+                  if (targetElement && targetElement.tagName === 'A' && targetElement.hasAttribute('href')) {
+                    event.preventDefault();
+                    const pageUrl = targetElement.getAttribute('href');
+                    if (pageUrl) {
+                      window.loadContentIntoIframe(pageUrl, targetElement);
+                    }
+                  }
+                });
+
+                // Initial page load logic, now dependent on successful TOC load as well
+                const lastPage = sessionStorage.getItem('currentPage');
+                if (lastPage) {
+                  window.loadContent(lastPage, null);
+                } else {
+                  // setTimeout just in case querySelector needs a moment after innerHTML
+                  setTimeout(() => { 
+                    const introLink = document.querySelector('#dynamic-toc-content a[href*="introduction/page.html"]');
+                    if (introLink && introLink.href) {
+                      window.loadContentIntoIframe(introLink.getAttribute('href'), introLink);
+                    } else {
+                      console.warn('Introduction link not found in TOC, loading default EXPRESS/introduction/page.html');
+                      window.loadContent('EXPRESS/introduction/page.html', null);
+                    }
+                  }, 0); // Minimal delay
+                }
+              })
+              .catch(error => {
+                console.error('Error loading Table of Contents:', error);
+                if (tocTargetDiv) {
+                   tocTargetDiv.innerHTML = '<p style="color: red;">Error loading Table of Contents. Details: ' + error.message + '</p>';
+                }
+                 // If TOC fails, home content should also reflect an error or stop
+                if (homeContentDiv) homeContentDiv.innerHTML = '<p style="padding:20px; color:red;">Content loading suspended due to TOC error.</p>';
+              });
+          } else {
+            console.error('Error: Target div for ToC (dynamic-toc-content) not found.');
+            showFatalError('UI component for Table of Contents is missing.');
+          }
+          // ----- End: TOC and Initial Page Load Logic -----
+
+        } catch (error) {
+          console.error('Fatal Error: Failed to load or process src/env-config.js.', error);
+          // Check if the error is due to fetch returning HTML (like a 404 page)
+          if (error instanceof SyntaxError && error.message.toLowerCase().includes("unexpected token '<'")) {
+            showFatalError('Failed to load critical configuration (env-config.js). The server returned HTML instead of JavaScript. This often means the file was not found (404 error) or the server is misconfigured. Please check the file path and server settings.');
+          } else {
+            showFatalError('Failed to load critical configuration (env-config.js). Details: ' + error.message);
+          }
+        }
+      }
+      
+      // Run initialization
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadConfigAndInitialize);
+      } else {
+        // DOMContentLoaded has already fired, run now.
+        // This path might be taken if this script itself is deferred or placed very late.
+        loadConfigAndInitialize();
+      }
     </script>
 </body>
 </html>

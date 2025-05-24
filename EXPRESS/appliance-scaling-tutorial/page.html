@@ -5,6 +5,8 @@
          <meta name="viewport" content="width=device-width, initial-scale=1.0">
          <title>Appliance Scaling Tutorial</title>
          <link rel="stylesheet" href="../../assets/styles/main.css">
+         <script src="https://d3js.org/d3.v7.min.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
          <!-- Standard Theme Handling Script (ensure it's the robust version) -->
          <script>
            // Theme pre-application for documentElement
@@ -41,6 +43,8 @@
 
              /* Dark theme specific overrides for this page, if needed beyond main.css */
              body.dark-theme .appliance-section { background-color: var(--sidebar-background); /* Already uses var */ }
+             #d3-chart-container svg { display: block; margin: auto; } /* Center SVG if smaller than container */
+             #three-cube-container canvas { display: block; } /* Ensure canvas is block for layout */
          </style>
      </head>
      <body>
@@ -101,37 +105,78 @@
                  </ul>
                  <p>Other factors also come into play, like the cost of components (compressors, heating elements), insulation thickness, and manufacturing complexity, which might not scale perfectly with simple geometric formulas but are often related.</p>
              </section>
+
+            <section class="appliance-section">
+                <h2>Visualizing Scaling with D3.js</h2>
+                <p>This bar chart (created with D3.js) shows how Volume (L³) and Surface Area (6L²) change for different side lengths (L) of a cube.</p>
+                <div id="d3-chart-container" style="width: 100%; min-height: 350px; background-color: var(--background-color); border: 1px solid var(--border-color); position: relative;">
+                    <!-- D3 chart will be rendered here -->
+                </div>
+                <p>Observe how volume grows much faster than surface area.</p>
+            </section>
+
+            <section class="appliance-section">
+                <h2>3D Visualization with Three.js</h2>
+                <p>This interactive 3D cube (created with Three.js) also demonstrates scaling. Use the slider to change its size.</p>
+                <div>
+                    <label for="three-cube-size">Cube Size:</label>
+                    <input type="range" id="three-cube-size" name="three-cube-size" min="0.5" max="3" value="1" step="0.1">
+                    <span id="three-cube-size-value" class="output">1</span>
+                </div>
+                <div id="three-cube-container" style="width: 100%; height: 300px; background-color: var(--background-color); border: 1px solid var(--border-color); position: relative;">
+                    <!-- Three.js scene will be rendered here -->
+                </div>
+            </section>
          </main>
          <script>
+             // Theme-related variables for Three.js
+             let threeScene, threeCamera, threeRenderer, threeCube;
+
+             function updateThreeJSTheme(theme) {
+                if (threeScene && threeRenderer) {
+                    const bgColor = theme === 'dark' ? 0x121212 : 0xffffff; // Match CSS dark/light
+                    threeScene.background = new THREE.Color(bgColor);
+                }
+             }
+            
+             function applyLocalTheme(theme) { // Renamed to avoid conflict with parent's applyTheme if any confusion
+                const newTheme = theme === 'dark' ? 'dark' : 'light';
+                if (document.body) {
+                    if (newTheme === 'dark') document.body.classList.add('dark-theme');
+                    else document.body.classList.remove('dark-theme');
+                }
+                if (document.documentElement) {
+                    if (newTheme === 'dark') document.documentElement.classList.add('dark-theme');
+                    else document.documentElement.classList.remove('dark-theme');
+                }
+                if (typeof updateThreeJSTheme === 'function') {
+                    updateThreeJSTheme(newTheme);
+                }
+             }
+
+
              // Standard Theme Handling (DOMContentLoaded and message listener part)
              window.addEventListener('DOMContentLoaded', () => {
                  if (document.documentElement && document.documentElement.classList.contains('dark-theme-preload-html')) {
                      document.documentElement.classList.remove('dark-theme-preload-html');
                  }
-                 // Apply actual body theme based on initial localStorage
+                 
                  try {
                     const currentTheme = localStorage.getItem('theme');
-                    if (currentTheme && document.body) { // Robustness check
-                        if (currentTheme === 'dark') document.body.classList.add('dark-theme');
-                        else document.body.classList.remove('dark-theme');
-                    }
-                 } catch(e) { /* ignore */ }
+                    if (currentTheme) applyLocalTheme(currentTheme); else applyLocalTheme('light');
+                 } catch(e) { applyLocalTheme('light'); }
 
                  window.addEventListener('message', function(event) {
                      if (event.data && event.data.type === 'themeChange') {
-                         if (document.body) { // Robustness check
-                             if (event.data.theme === 'dark') document.body.classList.add('dark-theme');
-                             else document.body.classList.remove('dark-theme');
-                         }
+                         applyLocalTheme(event.data.theme);
                          try { localStorage.setItem('theme', event.data.theme); } catch (e) { /* ignore */ }
                      }
                  });
                  if (window.parent && window.parent !== window) {
                     try {
                         const currentThemeInParent = parent.localStorage.getItem('theme');
-                        if (currentThemeInParent && document.body) {
-                            if (currentThemeInParent === 'dark') document.body.classList.add('dark-theme');
-                            else document.body.classList.remove('dark-theme');
+                        if (currentThemeInParent) {
+                            applyLocalTheme(currentThemeInParent);
                             localStorage.setItem('theme', currentThemeInParent);
                         }
                     } catch(e) { console.warn("iframe could not access parent's localStorage for theme sync on load.") }
@@ -179,7 +224,176 @@
                  }
                  genericSizeSlider.addEventListener('input', updateGenericDemo);
                  updateGenericDemo(); // Initial call
+
+                // D3 Chart Rendering
+                renderD3Chart();
+
+                // Three.js Scene Initialization
+                initThreeJS();
+                const threeCubeSizeSlider = document.getElementById('three-cube-size');
+                if (threeCubeSizeSlider) {
+                   threeCubeSizeSlider.addEventListener('input', (event) => {
+                       updateThreeJSCubeSize(parseFloat(event.target.value));
+                   });
+                   updateThreeJSCubeSize(parseFloat(threeCubeSizeSlider.value)); // Initial call
+                }
+                
+                window.addEventListener('resize', () => {
+                    renderD3Chart(); 
+                    // Three.js resize is handled in its own listener within initThreeJS
+                });
              });
+
+            function renderD3Chart() {
+                const data = [
+                    { L: 1, volume: 1, surface: 6 }, { L: 2, volume: 8, surface: 24 },
+                    { L: 3, volume: 27, surface: 54 }, { L: 4, volume: 64, surface: 96 },
+                    { L: 5, volume: 125, surface: 150 }
+                ];
+
+                const container = document.getElementById('d3-chart-container');
+                if (!container) return;
+                container.innerHTML = ''; 
+
+                const margin = {top: 30, right: 30, bottom: 70, left: 60},
+                      width = container.clientWidth - margin.left - margin.right,
+                      height = 350 - margin.top - margin.bottom;
+
+                const svg = d3.select(container)
+                    .append("svg")
+                        .attr("width", width + margin.left + margin.right)
+                        .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                const x0 = d3.scaleBand()
+                    .domain(data.map(d => `L=${d.L}`))
+                    .range([0, width])
+                    .paddingInner(0.2);
+
+                const x1 = d3.scaleBand()
+                    .domain(['volume', 'surface'])
+                    .range([0, x0.bandwidth()])
+                    .padding(0.05);
+                
+                const yMax = d3.max(data, d => Math.max(d.volume, d.surface));
+                const y = d3.scaleLinear()
+                    .domain([0, yMax * 1.1 || 10]) 
+                    .range([height, 0]);
+
+                svg.append("g")
+                    .selectAll("g")
+                    .data(data)
+                    .join("g")
+                        .attr("transform", d => `translate(${x0(`L=${d.L}`)},0)`)
+                    .selectAll("rect")
+                    .data(d => [{key: 'volume', value: d.volume}, {key: 'surface', value: d.surface}])
+                    .join("rect")
+                        .attr("x", d => x1(d.key))
+                        .attr("y", d => y(d.value))
+                        .attr("width", x1.bandwidth())
+                        .attr("height", d => height - y(d.value))
+                        .attr("fill", d => d.key === 'volume' ? 'var(--primary-color)' : 'var(--secondary-color)');
+                
+                svg.append("g")
+                   .attr("transform", `translate(0,${height})`)
+                   .call(d3.axisBottom(x0))
+                   .selectAll("text")
+                       .style("fill", "var(--text-color)"); 
+
+                svg.append("g")
+                   .call(d3.axisLeft(y))
+                   .selectAll("text")
+                       .style("fill", "var(--text-color)"); 
+                
+                svg.append("text")
+                   .attr("text-anchor", "middle")
+                   .attr("x", width / 2)
+                   .attr("y", height + margin.bottom / 1.5 + 10)
+                   .text("Side Length (L)")
+                   .style("fill", "var(--text-color)");
+
+                svg.append("text")
+                   .attr("text-anchor", "middle")
+                   .attr("transform", "rotate(-90)")
+                   .attr("y", -margin.left + 20)
+                   .attr("x", -height / 2)
+                   .text("Value (Units / Sq. Units)")
+                   .style("fill", "var(--text-color)");
+                    
+                const legend = svg.append("g")
+                   .attr("font-family", "sans-serif")
+                   .attr("font-size", 10)
+                   .attr("text-anchor", "end")
+                   .selectAll("g")
+                   .data([{key: 'volume', color: 'var(--primary-color)', text: 'Volume (L³)'}, {key: 'surface', color: 'var(--secondary-color)', text: 'Surface Area (6L²)'}])
+                   .join("g")
+                       .attr("transform", (d, i) => `translate(0,${i * 20})`);
+
+                legend.append("rect")
+                   .attr("x", width - 19)
+                   .attr("width", 19)
+                   .attr("height", 19)
+                   .attr("fill", d => d.color);
+
+                legend.append("text")
+                   .attr("x", width - 24)
+                   .attr("y", 9.5)
+                   .attr("dy", "0.32em")
+                   .text(d => d.text)
+                   .style("fill", "var(--text-color)");
+            }
+
+            function initThreeJS() {
+                const container = document.getElementById('three-cube-container');
+                if (!container) return;
+
+                threeScene = new THREE.Scene();
+                // Initial background color set based on current document style (which should be themed by applyLocalTheme)
+                threeScene.background = new THREE.Color(getComputedStyle(document.body).getPropertyValue('--background-color').trim() || 0xffffff);
+
+                threeCamera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                threeCamera.position.z = 3;
+
+                threeRenderer = new THREE.WebGLRenderer({ antialias: true });
+                threeRenderer.setSize(container.clientWidth, container.clientHeight);
+                container.innerHTML = ''; 
+                container.appendChild(threeRenderer.domElement);
+
+                const geometry = new THREE.BoxGeometry(1, 1, 1);
+                const material = new THREE.MeshStandardMaterial({ color: 0x007bff, metalness: 0.5, roughness: 0.5 }); 
+                threeCube = new THREE.Mesh(geometry, material);
+                threeScene.add(threeCube);
+                
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+                threeScene.add(ambientLight);
+                const pointLight = new THREE.PointLight(0xffffff, 0.8);
+                pointLight.position.set(2, 3, 4);
+                threeScene.add(pointLight);
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    threeCube.rotation.x += 0.005;
+                    threeCube.rotation.y += 0.005;
+                    threeRenderer.render(threeScene, threeCamera);
+                }
+                animate();
+
+                window.addEventListener('resize', () => {
+                   if (!container || !threeRenderer || !threeCamera) return;
+                   threeCamera.aspect = container.clientWidth / container.clientHeight;
+                   threeCamera.updateProjectionMatrix();
+                   threeRenderer.setSize(container.clientWidth, container.clientHeight);
+                });
+            }
+
+            function updateThreeJSCubeSize(size) {
+                if (threeCube) {
+                    threeCube.scale.set(size, size, size);
+                }
+                const sizeValueDisplay = document.getElementById('three-cube-size-value');
+                if(sizeValueDisplay) sizeValueDisplay.textContent = size.toFixed(1);
+            }
          <\/script>
          <footer><p>&copy; ${new Date().getFullYear()} Your Project</p></footer>
      </body>
