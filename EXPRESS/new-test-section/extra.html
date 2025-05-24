@@ -9,12 +9,23 @@
         // Apply theme on initial load and listen for changes from parent
         (function() { // Standard theme handling script
             function applyTheme(theme) {
-                if (theme === 'dark') {
-                    document.documentElement.classList.add('dark-theme-preload');
-                    document.body.classList.add('dark-theme');
+                if (document.documentElement) {
+                    if (theme === 'dark') {
+                        document.documentElement.classList.add('dark-theme-preload');
+                    } else {
+                        document.documentElement.classList.remove('dark-theme-preload');
+                    }
                 } else {
-                    document.documentElement.classList.remove('dark-theme-preload');
-                    document.body.classList.remove('dark-theme');
+                    console.error('Extra page theme: document.documentElement is not available.');
+                }
+                if (document.body) {
+                    if (theme === 'dark') {
+                        document.body.classList.add('dark-theme');
+                    } else {
+                        document.body.classList.remove('dark-theme');
+                    }
+                } else {
+                    console.error('Extra page theme: document.body is not available.');
                 }
             }
             try {
@@ -23,7 +34,7 @@
             } catch (e) { applyTheme('light'); }
 
             window.addEventListener('DOMContentLoaded', () => {
-                if (document.documentElement.classList.contains('dark-theme-preload')) {
+                if (document.documentElement && document.documentElement.classList.contains('dark-theme-preload')) {
                      document.documentElement.classList.remove('dark-theme-preload');
                 }
                  // Fallback for initial theme sync if message was missed

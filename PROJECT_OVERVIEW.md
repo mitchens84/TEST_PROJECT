@@ -57,7 +57,7 @@
 
 ## 5. Authentication
     - **Login Page**: `login.html` serves as the entry point for password authentication.
-    - **Password Hashing**: Client-side password hashing is performed using the SHA256 algorithm via the `crypto.subtle.digest` Web API. The default password is "TEST_PROJECT", and its pre-calculated SHA256 hash (`c44267c8b6a0f19268d96cfd59aa6a42b6ad7571f35bfa6752dce77e04922673`) is stored directly in `login.html`.
+    - **Password Hashing**: Authentication is based on SHA256 hash comparison. The hash can be configured in `src/env-config.js` under `authConfig.passwordHash`. If not specified there, it defaults to the hash of "TEST_PROJECT". The `authConfig.tier` should be set to `1` to use this mechanism.
     - **Session Management**: Upon successful authentication, an `isAuthenticated` flag is set to `true` in `sessionStorage`. This flag is checked by `index.html` to control access.
     - **Redirection**: If `sessionStorage.getItem('isAuthenticated')` is not `true`, `index.html` automatically redirects the user to `login.html`.
 
@@ -87,6 +87,18 @@
             - **Communication**: For more complex interactions between the iframe and the parent shell (beyond theming), use `window.parent.postMessage()` from the iframe and `window.addEventListener('message', ...)` in `index.html`.
             - **Sandbox Attributes**: The iframe in `index.html` is created without specific sandbox attributes. If your application requires particular permissions (e.g., `allow-scripts allow-same-origin allow-popups`), you would need to manually modify the iframe creation logic in `index.html` to add the necessary `sandbox` attribute. This is an advanced customization.
             - **Performance**: Be mindful of your application's bundle size and loading performance, as it will be loaded within an iframe.
+
+    - **C. Client-Side Rendered Markdown Content**:
+        1. **Create Directory**: Create a new subdirectory inside `EXPRESS/`. For example: `EXPRESS/my-markdown-doc`.
+        2. **Add Markdown File**: Place your Markdown file (e.g., `index.md` or `mydoc.md`) inside this new directory.
+        3. **Create Viewer `page.html`**: Inside the same directory, create a `page.html` file. This HTML file will be responsible for fetching and rendering your Markdown file.
+            - It should include a CDN link to a Markdown rendering library (e.g., Marked.js: `<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>`).
+            - It needs a script to fetch the `.md` file, use the library to parse it, and then inject the resulting HTML into a designated element (e.g., a `<main id="markdown-content">` element).
+            - Include the standard theme handling script (as found in other `page.html` files or the `add-content.js` template) to ensure theme consistency.
+            - Add basic CSS for the rendered Markdown, either inline in `page.html` or preferably by adding general Markdown styling rules to `assets/styles/main.css` (see the `.markdown-body` styles for an example).
+            - Refer to `EXPRESS/markdown-example/page.html` for a complete implementation example.
+        4. **Update TOC**: Run `node generate-toc.js --all` from the project root. This will add your new section (using the `<title>` from your `page.html`) to the Table of Contents.
+        5. **Verification**: The new section should appear in the sidebar, and clicking it should display your Markdown content rendered as HTML.
 
 ## 8. Scripts
     - `node generate-toc.js`: Scans the `EXPRESS/` directory and regenerates the `toc.html` file.
@@ -126,7 +138,7 @@
            const crypto = require('crypto');
            console.log(crypto.createHash('sha256').update('YOUR_NEW_PASSWORD').digest('hex'));
            ```
-        3. Replace the `PRECALCULATED_HASH` value in `login.html` with your new hash.
+        3. Update the `authConfig.passwordHash` value in `src/env-config.js` with your new hash. Ensure `authConfig.tier` is set to `1`. If `src/env-config.js` is not configured for the hash, you can also modify the fallback hash in `login.html`.
     - **Extending Functionality (Ideas)**:
         - **Build Process Integration**: Integrate `generate-toc.js` into a more formal build process (e.g., using npm scripts in `package.json` that might also handle minification or other optimizations if the project grows).
         - **Content Type Detection**: Enhance `generate-toc.js` to detect different content types (e.g., Markdown files that get converted to HTML on the fly, though this would require additional tooling).
