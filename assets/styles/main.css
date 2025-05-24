@@ -1,4 +1,16 @@
 /* Placeholder for main.css: Global styles, CSS variables, utility classes */
+
+/* Early FOUC prevention for dark theme based on class on <html> */
+html.dark-theme-preload-html {
+    background-color: #121212; /* Dark theme background directly for FOUC */
+    color: #e0e0e0;           /* Dark theme text color directly for FOUC */
+}
+/* The body will pick up its themed background-color and color
+   once the full applyTheme script runs and adds 'dark-theme' to the body,
+   which then activates the 'body.dark-theme' CSS variables.
+   The html.dark-theme-preload-html ensures the earliest possible paint
+   of the overall page background is dark. */
+
 :root {
     --primary-color: #007bff;
     --secondary-color: #6c757d;
