@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Rendering Example</title>
+    <link rel="stylesheet" href="../../assets/styles/main.css">
+    <script>
+        // Standard Theme Handling Script (Copied from add-content.js template, with robustness checks)
+        function applyTheme(theme) {
+            if (document.body) {
+                if (theme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.body.classList.remove('dark-theme');
+                }
+            } else {
+                console.error('Content page theme: document.body is not available for theme application.');
+            }
+        }
+        try {
+            const savedTheme = localStorage.getItem('theme');
+            if (document.documentElement && savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-theme-preload');
+            }
+        } catch (e) { console.warn('Could not access localStorage for initial theme in iframe'); }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (document.documentElement && document.documentElement.classList.contains('dark-theme-preload')) {
+                document.documentElement.classList.remove('dark-theme-preload');
+                if (document.body) document.body.classList.add('dark-theme');
+            } else {
+                try {
+                    const currentTheme = localStorage.getItem('theme');
+                    if (currentTheme) applyTheme(currentTheme);
+                } catch(e) { /* ignore */ }
+            }
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'themeChange') {
+                    applyTheme(event.data.theme);
+                    try { localStorage.setItem('theme', event.data.theme); } catch (e) { /* ignore */ }
+                }
+            });
+            // Request theme from parent for initial sync
+            if (window.parent && window.parent !== window) {
+               try {
+                   const currentThemeInParent = parent.localStorage.getItem('theme');
+                   if (currentThemeInParent) {
+                       applyTheme(currentThemeInParent);
+                       localStorage.setItem('theme', currentThemeInParent);
+                   }
+               } catch(e) { console.warn("iframe could not access parent's localStorage for theme sync on load.") }
+            }
+        });
+    <\/script>
+    <style>
+        .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
+        /* Basic styling for rendered markdown */
+        .markdown-body { padding: 20px; line-height: 1.6; }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { margin-top: 1.5em; margin-bottom: 0.5em; }
+        .markdown-body ul, .markdown-body ol { margin-left: 20px; }
+        .dark-theme .markdown-body { /* Specific dark theme adjustments if needed */ }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="../../index.html">Home</a>
+        </nav>
+        <h1>Markdown Example Page</h1>
+    </header>
+    <main id="markdown-content" class="markdown-body">
+        <p>Loading Markdown content...</p>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('index.md')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok for index.md');
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    document.getElementById('markdown-content').innerHTML = marked.parse(text);
+                })
+                .catch(error => {
+                    console.error('Error fetching or parsing Markdown:', error);
+                    document.getElementById('markdown-content').innerHTML = '<p style="color:red;">Error loading Markdown content. See console.</p>';
+                });
+        });
+    <\/script>
+    <footer>
+        <p>&copy; 2024 Your Project</p> <!-- Year will be updated by JS in real context -->
+    </footer>
+</body>
+</html>

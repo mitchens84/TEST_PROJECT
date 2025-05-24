@@ -5,9 +5,10 @@ const envConfig = {
     environment: 'development',
     baseUrl: '/',
     authConfig: {
-        tier: 0, // 0: Simple prompt, 1: Login page with hash
-        password: 'complexdemo',
-        sessionKey: 'tier0Password'
+        tier: 1, // Set to 1 as we are using login page with hash
+        password: 'TEST_PROJECT', // Reference password (can remain or be removed if hash is primary)
+        passwordHash: 'c44267c8b6a0f19268d96cfd59aa6a42b6ad7571f35bfa6752dce77e04922673', // Hash of 'TEST_PROJECT'
+        sessionKey: 'tier0Password' // Can remain, though less relevant for tier 1
     },
     // Add other configuration values here...
 };

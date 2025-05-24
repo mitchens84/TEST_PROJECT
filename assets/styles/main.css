@@ -267,3 +267,64 @@ body.login-page-body { /* Add a specific class to body of login.html if needed f
     min-height: 1.2em; /* Reserve space to prevent layout shift */
     font-weight: bold;
 }
+
+/* Styles for client-side rendered Markdown content */
+.markdown-body {
+    color: var(--text-color);
+    background-color: var(--background-color);
+}
+.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.3em;
+}
+.markdown-body a {
+    color: var(--link-color);
+}
+.markdown-body a:hover {
+    color: var(--link-hover-color);
+}
+.markdown-body code {
+    background-color: rgba(128, 128, 128, 0.1); /* Subtle background for inline code */
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: monospace;
+}
+.markdown-body pre {
+    background-color: rgba(128, 128, 128, 0.15); /* Slightly more prominent for code blocks */
+    padding: 1em;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+.markdown-body pre code {
+    background-color: transparent; /* Reset for code inside pre */
+    padding: 0;
+}
+.markdown-body blockquote {
+    border-left: 4px solid var(--border-color);
+    padding-left: 1em;
+    margin-left: 0;
+    color: var(--secondary-color); /* Or a slightly muted version of text-color */
+}
+.markdown-body table {
+    border-collapse: collapse;
+    width: auto;
+    margin-bottom: 1em;
+}
+.markdown-body th, .markdown-body td {
+    border: 1px solid var(--border-color);
+    padding: 0.5em;
+}
+.markdown-body th {
+    background-color: rgba(128, 128, 128, 0.05);
+}
+/* Ensure dark theme specific overrides if any default styles don't adapt well */
+body.dark-theme .markdown-body code {
+   background-color: rgba(200, 200, 200, 0.2);
+}
+body.dark-theme .markdown-body pre {
+   background-color: rgba(200, 200, 200, 0.25);
+}
+body.dark-theme .markdown-body th {
+   background-color: rgba(200, 200, 200, 0.1);
+}

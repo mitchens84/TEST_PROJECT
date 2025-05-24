@@ -36,10 +36,15 @@ function createDefaultPageHtml(sectionDirPath, sectionName) {
     <script>
         // Apply theme on initial load and listen for changes from parent
         function applyTheme(theme) {
-            if (theme === 'dark') {
-                document.body.classList.add('dark-theme');
+            // Ensure body exists before manipulating it
+            if (document.body) { 
+                if (theme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.body.classList.remove('dark-theme');
+                }
             } else {
-                document.body.classList.remove('dark-theme');
+                console.error('Content page theme: document.body is not available for theme application.');
             }
         }
         // Initial theme application from localStorage
@@ -47,7 +52,7 @@ function createDefaultPageHtml(sectionDirPath, sectionName) {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme) {
                 // Apply theme before body is fully rendered to avoid flash
-                if (savedTheme === 'dark') document.documentElement.classList.add('dark-theme-preload'); 
+                if (document.documentElement && savedTheme === 'dark') document.documentElement.classList.add('dark-theme-preload'); 
             } else {
                  // Optional: could check prefers-color-scheme
             }
@@ -57,9 +62,9 @@ function createDefaultPageHtml(sectionDirPath, sectionName) {
 
         window.addEventListener('DOMContentLoaded', () => {
             // Remove preload class after styles are applied
-            if (document.documentElement.classList.contains('dark-theme-preload')) {
+            if (document.documentElement && document.documentElement.classList.contains('dark-theme-preload')) {
                  document.documentElement.classList.remove('dark-theme-preload');
-                 document.body.classList.add('dark-theme'); // Ensure body class is set
+                 if (document.body) document.body.classList.add('dark-theme'); // Ensure body class is set
             } else {
                  // If not preloaded (e.g. no theme in localstorage or it was light)
                  // still try to apply from localstorage in case it was set to light explicitly
@@ -249,10 +254,15 @@ async function processNewContent(newContentPath) {
     <script>
         // Apply theme on initial load and listen for changes from parent
         function applyTheme(theme) {
-            if (theme === 'dark') {
-                document.body.classList.add('dark-theme');
+            // Ensure body exists before manipulating it
+            if (document.body) { 
+                if (theme === 'dark') {
+                    document.body.classList.add('dark-theme');
+                } else {
+                    document.body.classList.remove('dark-theme');
+                }
             } else {
-                document.body.classList.remove('dark-theme');
+                console.error('Content page theme: document.body is not available for theme application.');
             }
         }
         // Initial theme application from localStorage
@@ -260,7 +270,7 @@ async function processNewContent(newContentPath) {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme) {
                 // Apply theme before body is fully rendered to avoid flash
-                if (savedTheme === 'dark') document.documentElement.classList.add('dark-theme-preload');
+                if (document.documentElement && savedTheme === 'dark') document.documentElement.classList.add('dark-theme-preload');
             } else {
                  // Optional: could check prefers-color-scheme
             }
@@ -270,9 +280,9 @@ async function processNewContent(newContentPath) {
 
         window.addEventListener('DOMContentLoaded', () => {
             // Remove preload class after styles are applied
-            if (document.documentElement.classList.contains('dark-theme-preload')) {
+            if (document.documentElement && document.documentElement.classList.contains('dark-theme-preload')) {
                  document.documentElement.classList.remove('dark-theme-preload');
-                 document.body.classList.add('dark-theme'); // Ensure body class is set
+                 if (document.body) document.body.classList.add('dark-theme'); // Ensure body class is set
             } else {
                  // If not preloaded (e.g. no theme in localstorage or it was light)
                  // still try to apply from localstorage in case it was set to light explicitly

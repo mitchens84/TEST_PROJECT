@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Project Content Hub</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/styles/main.css">
+    <script type="module" src="src/env-config.js" defer></script>
     <script>
         // Apply theme on initial load
         (function() {
@@ -59,9 +61,18 @@
             return hashHex;
         }
 
-        const PRECALCULATED_HASH = "c44267c8b6a0f19268d96cfd59aa6a42b6ad7571f35bfa6752dce77e04922673";
+        // const PRECALCULATED_HASH = "c44267c8b6a0f19268d96cfd59aa6a42b6ad7571f35bfa6752dce77e04922673"; // Commented out or removed
 
         document.addEventListener('DOMContentLoaded', function() {
+            let effectivePasswordHash = "c44267c8b6a0f19268d96cfd59aa6a42b6ad7571f35bfa6752dce77e04922673"; // Default fallback
+
+            if (window.envConfig && window.envConfig.authConfig && window.envConfig.authConfig.passwordHash) {
+                effectivePasswordHash = window.envConfig.authConfig.passwordHash;
+                console.log("Using password hash from env-config.js");
+            } else {
+                console.warn("Password hash not found in env-config.js or env-config.js not loaded. Using default hash.");
+            }
+
             const loginForm = document.getElementById('login-form');
             const passwordInput = document.getElementById('password');
             const errorMessageElement = document.getElementById('error-message');
@@ -78,7 +89,7 @@
 
                 const hashedEnteredPassword = await sha256(enteredPassword);
 
-                if (hashedEnteredPassword === PRECALCULATED_HASH) {
+                if (hashedEnteredPassword === effectivePasswordHash) {
                     sessionStorage.setItem('isAuthenticated', 'true');
                     // Optional: Check for a redirect URL
                     // const redirectUrl = sessionStorage.getItem('redirectUrl') || 'index.html';
