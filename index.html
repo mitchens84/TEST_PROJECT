@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Content Hub</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <script>
+      // Theme pre-application for documentElement to prevent FOUC
+      (function() {
+        try {
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-theme');
+            document.documentElement.classList.add('dark-theme-preload-html'); // Specific for <html> if needed
+          } else if (savedTheme === 'light') {
+            // Explicitly remove classes if light theme is saved, to handle overrides
+            document.documentElement.classList.remove('dark-theme');
+            document.documentElement.classList.remove('dark-theme-preload-html');
+          }
+          // If no theme is saved in localStorage, it will default to browser/CSS default (likely light).
+        } catch (e) {
+          console.warn('Initial theme pre-application script failed:', e);
+        }
+      })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/styles/main.css">
     <style>
@@ -271,44 +290,76 @@
                 applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
             });
 
-
             const tocTargetDiv = document.getElementById('dynamic-toc-content');
-            if (tocTargetDiv) {
-                fetch('toc.html')
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok for toc.html: ' + response.status + ' ' + response.statusText);
-                        }
-                        return response.text();
-                    })
-                    .then(html => {
-                        tocTargetDiv.innerHTML = html;
-                        // Add event delegation for ToC links AFTER content is loaded
-                        tocTargetDiv.addEventListener('click', function(event) {
-                            let targetElement = event.target;
-                            // Traverse up the DOM to find an anchor tag if the click was on a child element (e.g., <span> inside <a>)
-                            while (targetElement && targetElement !== this && targetElement.tagName !== 'A') {
-                                targetElement = targetElement.parentElement;
-                            }
 
-                            if (targetElement && targetElement.tagName === 'A' && targetElement.hasAttribute('href')) {
-                                event.preventDefault(); // Prevent full page navigation
-                                const pageUrl = targetElement.getAttribute('href'); 
-                                if (pageUrl) {
-                                    // Call the existing function designed for ToC links
-                                    window.loadContentIntoIframe(pageUrl, targetElement);
+            if (typeof window.envConfig === 'undefined') {
+                if (tocTargetDiv) {
+                    tocTargetDiv.innerHTML = '<p style="color: red; font-weight: bold;">Critical Error: The environment configuration file (src/env-config.js) failed to load. This may be due to a server error (e.g., file not found, incorrect MIME type for JavaScript) or a syntax error in the file itself. The application cannot proceed reliably. Please check the browser console for errors related to \'src/env-config.js\'.</p>';
+                } else {
+                    console.error('Error: Target div for ToC (dynamic-toc-content) not found, and envConfig also failed to load.');
+                }
+                const searchInput = document.getElementById('toc-search');
+                if(searchInput) searchInput.disabled = true;
+                const homeContentDiv = document.getElementById('home-content');
+                if(homeContentDiv) homeContentDiv.innerHTML = '<p style="padding:20px; color:red;">Content loading suspended due to configuration error.</p>';
+
+            } else {
+                // envConfig is loaded, proceed to load TOC
+                if (tocTargetDiv) {
+                    fetch('toc.html')
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok for toc.html: ' + response.status + ' ' + response.statusText);
+                            }
+                            return response.text();
+                        })
+                        .then(html => {
+                            tocTargetDiv.innerHTML = html;
+                            // Add event delegation for ToC links AFTER content is loaded
+                            tocTargetDiv.addEventListener('click', function(event) {
+                                let targetElement = event.target;
+                                // Traverse up the DOM to find an anchor tag if the click was on a child element (e.g., <span> inside <a>)
+                                while (targetElement && targetElement !== this && targetElement.tagName !== 'A') {
+                                    targetElement = targetElement.parentElement;
                                 }
+
+                                if (targetElement && targetElement.tagName === 'A' && targetElement.hasAttribute('href')) {
+                                    event.preventDefault(); // Prevent full page navigation
+                                    const pageUrl = targetElement.getAttribute('href'); 
+                                    if (pageUrl) {
+                                        // Call the existing function designed for ToC links
+                                        window.loadContentIntoIframe(pageUrl, targetElement);
+                                    }
+                                }
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error loading Table of Contents:', error);
+                            if (tocTargetDiv) {
+                               tocTargetDiv.innerHTML = '<p style="color: red;">Error loading Table of Contents. See console for details.</p>';
                             }
                         });
-                    })
-                    .catch(error => {
-                        console.error('Error loading Table of Contents:', error);
-                        if (tocTargetDiv) {
-                           tocTargetDiv.innerHTML = '<p style="color: red;">Error loading Table of Contents. See console for details.</p>';
+                } else {
+                    console.error('Error: Target div for ToC (dynamic-toc-content) not found.');
+                }
+                
+                // Initial page load logic
+                const lastPage = sessionStorage.getItem('currentPage');
+                if (lastPage) {
+                    window.loadContent(lastPage, null); 
+                } else {
+                    // Wait for TOC to potentially load to find the intro link
+                    // A slight delay or a more robust check might be needed if toc.html fetch is slow
+                    // For now, assuming querySelector will find it if toc.html is processed quickly
+                    setTimeout(() => { // Adding a minimal delay to allow TOC to render
+                        const introLink = document.querySelector('#dynamic-toc-content a[href*="introduction/page.html"]');
+                        if (introLink && introLink.href) {
+                            window.loadContentIntoIframe(introLink.getAttribute('href'), introLink);
+                        } else {
+                             window.loadContent('EXPRESS/introduction/page.html', null); // Fallback if introLink not found
                         }
-                    });
-            } else {
-                console.error('Error: Target div for ToC (dynamic-toc-content) not found.');
+                    }, 100); // 100ms delay, adjust as needed or use MutationObserver for robustness
+                }
             }
 
             // Sidebar Toggle Functionality
@@ -328,19 +379,6 @@
                 });
             } else {
                 console.error('Sidebar or toggle button element not found. Toggle functionality will not work.');
-            }
-
-            // Initial page load logic
-            const lastPage = sessionStorage.getItem('currentPage');
-            if (lastPage) {
-                window.loadContent(lastPage, null); 
-            } else {
-                const introLink = document.querySelector('#dynamic-toc-content a[href*="introduction/page.html"]');
-                if (introLink && introLink.href) {
-                    window.loadContentIntoIframe(introLink.getAttribute('href'), introLink);
-                } else {
-                     window.loadContent('EXPRESS/introduction/page.html', null);
-                }
             }
 
             // TOC Search Functionality

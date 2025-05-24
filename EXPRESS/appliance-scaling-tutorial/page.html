@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+     <html lang="en">
+     <head>
+         <meta charset="UTF-8">
+         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+         <title>Appliance Scaling Tutorial</title>
+         <link rel="stylesheet" href="../../assets/styles/main.css">
+         <!-- Standard Theme Handling Script (ensure it's the robust version) -->
+         <script>
+           // Theme pre-application for documentElement
+           (function() {
+             try {
+               const savedTheme = localStorage.getItem('theme');
+               if (document.documentElement) { // Robustness check
+                 if (savedTheme === 'dark') {
+                   document.documentElement.classList.add('dark-theme');
+                   document.documentElement.classList.add('dark-theme-preload-html');
+                 } else if (savedTheme === 'light') {
+                   document.documentElement.classList.remove('dark-theme');
+                   document.documentElement.classList.remove('dark-theme-preload-html');
+                 }
+               }
+             } catch (e) { console.warn('Initial theme pre-application script failed:', e); }
+           })();
+         <\/script>
+         <style>
+             /* Specific styles for the tutorial page */
+             body { padding: 20px; font-family: var(--font-sans-serif); } /* Ensure main.css font is used */
+             .tutorial-container { max-width: 900px; margin: auto; }
+             .appliance-section { margin-bottom: 30px; padding: 15px; border: 1px solid var(--border-color); border-radius: 5px; background-color: var(--sidebar-background); }
+             .appliance-section h2 { margin-top: 0; color: var(--text-color); }
+             .appliance-section p { color: var(--text-color); }
+             .visualization { width: 100%; min-height: 150px; background-color: var(--background-color); border: 1px dashed var(--secondary-color); margin-top: 10px; display: flex; align-items: center; justify-content: center; text-align: center; }
+             /* Add more styles for visual appeal and interactivity */
+             label { margin-right: 10px; color: var(--text-color); }
+             input[type="range"] { width: 200px; }
+             .output { margin-top: 10px; font-weight: bold; color: var(--text-color); }
+             .comparison-table { width: 100%; margin-top:15px; border-collapse: collapse; }
+             .comparison-table th, .comparison-table td { border: 1px solid var(--border-color); padding: 8px; text-align: left; }
+             .comparison-table th { background-color: var(--sidebar-text); color: var(--sidebar-background); }
+
+             /* Dark theme specific overrides for this page, if needed beyond main.css */
+             body.dark-theme .appliance-section { background-color: var(--sidebar-background); /* Already uses var */ }
+         </style>
+     </head>
+     <body>
+         <header>
+             <nav><a href="../../index.html">Home</a></nav>
+             <h1 style="text-align:center;">Understanding Appliance Scaling</h1>
+         </header>
+         <main class="tutorial-container">
+             <section class="appliance-section">
+                 <h2>Introduction: Size, Volume, and Cost</h2>
+                 <p>When you choose a household appliance like a freezer or an oven, its capacity (e.g., liters for a freezer) is a key factor. But how do other physical properties and costs scale with this capacity? It's not always a linear relationship!</p>
+                 <p>This tutorial explores how volume, surface area (related to material cost), and potentially other factors change as appliance sizes increase.</p>
+             </section>
+
+             <section class="appliance-section">
+                 <h2>Example: The Freezer</h2>
+                 <p>Let's consider a freezer. Its capacity is its internal volume.</p>
+                 <div>
+                     <label for="freezer-size">Freezer Side Length (arbitrary units):</label>
+                     <input type="range" id="freezer-size" name="freezer-size" min="1" max="10" value="3">
+                     <span id="freezer-size-value" class="output">3</span>
+                 </div>
+                 <div class="visualization" id="freezer-viz">Visual representation of freezer</div>
+                 <p class="output">Volume (Capacity): <span id="freezer-volume">27</span> cubic units</p>
+                 <p class="output">Surface Area (Material Approx.): <span id="freezer-surface-area">54</span> square units</p>
+                 <p>Notice how doubling the side length doesn't just double the volume or surface area. Volume scales with the cube of the linear dimension (L³), while surface area scales with the square (6L² for a cube).</p>
+             </section>
+             
+             <section class="appliance-section">
+                <h2>Interactive Scaling Comparison</h2>
+                <p>Use the slider below to see how volume and surface area change for a simplified cubic appliance as its linear dimension (side length) increases.</p>
+                <div>
+                    <label for="generic-size">Side Length (L):</label>
+                    <input type="range" id="generic-size" min="1" max="10" value="1">
+                    <span id="generic-size-value" class="output">1</span>
+                </div>
+                <table class="comparison-table">
+                    <thead>
+                        <tr><th>Property</th><th>Formula</th><th>Value</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Side Length (L)</td><td>L</td><td id="table-l">1</td></tr>
+                        <tr><td>Volume (Capacity)</td><td>L³</td><td id="table-volume">1</td></tr>
+                        <tr><td>Surface Area (Materials)</td><td>6L²</td><td id="table-surface">6</td></tr>
+                        <tr><td>Volume/Surface Ratio</td><td>L/6</td><td id="table-ratio">0.17</td></tr>
+                    </tbody>
+                </table>
+                <p>Larger appliances often become more efficient in terms of capacity per unit of material used (higher Volume/Surface Ratio).</p>
+             </section>
+
+             <section class="appliance-section">
+                 <h2>Other Appliances & Considerations</h2>
+                 <p>This principle applies to many appliances:</p>
+                 <ul>
+                     <li><strong>Ovens:</strong> Internal cooking volume vs. material for walls, door.</li>
+                     <li><strong>Refrigerators:</strong> Similar to freezers.</li>
+                     <li><strong>Washing Machines:</strong> Drum capacity vs. materials for the drum and casing.</li>
+                 </ul>
+                 <p>Other factors also come into play, like the cost of components (compressors, heating elements), insulation thickness, and manufacturing complexity, which might not scale perfectly with simple geometric formulas but are often related.</p>
+             </section>
+         </main>
+         <script>
+             // Standard Theme Handling (DOMContentLoaded and message listener part)
+             window.addEventListener('DOMContentLoaded', () => {
+                 if (document.documentElement && document.documentElement.classList.contains('dark-theme-preload-html')) {
+                     document.documentElement.classList.remove('dark-theme-preload-html');
+                 }
+                 // Apply actual body theme based on initial localStorage
+                 try {
+                    const currentTheme = localStorage.getItem('theme');
+                    if (currentTheme && document.body) { // Robustness check
+                        if (currentTheme === 'dark') document.body.classList.add('dark-theme');
+                        else document.body.classList.remove('dark-theme');
+                    }
+                 } catch(e) { /* ignore */ }
+
+                 window.addEventListener('message', function(event) {
+                     if (event.data && event.data.type === 'themeChange') {
+                         if (document.body) { // Robustness check
+                             if (event.data.theme === 'dark') document.body.classList.add('dark-theme');
+                             else document.body.classList.remove('dark-theme');
+                         }
+                         try { localStorage.setItem('theme', event.data.theme); } catch (e) { /* ignore */ }
+                     }
+                 });
+                 if (window.parent && window.parent !== window) {
+                    try {
+                        const currentThemeInParent = parent.localStorage.getItem('theme');
+                        if (currentThemeInParent && document.body) {
+                            if (currentThemeInParent === 'dark') document.body.classList.add('dark-theme');
+                            else document.body.classList.remove('dark-theme');
+                            localStorage.setItem('theme', currentThemeInParent);
+                        }
+                    } catch(e) { console.warn("iframe could not access parent's localStorage for theme sync on load.") }
+                 }
+
+                 // Tutorial specific JS
+                 const freezerSizeSlider = document.getElementById('freezer-size');
+                 const freezerSizeValue = document.getElementById('freezer-size-value');
+                 const freezerViz = document.getElementById('freezer-viz');
+                 const freezerVolume = document.getElementById('freezer-volume');
+                 const freezerSurfaceArea = document.getElementById('freezer-surface-area');
+
+                 function updateFreezerDemo() {
+                     const size = parseInt(freezerSizeSlider.value);
+                     freezerSizeValue.textContent = size;
+                     const volume = size * size * size;
+                     const surfaceArea = 6 * size * size;
+                     freezerVolume.textContent = volume;
+                     freezerSurfaceArea.textContent = surfaceArea;
+                     // Basic visualization update
+                     freezerViz.innerHTML = `Imagine a cube with side ${size}`;
+                     const scaleFactor = size / 10; // Max size is 10
+                     freezerViz.style.transform = \`scale(\${0.5 + scaleFactor * 0.5})\`;
+                 }
+                 freezerSizeSlider.addEventListener('input', updateFreezerDemo);
+                 updateFreezerDemo(); // Initial call
+
+                 // Generic scaling demo JS
+                 const genericSizeSlider = document.getElementById('generic-size');
+                 const genericSizeValue = document.getElementById('generic-size-value');
+                 const tableL = document.getElementById('table-l');
+                 const tableVolume = document.getElementById('table-volume');
+                 const tableSurface = document.getElementById('table-surface');
+                 const tableRatio = document.getElementById('table-ratio');
+
+                 function updateGenericDemo() {
+                    const size = parseInt(genericSizeSlider.value);
+                    genericSizeValue.textContent = size;
+                    const volume = size * size * size;
+                    const surfaceArea = 6 * size * size;
+                    tableL.textContent = size;
+                    tableVolume.textContent = volume;
+                    tableSurface.textContent = surfaceArea;
+                    tableRatio.textContent = (volume / surfaceArea).toFixed(2);
+                 }
+                 genericSizeSlider.addEventListener('input', updateGenericDemo);
+                 updateGenericDemo(); // Initial call
+             });
+         <\/script>
+         <footer><p>&copy; ${new Date().getFullYear()} Your Project</p></footer>
+     </body>
+     </html>
