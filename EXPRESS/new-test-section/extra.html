@@ -28,12 +28,25 @@
                     console.error('Extra page theme: document.body is not available.');
                 }
             }
-            try {
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme) applyTheme(savedTheme); else applyTheme('light');
-            } catch (e) { applyTheme('light'); }
+            // try {
+            //     const savedTheme = localStorage.getItem('theme');
+            //     if (savedTheme) applyTheme(savedTheme); else applyTheme('light');
+            // } catch (e) { applyTheme('light'); }
 
             window.addEventListener('DOMContentLoaded', () => {
+                // Initial theme application is now correctly inside DOMContentLoaded
+                try {
+                    const savedTheme = localStorage.getItem('theme');
+                    if (savedTheme) {
+                        applyTheme(savedTheme);
+                    } else {
+                        applyTheme('light'); // Default to light if no theme saved
+                    }
+                } catch (e) {
+                    console.warn('Error applying initial theme from localStorage in extra.html:', e);
+                    applyTheme('light'); // Fallback
+                }
+
                 if (document.documentElement && document.documentElement.classList.contains('dark-theme-preload')) {
                      document.documentElement.classList.remove('dark-theme-preload');
                 }
@@ -41,7 +54,10 @@
                 if (window.parent && window.parent !== window) {
                     try {
                         const parentTheme = parent.localStorage.getItem('theme');
-                        if (parentTheme) applyTheme(parentTheme);
+                        if (parentTheme) {
+                           applyTheme(parentTheme); // Apply and potentially override if different
+                           localStorage.setItem('theme', parentTheme); // Sync local storage
+                        }
                     } catch(e) { console.warn("iframe could not access parent's localStorage for theme.");}
                 }
             });
