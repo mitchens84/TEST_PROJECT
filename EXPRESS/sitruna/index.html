@@ -939,7 +939,7 @@
     </div>
 
     <script>
-        const knowledgeItems = [
+        /* const knowledgeItems = [
             { id: '1.1', label: 'Marketplace Policies', category: 'AMAZON_KNOWLEDGE', systems: ['CLICKUP', 'GOOGLE_SITES'], team: 'All Staff', type: ['First-Party', 'Third-Party'], structure: 'Structured', privacy: 'High', implementationNotes: 'Critical for case compliance and decision-making; Includes VAT requirements', primaryUsers: 'Amazon Knowledge > Marketplace Policies', aiIntegrationPriority: 'Amazon policy changes → Documentation → Team implementation → Case handling', details: 'VAT registration requirements, Country-specific tax rules, HFSS Exemption Application, Brand protection informations, Account configuration, User permissions' },
             { id: '1.2', label: 'Listing Management', category: 'AMAZON_KNOWLEDGE', systems: ['CLICKUP', 'GOOGLE_SITES'], team: 'All Staff', type: ['First-Party', 'Third-Party'], structure: 'Semi-structured', privacy: 'Medium', implementationNotes: 'Core knowledge for product listings; Includes creation procedures', primaryUsers: 'Amazon Knowledge > Listing Management', aiIntegrationPriority: 'Team expertise → Documentation → Client implementation', details: 'Listing creation procedures, Buyer-seller messaging, Review management' },
             { id: '1.3', label: 'Inventory & Fulfillment', category: 'AMAZON_KNOWLEDGE', systems: ['CLICKUP', 'GOOGLE_SITES'], team: 'All Staff', type: ['First-Party', 'Third-Party'], structure: 'Structured', privacy: 'Medium', implementationNotes: 'Essential for inventory operations; Includes shipment plans', primaryUsers: 'Amazon Knowledge > Inventory & Fulfillment', aiIntegrationPriority: 'Team expertise → Documentation → Client implementation', details: 'Create FBA Shipment Plan, Shipping & Warehouse Partners, Inbound units management, FBM SKU management' },
@@ -959,7 +959,23 @@
             { id: '5.1', label: 'Client Communication', category: 'TEAM_COMMUNICATION', systems: ['FRONT', 'SLACK'], team: 'All Staff', type: ['First-Party'], structure: 'Unstructured', privacy: 'Medium', implementationNotes: 'External correspondence; Includes client correspondence', primaryUsers: 'Account Team', aiIntegrationPriority: 'Client emails → Response → Resolution', details: 'Client correspondence, Client-specific channels' },
             { id: '5.2', label: 'Internal Collaboration', category: 'TEAM_COMMUNICATION', systems: ['SLACK', 'FRONT', 'CLICKUP'], team: 'All Staff', type: ['First-Party'], structure: 'Unstructured', privacy: 'Medium', implementationNotes: 'Team discussions; Includes team discussions', primaryUsers: 'Team Communication > Internal Collaboration', aiIntegrationPriority: 'Team questions → Discussion → Resolution', details: 'Team communication, Internal discussions, Department-specific knowledge, Specialized projects, Short-term engagements' },
             { id: '5.3', label: 'Knowledge Sharing', category: 'TEAM_COMMUNICATION', systems: ['SLACK', 'CLICKUP', 'FRONT'], team: 'All Staff', type: ['Third-Party', 'First-Party'], structure: 'Unstructured', privacy: 'Medium', implementationNotes: 'Information distribution; Includes updates', primaryUsers: 'Team Communication > Knowledge Sharing', aiIntegrationPriority: 'Discoveries → Communication → Team knowledge', details: 'Knowledge sharing, Amazon updates, Reference materials' }
-        ];
+        ]; */
+    const knowledgeItems = [
+        { 
+            id: '0.1', 
+            label: 'Test Item 1', 
+            category: 'TEST_CATEGORY', 
+            systems: ['TEST_SYSTEM'], 
+            team: 'Test Team', 
+            type: ['Test-Type'], 
+            structure: 'Test Structure', 
+            privacy: 'Test Privacy', 
+            implementationNotes: 'Test notes.', 
+            primaryUsers: 'Test Users', 
+            aiIntegrationPriority: 'Low', 
+            details: 'Test details.' 
+        }
+    ];
 
         const categoryLabels = { 'AMAZON_KNOWLEDGE': 'Amazon Knowledge', 'CASE_MANAGEMENT': 'Case Management', 'INTERNAL_OPERATIONS': 'Internal Operations', 'CLIENT_INFORMATION': 'Client Information', 'TEAM_COMMUNICATION': 'Team Communication' };
         const systemLabels = { 'CLICKUP': 'ClickUp', 'GOOGLE_SITES': 'Google Sites', 'SLACK': 'Slack', 'GOOGLE_SHEETS': 'Google Sheets', 'FRONT': 'Front', 'GOOGLE_DRIVE': 'Google Drive', 'BIG_QUERY': 'Big Query', 'CHATGPT': 'ChatGPT', 'AMAZON_SC': 'Amazon Seller Central' };
