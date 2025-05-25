@@ -482,7 +482,7 @@
         try {
           // Attempt to import env-config.js. Ensure the path is correct.
           // If index.html is at the root, and src is a top-level folder, './src/env-config.js' is correct.
-          const configModule = await import('/src/env-config.js'); 
+          const configModule = await import('./src/env-config.js'); 
           window.envConfig = configModule.default; 
           console.log('env-config.js loaded successfully via dynamic import:', window.envConfig);
 
