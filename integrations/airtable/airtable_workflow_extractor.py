@@ -37,8 +37,8 @@ def parse_args():
     parser.add_argument("--base-id", required=True, help="Airtable Base ID")
     parser.add_argument("--table-id", required=True, help="Airtable Table ID")
     parser.add_argument("--view-id", help="Airtable View ID (optional)")
-    parser.add_argument("--output", default="workflow_data.json", 
-                      help="Output JSON file (default: workflow_data.json)")
+    parser.add_argument("--output", default="data/airtable_index_data.json", 
+                      help="Output JSON file (default: data/airtable_index_data.json)")
     return parser.parse_args()
 
 
@@ -77,72 +77,28 @@ def get_airtable_data(base_id: str, table_id: str, view_id: Optional[str] = None
     return response.json()
 
 
-def process_workflow_data(data: Dict[str, Any]) -> Dict[str, Any]:
+def process_workflow_data(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
-    Process and transform the raw Airtable data for visualization.
+    Extracts the records from the raw Airtable data.
     
     Args:
-        data: Raw data from Airtable API
+        data: Raw data from Airtable API (which is a dict with a 'records' key)
         
     Returns:
-        Processed data ready for visualization
+        A list of records.
     """
     records = data.get("records", [])
-    logger.info(f"Processing {len(records)} records")
+    logger.info(f"Extracted {len(records)} records")
     
-    # Extract fields and create a more usable structure
-    processed_data = {
-        "nodes": [],
-        "links": []
-    }
-    
-    node_ids = set()
-    
-    # First pass: Create nodes
-    for record in records:
-        record_id = record.get("id")
-        fields = record.get("fields", {})
-        
-        # Create a node for each record
-        node = {
-            "id": record_id,
-            "recordId": record_id,
-            **fields  # Include all fields from the record
-        }
-        
-        processed_data["nodes"].append(node)
-        node_ids.add(record_id)
-    
-    # Second pass: Create links based on relationships
-    # This assumes there's some field in your data that represents relationships
-    # Modify this according to your actual data structure
-    for node in processed_data["nodes"]:
-        # Example: If there's a "Next Steps" or "Dependencies" field that references other records
-        next_steps = node.get("Next Steps", [])
-        if isinstance(next_steps, list):
-            for next_step in next_steps:
-                if next_step in node_ids:
-                    processed_data["links"].append({
-                        "source": node["id"],
-                        "target": next_step,
-                        "type": "next_step"
-                    })
-        
-        # Check for other relationship fields
-        dependencies = node.get("Dependencies", [])
-        if isinstance(dependencies, list):
-            for dependency in dependencies:
-                if dependency in node_ids:
-                    processed_data["links"].append({
-                        "source": dependency,
-                        "target": node["id"],
-                        "type": "dependency"
-                    })
-    
-    return processed_data
+    # Optionally, you can choose to extract only the 'fields' from each record
+    # if 'createdTime' and 'id' at the record's root are not needed.
+    # For a full dump, just return the records as they are.
+    # Example: return [record['fields'] for record in records]
+    # For now, let's return the full records including their Airtable IDs and createdTime:
+    return records
 
 
-def save_to_json(data: Dict[str, Any], output_file: str) -> None:
+def save_to_json(data: List[Dict[str, Any]], output_file: str) -> None:
     """
     Save the processed data to a JSON file.
     

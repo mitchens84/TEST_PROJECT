@@ -20,19 +20,29 @@
                 // Inform complex components about theme change if they have their own theme logic
                 window.dispatchEvent(new CustomEvent('appThemeChanged', { detail: { theme } }));
             }
-            try {
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme) applyTheme(savedTheme); else applyTheme('light');
-            } catch (e) { applyTheme('light'); }
 
             window.addEventListener('DOMContentLoaded', () => {
+                // Initial theme application based on localStorage
+                try {
+                    const savedTheme = localStorage.getItem('theme');
+                    if (savedTheme) {
+                        applyTheme(savedTheme);
+                    } else {
+                        applyTheme('light'); // Default to light if nothing is saved
+                    }
+                } catch (e) {
+                    console.warn('Failed to apply theme from localStorage on DOMContentLoaded:', e);
+                    applyTheme('light'); // Fallback
+                }
+
+                // The rest of the original DOMContentLoaded logic (preload class removal, parent theme check)
                 if (document.documentElement.classList.contains('dark-theme-preload')) {
                      document.documentElement.classList.remove('dark-theme-preload');
                 }
                 if (window.parent && window.parent !== window) {
                     try {
                         const parentTheme = parent.localStorage.getItem('theme');
-                        if (parentTheme) applyTheme(parentTheme);
+                        if (parentTheme) applyTheme(parentTheme); // This call inside DOMContentLoaded is fine
                     } catch(e) { console.warn("iframe could not access parent's localStorage for theme.");}
                 }
             });

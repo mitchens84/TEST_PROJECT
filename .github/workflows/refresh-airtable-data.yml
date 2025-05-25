@@ -1,0 +1,51 @@
+name: Refresh Airtable Index Data
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight UTC
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  refresh-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to commit changes back to the repo
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x' # Use a recent Python 3 version
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f integrations/airtable/requirements.txt ]; then
+            pip install -r integrations/airtable/requirements.txt
+          else
+            echo "requirements.txt not found, skipping pip install."
+          fi
+
+      - name: Run Airtable script
+        env:
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+        run: |
+          python integrations/airtable/airtable_workflow_extractor.py \
+            --base-id "appaWqv85wwLPD2Gy" \
+            --table-id "tblrbfE4HKco5T6Tj" \
+            # The --output argument will use the new default "data/airtable_index_data.json"
+
+      - name: Commit and push if data changed
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/airtable_index_data.json
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Automated update of Airtable index data"
+            git push
+          fi

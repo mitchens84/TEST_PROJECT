@@ -297,13 +297,17 @@
                 }
             }
 
-            // Load saved theme
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                applyTheme(savedTheme);
-            } else {
-                // Default to light theme or detect OS preference if desired
-                applyTheme('light'); 
+            // Initial theme application based on localStorage (MOVED HERE - though already here, adding try/catch)
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    applyTheme(savedTheme);
+                } else {
+                    applyTheme('light'); // Default
+                }
+            } catch (e) {
+                console.warn('Failed to apply theme from localStorage on DOMContentLoaded (root index.html):', e);
+                applyTheme('light'); // Fallback
             }
 
             themeToggleButton.addEventListener('click', function() {
