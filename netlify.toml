@@ -17,7 +17,7 @@
 [[headers]]
   for = "/*" # Apply to all pages
   [headers.values]
-    Permissions-Policy = "geolocation=(), microphone=(), camera=(), magnetometer=(), gyroscope=(), payment=()"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=(), magnetometer=(), gyroscope=(), payment=(), interest-cohort=()"
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
     # Add other security headers here if needed in the future
