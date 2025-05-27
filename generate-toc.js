@@ -39,10 +39,12 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
     "FEATURES",
     "CONTENT DEMONSTRATIONS", // was "section"
     "ADVANCED SHOWCASES",   // was "new-test-section"
+    "SITRUNA KNOWLEDGE MAP", // was "sitruna"
+    "APPLIANCE SCALING TUTORIAL",
+    "MARKDOWN RENDERING EXAMPLE",
     "COMPREHENSIVE STORAGE TEST", // for test.html (assuming test.html is moved into EXPRESS/comprehensive-storage-test/index.html)
     "CAREER PROPOSAL - INTERACTIVE", // was "career"
-    "COMPLEX CONTENT SHOWCASE", // was "complex-showcase"
-    "SITRUNA KNOWLEDGE MAP" // was "sitruna"
+    "COMPLEX CONTENT SHOWCASE" // was "complex-showcase"
   ];
   let htmlToc = '<ul>\n';
   try {

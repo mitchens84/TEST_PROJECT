@@ -11,12 +11,19 @@
         // Apply theme on initial load and listen for changes from parent
         (function() { // Standard theme handling script
             function applyTheme(theme) {
-                if (theme === 'dark') {
-                    document.documentElement.classList.add('dark-theme-preload');
-                    document.body.classList.add('dark-theme');
-                } else {
-                    document.documentElement.classList.remove('dark-theme-preload');
-                    document.body.classList.remove('dark-theme');
+                if (document.documentElement) {
+                    if (theme === 'dark') {
+                        document.documentElement.classList.add('dark-theme-preload');
+                    } else {
+                        document.documentElement.classList.remove('dark-theme-preload');
+                    }
+                }
+                if (document.body) {
+                    if (theme === 'dark') {
+                        document.body.classList.add('dark-theme');
+                    } else {
+                        document.body.classList.remove('dark-theme');
+                    }
                 }
             }
             try {
