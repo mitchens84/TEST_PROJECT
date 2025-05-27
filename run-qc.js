@@ -68,8 +68,8 @@ function checkHtmlFile(filePath) {
                 continue;
             }
         }
-        if (!attributes.includes('id=') && !attributes.includes('name=') && !attributes.includes('data-id=')) {
-            logIssue(filePath, `Interactive element <${tagName}> found without id, name, or data-id: ${fullTag.substring(0, 60)}...`);
+        if (!attributes.includes('id=') && !attributes.includes('name=') && !attributes.includes('data-id=') && !attributes.includes('data-storage-key=')) {
+            logIssue(filePath, `Interactive element <${tagName}> found without id, name, data-id, or data-storage-key: ${fullTag.substring(0, 60)}...`);
         }
     }
 
