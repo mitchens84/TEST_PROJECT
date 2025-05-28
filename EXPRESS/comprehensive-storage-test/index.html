@@ -231,10 +231,68 @@
     </div>
 
     <script type="module">
-        // Import storage systems
-        import autoStorage from '../../src/auto-storage.js'; // Adjusted path
-        import SimpleStorage from '../../src/simple-storage.js'; // Adjusted path
-        import StorageManager from '../../src/storage-manager.js'; // Adjusted path
+        // Get the base URL for the main site
+        const getBasePath = () => {
+            try {
+                // Check if we're in an iframe
+                const isInIframe = window !== window.top;
+                
+                if (isInIframe) {
+                    // Get the top window's origin and path
+                    const topOrigin = window.top.location.origin;
+                    const topPathname = window.top.location.pathname;
+                    const topDir = topPathname.substring(0, topPathname.lastIndexOf('/') + 1);
+                    return `${topOrigin}${topDir}`;
+                } else {
+                    // We're in the main window - go back two levels from EXPRESS/comprehensive-storage-test/
+                    return '../../';
+                }
+            } catch (error) {
+                console.warn('Could not determine base path, using relative path:', error);
+                return '../../';
+            }
+        };
+        
+        const basePath = getBasePath();
+        console.log('Using base path:', basePath);
+        
+        let autoStorage, SimpleStorage, StorageManager;
+        
+        // Load modules with proper error handling
+        async function loadModules() {
+            try {
+                console.log('Loading storage modules...');
+                
+                // Load all required modules with absolute paths
+                const [autoStorageModule, simpleStorageModule, storageManagerModule] = await Promise.all([
+                    import(`${basePath}src/auto-storage.js`),
+                    import(`${basePath}src/simple-storage.js`),
+                    import(`${basePath}src/storage-manager.js`)
+                ]);
+                
+                autoStorage = autoStorageModule.default;
+                SimpleStorage = simpleStorageModule.default;
+                StorageManager = storageManagerModule.default;
+                
+                console.log('All storage modules loaded successfully');
+                
+                // Initialize the page
+                initializePage();
+                
+            } catch (error) {
+                console.error('Failed to load storage modules:', error);
+                showError(`Failed to load required modules: ${error.message}`);
+            }
+        }
+        
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'color: red; padding: 10px; border: 1px solid red; margin: 10px; background: #ffe6e6;';
+            errorDiv.textContent = message;
+            document.body.insertBefore(errorDiv, document.body.firstChild);
+        }
+        
+        function initializePage() {
 
         const simpleKeyInput = document.getElementById('simpleStorageKey');
         const simpleValueInput = document.getElementById('simpleStorageValue');
@@ -323,28 +381,36 @@
             }
         });
         
-        document.addEventListener('DOMContentLoaded', function() {
-            var collapsibles = document.getElementsByClassName("collapsible");
-            for (var i = 0; i < collapsibles.length; i++) {
-                collapsibles[i].addEventListener("click", function() {
-                    this.classList.toggle("active");
-                    var content = this.nextElementSibling;
-                    if (content.style.maxHeight && content.style.maxHeight !== "0px"){
-                        content.style.maxHeight = null;
-                    } else {
-                        content.style.maxHeight = content.scrollHeight + "px";
-                    } 
-                });
+        // Initialize collapsible elements
+        var collapsibles = document.getElementsByClassName("collapsible");
+        for (var i = 0; i < collapsibles.length; i++) {
+            collapsibles[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var content = this.nextElementSibling;
+                if (content.style.maxHeight && content.style.maxHeight !== "0px"){
+                    content.style.maxHeight = null;
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                } 
+            });
 
-                const content = collapsibles[i].nextElementSibling;
-                if (collapsibles[i].classList.contains('active') && content) { 
-                     if (content.style.maxHeight !== content.scrollHeight + "px") {
-                        content.style.maxHeight = content.scrollHeight + "px";
-                     }
-                }
+            const content = collapsibles[i].nextElementSibling;
+            if (collapsibles[i].classList.contains('active') && content) { 
+                 if (content.style.maxHeight !== content.scrollHeight + "px") {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                 }
             }
-            inspectPrefixedStorage();
-        });
+        }
+        inspectPrefixedStorage();
+        
+        } // End of initializePage function
+        
+        // Start loading modules when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadModules);
+        } else {
+            loadModules();
+        }
     </script>
 </body>
 </html>

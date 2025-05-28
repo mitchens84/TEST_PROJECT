@@ -1,5 +1,6 @@
 {
     "name": "template-project",
+    "type": "module",
     "private": true,
     "version": "0.0.1",
     "description": "A template for frontend projects with HTML, optional React/Vite, and utility scripts.",

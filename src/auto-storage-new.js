@@ -1,4 +1,5 @@
 // AutoStorage: Manages automatic saving of form data and UI state to localStorage.
+import ModuleLoader from './module-loader.js';
 
 /**
  * AutoStorage
@@ -45,7 +46,7 @@ class AutoStorageClass {
 
   async loadStorageManager() {
     try {
-      const module = await import('./storage-manager.js');
+      const module = await ModuleLoader.loadModule('./storage-manager.js');
       this.storageManager = module.default;
     } catch (error) {
       console.error('Failed to load StorageManager:', error);

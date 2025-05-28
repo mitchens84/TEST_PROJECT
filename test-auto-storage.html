@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Storage Test</title>
+</head>
+<body>
+    <h1>Auto Storage Import Test</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        const results = document.getElementById('results');
+        
+        try {
+            console.log('Testing ModuleLoader import...');
+            const moduleLoaderModule = await import('./src/module-loader.js');
+            console.log('ModuleLoader module:', moduleLoaderModule);
+            results.innerHTML += `<p style="color: green;">✅ ModuleLoader imported: ${typeof moduleLoaderModule.default}</p>`;
+            
+            console.log('Testing AutoStorage import...');
+            const autoStorageModule = await import('./src/auto-storage.js');
+            console.log('AutoStorage module:', autoStorageModule);
+            results.innerHTML += `<p style="color: green;">✅ AutoStorage imported: ${typeof autoStorageModule.default}</p>`;
+            
+        } catch (error) {
+            console.error('Import error:', error);
+            results.innerHTML += `<p style="color: red;">❌ Import failed: ${error.message}</p>`;
+        }
+    </script>
+</body>
+</html>

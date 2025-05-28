@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Test</title>
+</head>
+<body>
+    <h1>Module Loading Test</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        const results = document.getElementById('results');
+        
+        async function testModule(modulePath, name) {
+            try {
+                const module = await import(modulePath);
+                results.innerHTML += `<p style="color: green;">✅ ${name}: Loaded successfully</p>`;
+                console.log(`✅ ${name}:`, module);
+                return module;
+            } catch (error) {
+                results.innerHTML += `<p style="color: red;">❌ ${name}: ${error.message}</p>`;
+                console.error(`❌ ${name}:`, error);
+                return null;
+            }
+        }
+        
+        async function testAllModules() {
+            await testModule('./src/env-config.js', 'env-config');
+            await testModule('./src/module-loader.js', 'module-loader');
+            await testModule('./src/router.js', 'router');
+            await testModule('./src/auto-storage.js', 'auto-storage');
+            await testModule('./src/quality-control.js', 'quality-control');
+        }
+        
+        testAllModules();
+    </script>
+</body>
+</html>

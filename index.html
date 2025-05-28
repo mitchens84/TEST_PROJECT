@@ -119,7 +119,7 @@
     </head>
 <body>
     <button id="sidebar-toggle-btn">☰</button>
-    <!-- <script type="module" src="src/env-config.js" defer></script> -->
+    <!-- Quality Control will be loaded dynamically to avoid path conflicts -->
     <script>
         // Authentication Check and Redirection
         (function() {
@@ -216,7 +216,13 @@
 
         // Function called by toc.html links (e.g., parent.loadContentIntoIframe('path/to/page.html', this))
         window.loadContentIntoIframe = function(pageUrl, tocLinkElement) {
-            // tocLinkElement is the <a> from toc.html. We don't activate static nav buttons from ToC clicks.
+            // Update URL to reflect the current content
+            const route = extractRouteFromUrl(pageUrl);
+            const newUrl = new URL(window.location);
+            newUrl.hash = route;
+            window.history.pushState({ page: pageUrl, route: route }, '', newUrl);
+            
+            // Load the content
             window.loadContent(pageUrl, null); 
             sessionStorage.setItem('currentPage', pageUrl);
 
@@ -229,6 +235,64 @@
             }
             */
         };
+        
+        // Helper function to extract route from URL
+        function extractRouteFromUrl(url) {
+            // Convert EXPRESS/section/page.html to #/section
+            let route = url.replace(/^EXPRESS\//, '').replace(/\/index\.html$/, '').replace(/\/page\.html$/, '');
+            if (!route || route === url) {
+                // Fallback for other patterns
+                const parts = url.split('/').filter(part => part && part !== 'EXPRESS');
+                route = parts.length > 0 ? parts.join('/') : 'home';
+            }
+            return route;
+        }
+        
+        // Handle URL routing for direct access and browser navigation
+        function handleRouting() {
+          const hash = window.location.hash.slice(1); // Remove the # symbol
+          if (hash) {
+            // Convert hash to page URL
+            let pageUrl;
+            if (hash === 'home' || hash === '') {
+              pageUrl = 'EXPRESS/introduction/page.html';
+            } else if (hash.includes('/')) {
+              pageUrl = `EXPRESS/${hash}/page.html`;
+            } else {
+              pageUrl = `EXPRESS/${hash}/page.html`;
+            }
+            
+            // Load the page if it exists, otherwise default to introduction
+            fetch(pageUrl, { method: 'HEAD' }).then(response => {
+              if (response.ok) {
+                window.loadContent(pageUrl, null);
+                sessionStorage.setItem('currentPage', pageUrl);
+              } else {
+                console.warn(`Page not found: ${pageUrl}, loading introduction`);
+                window.loadContent('EXPRESS/introduction/page.html', null);
+              }
+            }).catch(() => {
+              console.warn(`Failed to check page: ${pageUrl}, loading introduction`);
+              window.loadContent('EXPRESS/introduction/page.html', null);
+            });
+          }
+        }
+
+        // Listen for hash changes (browser back/forward)
+        window.addEventListener('hashchange', handleRouting);
+        
+        // Handle initial routing if URL has hash
+        if (window.location.hash) {
+          setTimeout(handleRouting, 100); // Small delay to ensure DOM is ready
+        }
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.page) {
+                window.loadContent(event.state.page, null);
+                sessionStorage.setItem('currentPage', event.state.page);
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             // Theme Toggle Functionality
@@ -468,6 +532,39 @@
           window.envConfig = configModule.default; 
           console.log('env-config.js loaded successfully via dynamic import:', window.envConfig);
 
+          // Initialize Router and AutoStorage
+          try {
+            const routerModule = await import('./src/router.js');
+            const autoStorageModule = await import('./src/auto-storage.js');
+            
+            // Initialize router
+            window.router = new routerModule.default();
+            await window.router.init();
+            
+            // Initialize auto-storage
+            window.autoStorage = new autoStorageModule.default();
+            await window.autoStorage.init();
+            
+            console.log('Router and AutoStorage initialized successfully');
+          } catch (error) {
+            console.error('Failed to initialize Router and/or AutoStorage:', error);
+            // Continue without these features if they fail
+          }
+
+          // Load Quality Control for testing (optional, non-blocking)
+          try {
+            const qcModule = await import('./src/quality-control.js');
+            window.qualityController = new qcModule.default();
+            // Run QC tests in background
+            setTimeout(() => {
+              window.qualityController.runAllTests().then(() => {
+                console.log('Quality Control tests completed');
+              }).catch(e => console.warn('QC tests failed:', e));
+            }, 2000); // Delay to let other components initialize
+          } catch (error) {
+            console.warn('Quality Control module failed to load:', error);
+          }
+
           // Clear any previous error shown in TOC area if it was there from a different script
           if (tocTargetDiv && tocTargetDiv.innerHTML.includes("Critical Error")) {
             tocTargetDiv.innerHTML = '<p>Loading Table of Contents...</p>'; 
@@ -531,6 +628,44 @@
             showFatalError('UI component for Table of Contents is missing.');
           }
           // ----- End: TOC and Initial Page Load Logic -----
+
+          // Handle URL routing for direct access and browser navigation
+          function handleRouting() {
+            const hash = window.location.hash.slice(1); // Remove the # symbol
+            if (hash) {
+              // Convert hash to page URL
+              let pageUrl;
+              if (hash === 'home' || hash === '') {
+                pageUrl = 'EXPRESS/introduction/page.html';
+              } else if (hash.includes('/')) {
+                pageUrl = `EXPRESS/${hash}/page.html`;
+              } else {
+                pageUrl = `EXPRESS/${hash}/page.html`;
+              }
+              
+              // Load the page if it exists, otherwise default to introduction
+              fetch(pageUrl, { method: 'HEAD' }).then(response => {
+                if (response.ok) {
+                  window.loadContent(pageUrl, null);
+                  sessionStorage.setItem('currentPage', pageUrl);
+                } else {
+                  console.warn(`Page not found: ${pageUrl}, loading introduction`);
+                  window.loadContent('EXPRESS/introduction/page.html', null);
+                }
+              }).catch(() => {
+                console.warn(`Failed to check page: ${pageUrl}, loading introduction`);
+                window.loadContent('EXPRESS/introduction/page.html', null);
+              });
+            }
+          }
+
+          // Listen for hash changes (browser back/forward)
+          window.addEventListener('hashchange', handleRouting);
+          
+          // Handle initial routing if URL has hash
+          if (window.location.hash) {
+            setTimeout(handleRouting, 100); // Small delay to ensure DOM is ready
+          }
 
         } catch (error) {
           console.error('Fatal Error: Failed to load or process src/env-config.js.', error);

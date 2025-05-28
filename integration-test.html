@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-item { 
+            padding: 10px; 
+            margin: 5px 0; 
+            border-radius: 4px; 
+            border: 1px solid #ddd;
+        }
+        .pass { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .fail { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border-color: #b6d4dc; color: #0c5460; }
+        #results { margin-top: 20px; }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin-right: 10px;
+        }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Module Integration Test</h1>
+    <p>This page tests the loading and integration of all system modules.</p>
+    
+    <button onclick="runTests()">Run Tests</button>
+    <button onclick="clearResults()">Clear Results</button>
+    <button onclick="testRouting()">Test Routing</button>
+    
+    <div id="results"></div>
+    
+    <script type="module">
+        window.testResults = [];
+        
+        function addResult(name, status, details) {
+            const result = { name, status, details, timestamp: Date.now() };
+            window.testResults.push(result);
+            
+            const resultsDiv = document.getElementById('results');
+            const item = document.createElement('div');
+            item.className = `test-item ${status.toLowerCase()}`;
+            item.innerHTML = `
+                <strong>${status === 'PASS' ? '✅' : status === 'FAIL' ? '❌' : 'ℹ️'} ${name}</strong><br>
+                <small>${details}</small>
+            `;
+            resultsDiv.appendChild(item);
+        }
+        
+        window.addResult = addResult;
+        
+        window.clearResults = function() {
+            document.getElementById('results').innerHTML = '';
+            window.testResults = [];
+        };
+        
+        window.runTests = async function() {
+            clearResults();
+            addResult('Test Started', 'INFO', 'Beginning comprehensive module tests...');
+            
+            // Test 1: Environment Config
+            try {
+                const envModule = await import('./src/env-config.js');
+                if (envModule.default && typeof envModule.default === 'object') {
+                    addResult('Environment Config', 'PASS', `Loaded: ${JSON.stringify(envModule.default).substring(0, 50)}...`);
+                    window.envConfig = envModule.default;
+                } else {
+                    addResult('Environment Config', 'FAIL', 'Module loaded but no valid default export');
+                }
+            } catch (error) {
+                addResult('Environment Config', 'FAIL', error.message);
+            }
+            
+            // Test 2: Router
+            try {
+                const routerModule = await import('./src/router.js');
+                if (routerModule.default && typeof routerModule.default === 'function') {
+                    const router = new routerModule.default();
+                    if (typeof router.init === 'function') {
+                        await router.init();
+                        addResult('Router Module', 'PASS', 'Router loaded and initialized');
+                        window.testRouter = router;
+                    } else {
+                        addResult('Router Module', 'FAIL', 'Router class missing init method');
+                    }
+                } else {
+                    addResult('Router Module', 'FAIL', 'Invalid router export');
+                }
+            } catch (error) {
+                addResult('Router Module', 'FAIL', error.message);
+            }
+            
+            // Test 3: Auto Storage
+            try {
+                const autoStorageModule = await import('./src/auto-storage.js');
+                if (autoStorageModule.default && typeof autoStorageModule.default === 'object') {
+                    if (typeof autoStorageModule.default.init === 'function') {
+                        // Don't call init as it might interfere with main app
+                        addResult('Auto Storage Module', 'PASS', 'Auto storage module loaded with init method');
+                        window.testAutoStorage = autoStorageModule.default;
+                    } else {
+                        addResult('Auto Storage Module', 'FAIL', 'Auto storage missing init method');
+                    }
+                } else {
+                    addResult('Auto Storage Module', 'FAIL', 'Invalid auto storage export');
+                }
+            } catch (error) {
+                addResult('Auto Storage Module', 'FAIL', error.message);
+            }
+            
+            // Test 4: Quality Control
+            try {
+                const qcModule = await import('./src/quality-control.js');
+                if (qcModule.default && typeof qcModule.default === 'function') {
+                    const qc = new qcModule.default();
+                    if (typeof qc.runAllTests === 'function') {
+                        addResult('Quality Control Module', 'PASS', 'QC module loaded with runAllTests method');
+                        window.testQC = qc;
+                    } else {
+                        addResult('Quality Control Module', 'FAIL', 'QC class missing runAllTests method');
+                    }
+                } else {
+                    addResult('Quality Control Module', 'FAIL', 'Invalid QC export');
+                }
+            } catch (error) {
+                addResult('Quality Control Module', 'FAIL', error.message);
+            }
+            
+            // Test 5: Module Loader
+            try {
+                const moduleLoaderModule = await import('./src/module-loader.js');
+                if (moduleLoaderModule.default || moduleLoaderModule.ModuleLoader) {
+                    const ModuleLoader = moduleLoaderModule.default || moduleLoaderModule.ModuleLoader;
+                    if (typeof ModuleLoader.loadModule === 'function') {
+                        addResult('Module Loader', 'PASS', 'Module loader with loadModule method');
+                        window.testModuleLoader = ModuleLoader;
+                    } else {
+                        addResult('Module Loader', 'FAIL', 'Module loader missing loadModule method');
+                    }
+                } else {
+                    addResult('Module Loader', 'FAIL', 'Invalid module loader export');
+                }
+            } catch (error) {
+                addResult('Module Loader', 'FAIL', error.message);
+            }
+            
+            // Test 6: DOM Elements
+            const requiredElements = [
+                'dynamic-toc-content',
+                'home-content', 
+                'sidebar',
+                'content-area',
+                'theme-toggle-btn'
+            ];
+            
+            let domTestsPassed = 0;
+            for (const elementId of requiredElements) {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    domTestsPassed++;
+                } else {
+                    addResult(`DOM Element: ${elementId}`, 'FAIL', 'Element not found');
+                }
+            }
+            
+            if (domTestsPassed === requiredElements.length) {
+                addResult('DOM Elements', 'PASS', `All ${requiredElements.length} required elements found`);
+            } else {
+                addResult('DOM Elements', 'FAIL', `Only ${domTestsPassed}/${requiredElements.length} elements found`);
+            }
+            
+            // Test 7: localStorage
+            try {
+                const testKey = 'integration_test_' + Date.now();
+                const testValue = { test: true, timestamp: Date.now() };
+                localStorage.setItem(testKey, JSON.stringify(testValue));
+                const retrieved = JSON.parse(localStorage.getItem(testKey));
+                localStorage.removeItem(testKey);
+                
+                if (retrieved && retrieved.test === true) {
+                    addResult('LocalStorage', 'PASS', 'Read/write/delete operations work');
+                } else {
+                    addResult('LocalStorage', 'FAIL', 'Data integrity check failed');
+                }
+            } catch (error) {
+                addResult('LocalStorage', 'FAIL', error.message);
+            }
+            
+            // Test 8: Run actual QC if available
+            if (window.testQC) {
+                try {
+                    addResult('Running Full QC', 'INFO', 'Executing quality control tests...');
+                    const qcResults = await window.testQC.runAllTests();
+                    if (qcResults && typeof qcResults === 'object') {
+                        addResult('Quality Control Results', 'PASS', 
+                            `QC completed: ${qcResults.passed}/${qcResults.total} tests passed (${qcResults.successRate.toFixed(1)}%)`);
+                    }
+                } catch (error) {
+                    addResult('Quality Control Execution', 'FAIL', error.message);
+                }
+            }
+            
+            // Summary
+            const passed = window.testResults.filter(r => r.status === 'PASS').length;
+            const failed = window.testResults.filter(r => r.status === 'FAIL').length;
+            const total = passed + failed;
+            const successRate = total > 0 ? (passed / total * 100).toFixed(1) : 0;
+            
+            addResult('Test Summary', successRate >= 90 ? 'PASS' : 'FAIL', 
+                `${passed}/${total} tests passed (${successRate}% success rate)`);
+        };
+        
+        window.testRouting = function() {
+            addResult('Routing Test', 'INFO', 'Testing URL routing functionality...');
+            
+            // Test hash-based routing
+            if (window.location.hash !== '#test-route') {
+                window.location.hash = '#test-route';
+                setTimeout(() => {
+                    if (window.location.hash === '#test-route') {
+                        addResult('Hash Routing', 'PASS', 'Hash-based routing works');
+                        // Reset hash
+                        window.location.hash = '';
+                    } else {
+                        addResult('Hash Routing', 'FAIL', 'Hash routing failed');
+                    }
+                }, 100);
+            }
+            
+            // Test loadContent function
+            if (typeof window.loadContent === 'function') {
+                addResult('LoadContent Function', 'PASS', 'loadContent function is available');
+            } else {
+                addResult('LoadContent Function', 'FAIL', 'loadContent function not found');
+            }
+            
+            // Test loadContentIntoIframe function
+            if (typeof window.loadContentIntoIframe === 'function') {
+                addResult('LoadContentIntoIframe Function', 'PASS', 'loadContentIntoIframe function is available');
+            } else {
+                addResult('LoadContentIntoIframe Function', 'FAIL', 'loadContentIntoIframe function not found');
+            }
+        };
+        
+        // Auto-run tests when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(runTests, 1000); // Give page time to fully load
+        });
+    </script>
+</body>
+</html>
