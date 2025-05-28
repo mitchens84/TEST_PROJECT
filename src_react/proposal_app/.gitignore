@@ -1,0 +1,71 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+# Log files
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Editor directories and files
+.idea/
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.local
+
+# Test results
+/cypress/videos/
+/cypress/screenshots/
+/mochawesome-report/
+junit.xml
+# Storybook
+.storybook-static/
+storybook-static/
+# Vite
+.vite/
+*.vite.*
+vite.config.js.timestamp-*
+# TypeScript
+*.tsbuildinfo
+# Next.js
+.next/
+out/
+# Nuxt.js
+.nuxt/
+# Svelte
+.svelte-kit/
+# Angular
+.angular/
+# Vue
+.vue-devtools-proxy-log.*
+# Gatsby
+.cache/
+public/
+# Docusaurus
+.docusaurus/
+build/
+# Other
+*.log
+*.lock
+.cache/
+*.bak
+*.tmp
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# Specific to this project if any other build artifacts
+# e.g. if 'build' script outputs to a different folder name locally
+# /local-build-output/
