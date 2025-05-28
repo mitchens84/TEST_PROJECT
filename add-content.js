@@ -236,125 +236,13 @@ async function processNewContent(newContentPath) {
   const pageHtmlPath = path.join(targetSectionDirPath, 'page.html');
 
   // Create or update page.html
+  // Create page.html if it doesn't exist
   if (!fs.existsSync(pageHtmlPath)) {
     console.log(`page.html not found in section \"${sectionName}\". Creating a default one.`);
     createDefaultPageHtml(targetSectionDirPath, sectionName);
   } else {
-    console.log(`page.html already exists in section \"${sectionName}\". Updating to list current files.`);
-    const sectionTitle = sectionName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    const assetsPath = path.join(projectRoot, 'assets', 'styles', 'main.css'); 
-    const indexPath = path.join(projectRoot, 'index.html'); 
-    const updatedHtmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${sectionTitle}</title>
-    <link rel="stylesheet" href="${path.relative(targetSectionDirPath, assetsPath).replace(/\\\\/g, '/')}">
-    <script>
-        // Apply theme on initial load and listen for changes from parent
-        function applyTheme(theme) {
-            // Ensure body exists before manipulating it
-            if (document.body) { 
-                if (theme === 'dark') {
-                    document.body.classList.add('dark-theme');
-                } else {
-                    document.body.classList.remove('dark-theme');
-                }
-            } else {
-                console.error('Content page theme: document.body is not available for theme application.');
-            }
-        }
-        // Initial theme application from localStorage
-        try {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) {
-                // Apply theme before body is fully rendered to avoid flash
-                if (document.documentElement && savedTheme === 'dark') document.documentElement.classList.add('dark-theme-preload');
-            } else {
-                 // Optional: could check prefers-color-scheme
-            }
-        } catch (e) {
-            console.warn('Could not access localStorage for initial theme in iframe');
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            // Remove preload class after styles are applied
-            if (document.documentElement && document.documentElement.classList.contains('dark-theme-preload')) {
-                 document.documentElement.classList.remove('dark-theme-preload');
-                 if (document.body) document.body.classList.add('dark-theme'); // Ensure body class is set
-            } else {
-                 // If not preloaded (e.g. no theme in localstorage or it was light)
-                 // still try to apply from localstorage in case it was set to light explicitly
-                 try {
-                    const currentTheme = localStorage.getItem('theme');
-                     if (currentTheme) applyTheme(currentTheme);
-                 } catch(e) { /* ignore */ }
-            }
-
-            window.addEventListener('message', function(event) {
-                // Optional: Check event.origin for security if the origin is known and static
-                // if (event.origin !== 'http://your-main-app-origin.com') return;
-                if (event.data && event.data.type === 'themeChange') {
-                    applyTheme(event.data.theme);
-                    // Also update localStorage in the iframe to keep it synced
-                    try {
-                        localStorage.setItem('theme', event.data.theme);
-                    } catch (e) {
-                        console.warn('Could not set localStorage theme in iframe');
-                    }
-                }
-            });
-        });
-    <\/script>
-    <style>
-        /* Prevent FOUC (Flash Of Unstyled Content) for dark theme */
-        .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
-    </style>
-</head>
-<body style="padding: 20px;">
-    <header>
-        <nav>
-            <a href="${path.relative(targetSectionDirPath, indexPath).replace(/\\\\/g, '/')}">Home</a>
-        </nav>
-        <h1>${sectionTitle}</h1>
-    </header>
-    <main>
-        <p>Content for the "${sectionName}" section.</p>
-        
-        <h2>Files in this section:</h2>
-        <ul>
-            ${fs.readdirSync(targetSectionDirPath).map(file => `<li><a href="./${file}">${file}</a></li>`).join('\n            ')}
-        </ul>
-    </main>
-    <footer>
-        <p>&copy; <span id="currentYear">${new Date().getFullYear()}</span> Your Project</p>
-        <!-- AUTO-STORAGE-INIT -->
-        <script>
-             // Request theme from parent on load, in case message was missed or for initial sync
-            // This is an additional measure. The DOMContentLoaded listener above handles initial localStorage.
-            // And the parent is supposed to send the theme on iframe load.
-            if (window.parent && window.parent !== window) {
-                try {
-                    const currentThemeInParent = parent.localStorage.getItem('theme');
-                     if (currentThemeInParent) {
-                        applyTheme(currentThemeInParent);
-                        localStorage.setItem('theme', currentThemeInParent); // Sync iframe's local storage
-                     }
-                } catch(e) {
-                    console.warn("iframe could not access parent's localStorage for theme sync on load.")
-                }
-            }
-        </script>
-    </footer>
-</body>
-</html>`;
-    try {
-        fs.writeFileSync(pageHtmlPath, updatedHtmlContent, 'utf8');
-        console.log(`Updated existing page.html in section \"${sectionName}\" to list current files.`);
-    } catch (err) {
-        console.error(`Error updating page.html for section \"${sectionName}\":`, err);
-    }
+    console.log(`page.html already exists in section \"${sectionName}\". Skipping creation/update of page.html itself. The TOC will still be updated.`);
+    // The existing page.html will NOT be overwritten.
   }
 
   try {

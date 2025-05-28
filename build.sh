@@ -13,18 +13,14 @@ PROPOSAL_APP_OUTPUT_DIR="EXPRESS/career/full-proposal-component"
 # --- 1. Build Internal React Proposal App ---
 echo "Building Internal React Proposal App..."
 
-# Check if node_modules exists in proposal_app, if not, run npm install
-if [ ! -d "$PROPOSAL_APP_DIR/node_modules" ]; then
-  echo "node_modules not found in $PROPOSAL_APP_DIR. Running npm install..."
-  (cd "$PROPOSAL_APP_DIR" && npm install)
-  if [ $? -ne 0 ]; then
-    echo "Error: npm install failed for $PROPOSAL_APP_DIR. Aborting build."
-    exit 1
-  fi
-else
-  # Optional: Could add a check here to run npm install if its package.json is newer
-  # than a marker in its node_modules, similar to the root project check.
-  echo "node_modules found in $PROPOSAL_APP_DIR. Skipping npm install."
+echo "Forcefully removing old node_modules in $PROPOSAL_APP_DIR to ensure fresh dependencies..."
+(cd "$PROPOSAL_APP_DIR" && rm -rf node_modules)
+
+echo "Running npm install in $PROPOSAL_APP_DIR..."
+(cd "$PROPOSAL_APP_DIR" && npm install)
+if [ $? -ne 0 ]; then
+  echo "Error: npm install failed for $PROPOSAL_APP_DIR. Aborting build."
+  exit 1
 fi
 
 echo "Running npm run build for $PROPOSAL_APP_DIR..."
