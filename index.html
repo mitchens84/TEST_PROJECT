@@ -176,7 +176,7 @@
             let iframe = homeContentDiv.querySelector('iframe');
             if (!iframe) {
                 iframe = document.createElement('iframe');
-                // Styles for iframe are expected to be in CSS
+                iframe.id = 'content-iframe'; // Set the ID that router expects
                 homeContentDiv.innerHTML = ''; 
                 homeContentDiv.appendChild(iframe);
             }
@@ -216,24 +216,20 @@
 
         // Function called by toc.html links (e.g., parent.loadContentIntoIframe('path/to/page.html', this))
         window.loadContentIntoIframe = function(pageUrl, tocLinkElement) {
-            // Update URL to reflect the current content
-            const route = extractRouteFromUrl(pageUrl);
-            const newUrl = new URL(window.location);
-            newUrl.hash = route;
-            window.history.pushState({ page: pageUrl, route: route }, '', newUrl);
-            
-            // Load the content
-            window.loadContent(pageUrl, null); 
-            sessionStorage.setItem('currentPage', pageUrl);
-
-            // Optional: Auto-collapse sidebar after clicking a ToC link
-            /*
-            const sidebar = document.getElementById('sidebar');
-            const toggleButton = document.getElementById('sidebar-toggle-btn');
-            if (sidebar && toggleButton && !sidebar.classList.contains('sidebar-collapsed')) {
-                toggleButton.click(); // Simulate a click on the toggle button
+            // Use the new router for navigation
+            if (window.router) {
+                const route = extractRouteFromUrl(pageUrl);
+                window.router.navigate(route);
+            } else {
+                // Fallback to old method if router not available
+                const route = extractRouteFromUrl(pageUrl);
+                const newUrl = new URL(window.location);
+                newUrl.hash = route;
+                window.history.pushState({ page: pageUrl, route: route }, '', newUrl);
+                
+                window.loadContent(pageUrl, null); 
+                sessionStorage.setItem('currentPage', pageUrl);
             }
-            */
         };
         
         // Helper function to extract route from URL
@@ -249,10 +245,17 @@
         }
         
         // Handle URL routing for direct access and browser navigation
+        // This is handled by the Router class now, but kept for fallback
         function handleRouting() {
-          const hash = window.location.hash.slice(1); // Remove the # symbol
+          if (window.router) {
+            // Let the router handle it
+            window.router.loadCurrentRoute();
+            return;
+          }
+          
+          // Fallback routing logic
+          const hash = window.location.hash.slice(1);
           if (hash) {
-            // Convert hash to page URL
             let pageUrl;
             if (hash === 'home' || hash === '') {
               pageUrl = 'EXPRESS/introduction/page.html';
@@ -262,7 +265,6 @@
               pageUrl = `EXPRESS/${hash}/page.html`;
             }
             
-            // Load the page if it exists, otherwise default to introduction
             fetch(pageUrl, { method: 'HEAD' }).then(response => {
               if (response.ok) {
                 window.loadContent(pageUrl, null);
@@ -278,12 +280,12 @@
           }
         }
 
-        // Listen for hash changes (browser back/forward)
+        // Listen for hash changes (browser back/forward) - Router will handle this too
         window.addEventListener('hashchange', handleRouting);
         
-        // Handle initial routing if URL has hash
+        // Handle initial routing if URL has hash - Router will handle this
         if (window.location.hash) {
-          setTimeout(handleRouting, 100); // Small delay to ensure DOM is ready
+          setTimeout(handleRouting, 100);
         }
 
         // Handle browser back/forward buttons
@@ -537,13 +539,27 @@
             const routerModule = await import('./src/router.js');
             const autoStorageModule = await import('./src/auto-storage.js');
             
-            // Initialize router
-            window.router = new routerModule.default();
-            await window.router.init();
+            // Initialize ContentRouter with proper route configuration
+            window.router = new routerModule.ContentRouter({
+              contentContainer: 'content-iframe',
+              contentBasePath: 'EXPRESS/',
+              defaultRoute: 'introduction'
+            });
             
-            // Initialize auto-storage
-            window.autoStorage = new autoStorageModule.default();
-            await window.autoStorage.init();
+            // Add route handlers
+            window.router.addContentRoute('home', 'introduction/page.html', 'Introduction - Project Hub');
+            window.router.addContentRoute('introduction', 'introduction/page.html', 'Introduction - Project Hub');
+            window.router.addContentRoute('sitruna', 'sitruna/index.html', 'Sitruna - Project Hub');
+            window.router.addContentRoute('career', 'career/index.html', 'Career - Project Hub');
+            window.router.addContentRoute('features', 'features/page.html', 'Features - Project Hub');
+            window.router.addContentRoute('complex-showcase', 'complex-showcase/index.html', 'Complex Showcase - Project Hub');
+            window.router.addContentRoute('comprehensive-storage-test', 'comprehensive-storage-test/index.html', 'Storage Test - Project Hub');
+            
+            // Initialize auto-storage (it's a singleton instance, not a constructor)
+            window.autoStorage = autoStorageModule.default;
+            if (!window.autoStorage.initialized) {
+              await window.autoStorage.init();
+            }
             
             console.log('Router and AutoStorage initialized successfully');
           } catch (error) {
@@ -598,21 +614,26 @@
                   }
                 });
 
-                // Initial page load logic, now dependent on successful TOC load as well
-                const lastPage = sessionStorage.getItem('currentPage');
-                if (lastPage) {
-                  window.loadContent(lastPage, null);
+                // Initial page load logic - use router if available
+                if (window.router) {
+                  // Let router handle initial load
+                  window.router.loadCurrentRoute();
                 } else {
-                  // setTimeout just in case querySelector needs a moment after innerHTML
-                  setTimeout(() => { 
-                    const introLink = document.querySelector('#dynamic-toc-content a[href*="introduction/page.html"]');
-                    if (introLink && introLink.href) {
-                      window.loadContentIntoIframe(introLink.getAttribute('href'), introLink);
-                    } else {
-                      console.warn('Introduction link not found in TOC, loading default EXPRESS/introduction/page.html');
-                      window.loadContent('EXPRESS/introduction/page.html', null);
-                    }
-                  }, 0); // Minimal delay
+                  // Fallback to old logic
+                  const lastPage = sessionStorage.getItem('currentPage');
+                  if (lastPage) {
+                    window.loadContent(lastPage, null);
+                  } else {
+                    setTimeout(() => { 
+                      const introLink = document.querySelector('#dynamic-toc-content a[href*="introduction/page.html"]');
+                      if (introLink && introLink.href) {
+                        window.loadContentIntoIframe(introLink.getAttribute('href'), introLink);
+                      } else {
+                        console.warn('Introduction link not found in TOC, loading default EXPRESS/introduction/page.html');
+                        window.loadContent('EXPRESS/introduction/page.html', null);
+                      }
+                    }, 0);
+                  }
                 }
               })
               .catch(error => {
@@ -628,44 +649,6 @@
             showFatalError('UI component for Table of Contents is missing.');
           }
           // ----- End: TOC and Initial Page Load Logic -----
-
-          // Handle URL routing for direct access and browser navigation
-          function handleRouting() {
-            const hash = window.location.hash.slice(1); // Remove the # symbol
-            if (hash) {
-              // Convert hash to page URL
-              let pageUrl;
-              if (hash === 'home' || hash === '') {
-                pageUrl = 'EXPRESS/introduction/page.html';
-              } else if (hash.includes('/')) {
-                pageUrl = `EXPRESS/${hash}/page.html`;
-              } else {
-                pageUrl = `EXPRESS/${hash}/page.html`;
-              }
-              
-              // Load the page if it exists, otherwise default to introduction
-              fetch(pageUrl, { method: 'HEAD' }).then(response => {
-                if (response.ok) {
-                  window.loadContent(pageUrl, null);
-                  sessionStorage.setItem('currentPage', pageUrl);
-                } else {
-                  console.warn(`Page not found: ${pageUrl}, loading introduction`);
-                  window.loadContent('EXPRESS/introduction/page.html', null);
-                }
-              }).catch(() => {
-                console.warn(`Failed to check page: ${pageUrl}, loading introduction`);
-                window.loadContent('EXPRESS/introduction/page.html', null);
-              });
-            }
-          }
-
-          // Listen for hash changes (browser back/forward)
-          window.addEventListener('hashchange', handleRouting);
-          
-          // Handle initial routing if URL has hash
-          if (window.location.hash) {
-            setTimeout(handleRouting, 100); // Small delay to ensure DOM is ready
-          }
 
         } catch (error) {
           console.error('Fatal Error: Failed to load or process src/env-config.js.', error);

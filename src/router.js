@@ -210,30 +210,28 @@ export class ContentRouter extends Router {
    * Load content in iframe
    */
   async loadContentInIframe(contentPath) {
+    // Use the global loadContent function if available
+    if (typeof window !== 'undefined' && window.loadContent) {
+      // Build full content URL
+      let contentUrl = this.buildContentUrl(contentPath);
+      window.loadContent(contentUrl, null);
+      sessionStorage.setItem('currentPage', contentUrl);
+      return;
+    }
+    
+    // Fallback to direct iframe manipulation
     const iframe = document.getElementById(this.contentContainer);
     if (!iframe) {
       throw new Error(`Content container ${this.contentContainer} not found`);
     }
     
-    // Build content URL
-    let contentUrl = contentPath;
-    
-    // If it's a relative path, prefix with content base path
-    if (!contentUrl.startsWith('http') && !contentUrl.startsWith('/')) {
-      contentUrl = this.contentBasePath + contentUrl;
-    }
-    
-    // Add .html suffix if not present and not already a complete URL
-    if (!contentUrl.includes('.') && !contentUrl.startsWith('http')) {
-      contentUrl += '/index.html';
-    }
-    
+    const contentUrl = this.buildContentUrl(contentPath);
     console.log(`Loading content: ${contentPath} -> ${contentUrl}`);
     
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error(`Timeout loading content: ${contentUrl}`));
-      }, 10000); // 10 second timeout
+      }, 10000);
       
       iframe.onload = () => {
         clearTimeout(timeoutId);
@@ -248,6 +246,28 @@ export class ContentRouter extends Router {
       
       iframe.src = contentUrl;
     });
+  }
+  
+  /**
+   * Build content URL from path
+   */
+  buildContentUrl(contentPath) {
+    let contentUrl = contentPath;
+    
+    // If it's a relative path, prefix with content base path
+    if (!contentUrl.startsWith('http') && !contentUrl.startsWith('/')) {
+      contentUrl = this.contentBasePath + contentUrl;
+    }
+    
+    // Add .html suffix if not present and not already a complete URL
+    if (!contentUrl.includes('.') && !contentUrl.startsWith('http')) {
+      contentUrl += '/index.html';
+    }
+    
+    // Clean up double slashes
+    contentUrl = contentUrl.replace(/([^:]\/)\/+/g, '$1');
+    
+    return contentUrl;
   }
   
   /**
