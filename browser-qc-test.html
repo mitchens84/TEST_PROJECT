@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Quality Control Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .test-container { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-result { margin: 5px 0; padding: 8px; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .console-output { background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 12px; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+        h1, h2 { color: #2d3748; }
+        button { background: #4299e1; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #3182ce; }
+    </style>
+</head>
+<body>
+    <h1>Browser Quality Control Test</h1>
+    
+    <div class="test-container">
+        <h2>Module Loading Tests</h2>
+        <div id="module-tests"></div>
+        <button onclick="runModuleTests()">Run Module Tests</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>Router Tests</h2>
+        <div id="router-tests"></div>
+        <button onclick="runRouterTests()">Run Router Tests</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>AutoStorage Tests</h2>
+        <div id="storage-tests"></div>
+        <button onclick="runStorageTests()">Run Storage Tests</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>Console Output</h2>
+        <div id="console-output" class="console-output"></div>
+        <button onclick="clearConsole()">Clear Console</button>
+    </div>
+
+    <script type="module">
+        let testResults = {
+            modules: document.getElementById('module-tests'),
+            router: document.getElementById('router-tests'),
+            storage: document.getElementById('storage-tests')
+        };
+        
+        let consoleDiv = document.getElementById('console-output');
+        
+        function addResult(container, message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            container.appendChild(div);
+        }
+        
+        function logToConsole(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            consoleDiv.textContent += `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        // Override console methods
+        const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info
+        };
+        
+        console.log = (...args) => {
+            logToConsole(args.join(' '), 'log');
+            originalConsole.log.apply(console, args);
+        };
+        
+        console.error = (...args) => {
+            logToConsole(args.join(' '), 'error');
+            originalConsole.error.apply(console, args);
+        };
+        
+        console.warn = (...args) => {
+            logToConsole(args.join(' '), 'warn');
+            originalConsole.warn.apply(console, args);
+        };
+        
+        console.info = (...args) => {
+            logToConsole(args.join(' '), 'info');
+            originalConsole.info.apply(console, args);
+        };
+        
+        window.clearConsole = function() {
+            consoleDiv.textContent = '';
+        };
+        
+        window.runModuleTests = async function() {
+            testResults.modules.innerHTML = '';
+            addResult(testResults.modules, 'Starting module loading tests...', 'info');
+            
+            const modules = [
+                { name: 'env-config', path: './src/env-config.js' },
+                { name: 'router', path: './src/router.js' },
+                { name: 'auto-storage', path: './src/auto-storage.js' },
+                { name: 'module-loader', path: './src/module-loader.js' },
+                { name: 'quality-control', path: './src/quality-control.js' },
+                { name: 'storage-manager', path: './src/storage-manager.js' }
+            ];
+            
+            for (const module of modules) {
+                try {
+                    const imported = await import(module.path);
+                    if (imported.default) {
+                        addResult(testResults.modules, `✓ ${module.name}: Loaded successfully`, 'success');
+                    } else {
+                        addResult(testResults.modules, `⚠ ${module.name}: No default export`, 'warning');
+                    }
+                } catch (error) {
+                    addResult(testResults.modules, `❌ ${module.name}: ${error.message}`, 'error');
+                }
+            }
+        };
+        
+        window.runRouterTests = async function() {
+            testResults.router.innerHTML = '';
+            addResult(testResults.router, 'Starting router tests...', 'info');
+            
+            try {
+                const routerModule = await import('./src/router.js');
+                addResult(testResults.router, '✓ Router module loaded', 'success');
+                
+                const router = new routerModule.ContentRouter({
+                    contentContainer: 'test-container',
+                    contentBasePath: 'EXPRESS/',
+                    defaultRoute: 'introduction'
+                });
+                addResult(testResults.router, '✓ ContentRouter instantiated', 'success');
+                
+                // Add routes
+                router.addContentRoute('test', 'introduction/page.html', 'Test Route');
+                addResult(testResults.router, `✓ Routes added: ${router.getRoutes().length}`, 'success');
+                
+                // Test route existence
+                if (router.hasRoute('test')) {
+                    addResult(testResults.router, '✓ Route detection working', 'success');
+                } else {
+                    addResult(testResults.router, '❌ Route detection failed', 'error');
+                }
+                
+                // Test navigation
+                const currentPath = router.getCurrentPath();
+                addResult(testResults.router, `✓ Current path: ${currentPath || 'none'}`, 'info');
+                
+            } catch (error) {
+                addResult(testResults.router, `❌ Router test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.runStorageTests = async function() {
+            testResults.storage.innerHTML = '';
+            addResult(testResults.storage, 'Starting auto-storage tests...', 'info');
+            
+            try {
+                const autoStorageModule = await import('./src/auto-storage.js');
+                addResult(testResults.storage, '✓ Auto-storage module loaded', 'success');
+                
+                const autoStorage = autoStorageModule.default;
+                if (autoStorage) {
+                    addResult(testResults.storage, `✓ Auto-storage instance available (initialized: ${autoStorage.initialized})`, 'success');
+                    
+                    if (!autoStorage.initialized) {
+                        await autoStorage.init();
+                        addResult(testResults.storage, '✓ Auto-storage initialized', 'success');
+                    }
+                    
+                    // Test basic functionality
+                    if (typeof autoStorage.saveFormData === 'function') {
+                        addResult(testResults.storage, '✓ saveFormData method available', 'success');
+                    } else {
+                        addResult(testResults.storage, '❌ saveFormData method missing', 'error');
+                    }
+                    
+                } else {
+                    addResult(testResults.storage, '❌ Auto-storage instance not found', 'error');
+                }
+                
+            } catch (error) {
+                addResult(testResults.storage, `❌ Auto-storage test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Auto-run tests on load
+        setTimeout(() => {
+            runModuleTests();
+            setTimeout(() => runRouterTests(), 1000);
+            setTimeout(() => runStorageTests(), 2000);
+        }, 500);
+        
+        logToConsole('Browser Quality Control Test initialized');
+    </script>
+    
+    <div id="test-container" style="display: none;"></div>
+</body>
+</html>
