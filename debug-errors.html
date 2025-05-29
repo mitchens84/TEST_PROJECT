@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .log { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .error { background: #ffe6e6; border-left: 4px solid #ff0000; }
+        .success { background: #e6ffe6; border-left: 4px solid #00aa00; }
+        .warning { background: #fff3e0; border-left: 4px solid #ff9800; }
+        .test-button { padding: 10px 20px; margin: 5px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .test-button:hover { background: #005a87; }
+    </style>
+</head>
+<body>
+    <h1>JavaScript Error Debug Test</h1>
+    <p>This page tests for the "Unexpected token '&lt;'" errors and iframe loading issues.</p>
+    
+    <div id="log-container"></div>
+    
+    <h2>Test Pages</h2>
+    <button class="test-button" onclick="testPage('EXPRESS/section/page.html')">Test Content Demonstrations</button>
+    <button class="test-button" onclick="testPage('EXPRESS/sitruna/index.html')">Test Sitruna Knowledge Map</button>
+    <button class="test-button" onclick="testPage('EXPRESS/appliance-scaling-tutorial/page.html')">Test Appliance Scaling Tutorial</button>
+    <button class="test-button" onclick="testPage('EXPRESS/markdown-example/page.html')">Test Markdown Rendering Example</button>
+    <button class="test-button" onclick="testPage('EXPRESS/career/index.html')">Test Career Proposal</button>
+    <button class="test-button" onclick="clearLog()">Clear Log</button>
+
+    <h2>Test iframe</h2>
+    <iframe id="test-iframe" style="width: 100%; height: 300px; border: 1px solid #ccc; margin-top: 10px;"></iframe>
+
+    <script>
+        const logContainer = document.getElementById('log-container');
+        const testIframe = document.getElementById('test-iframe');
+        
+        function log(message, type = 'info') {
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            logContainer.appendChild(logDiv);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function clearLog() {
+            logContainer.innerHTML = '';
+        }
+        
+        function testPage(pageUrl) {
+            log(`Testing page: ${pageUrl}`);
+            
+            // Test fetch first
+            fetch(pageUrl, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        log(`✅ Page exists: ${pageUrl} (${response.status})`, 'success');
+                        
+                        // Test iframe loading
+                        testIframe.onload = function() {
+                            log(`✅ Iframe loaded successfully: ${pageUrl}`, 'success');
+                        };
+                        
+                        testIframe.onerror = function() {
+                            log(`❌ Iframe loading error: ${pageUrl}`, 'error');
+                        };
+                        
+                        testIframe.src = pageUrl;
+                        
+                    } else {
+                        log(`❌ Page not found: ${pageUrl} (${response.status})`, 'error');
+                    }
+                })
+                .catch(error => {
+                    log(`❌ Fetch error: ${pageUrl} - ${error.message}`, 'error');
+                });
+        }
+        
+        // Global error handler to catch any script errors
+        window.addEventListener('error', function(event) {
+            log(`🔴 Script Error: ${event.message} at ${event.filename}:${event.lineno}`, 'error');
+        });
+        
+        // Promise rejection handler
+        window.addEventListener('unhandledrejection', function(event) {
+            log(`🔴 Promise Rejection: ${event.reason}`, 'error');
+        });
+        
+        log('Debug page loaded. Click buttons to test individual pages.', 'success');
+    </script>
+</body>
+</html>

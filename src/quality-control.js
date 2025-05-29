@@ -45,7 +45,13 @@ class QualityController {
       'toc.html',
       'index.html',
       'EXPRESS/introduction/page.html',
-      'EXPRESS/comprehensive-storage-test/index.html'
+      'EXPRESS/comprehensive-storage-test/index.html',
+      'EXPRESS/section/page.html',                    // Content demonstrations
+      'EXPRESS/sitruna/index.html',                   // Sitruna knowledge map
+      'EXPRESS/appliance-scaling-tutorial/page.html', // Appliance scaling tutorial
+      'EXPRESS/markdown-example/page.html',           // Markdown rendering example
+      'EXPRESS/career/index.html',                    // Career proposal
+      'EXPRESS/complex-showcase/index.html'           // Complex showcase
     ];
 
     for (const filePath of files) {
@@ -202,6 +208,19 @@ class QualityController {
       });
     }
 
+    // Update collapsible UI report
+    this.updateCollapsibleReport({
+      total,
+      passed,
+      failed,
+      warned,
+      successRate: (passed / total) * 100,
+      hasErrors: failed > 0,
+      tests: this.tests,
+      errors: this.errors,
+      warnings: this.warnings
+    });
+
     // Return summary for external use
     return {
       total,
@@ -214,6 +233,67 @@ class QualityController {
       errors: this.errors,
       warnings: this.warnings
     };
+  }
+
+  // Update the collapsible report UI
+  updateCollapsibleReport(report) {
+    const container = document.getElementById('qc-report-container');
+    const summary = document.getElementById('qc-report-summary');
+    const details = document.getElementById('qc-report-details');
+    const header = document.getElementById('qc-report-header');
+    const content = document.getElementById('qc-report-content');
+    const toggleIcon = document.getElementById('qc-toggle-icon');
+
+    if (!container || !summary || !details) return;
+
+    // Show the container
+    container.style.display = 'block';
+
+    // Update summary
+    const successRate = report.successRate.toFixed(1);
+    const statusColor = report.hasErrors ? '#ff4444' : report.warned > 0 ? '#ff8800' : '#44aa44';
+    
+    summary.innerHTML = `
+      <div style="color: ${statusColor}; font-size: 14px;">
+        Success Rate: ${successRate}% | ✅ ${report.passed} ❌ ${report.failed} ⚠️ ${report.warned}
+      </div>
+    `;
+
+    // Update detailed results
+    let detailsHTML = '';
+    
+    if (report.tests.length > 0) {
+      detailsHTML += '<div style="margin-bottom: 8px;"><strong style="color: #44aa44;">✅ Passed Tests:</strong></div>';
+      report.tests.forEach(test => {
+        detailsHTML += `<div style="margin-left: 10px; color: #666; font-size: 11px;">• ${test.name}: ${test.details}</div>`;
+      });
+    }
+    
+    if (report.warnings.length > 0) {
+      detailsHTML += '<div style="margin: 8px 0 4px 0;"><strong style="color: #ff8800;">⚠️ Warnings:</strong></div>';
+      report.warnings.forEach(warning => {
+        detailsHTML += `<div style="margin-left: 10px; color: #ff8800; font-size: 11px;">• ${warning.name}: ${warning.details}</div>`;
+      });
+    }
+    
+    if (report.errors.length > 0) {
+      detailsHTML += '<div style="margin: 8px 0 4px 0;"><strong style="color: #ff4444;">❌ Failed Tests:</strong></div>';
+      report.errors.forEach(error => {
+        detailsHTML += `<div style="margin-left: 10px; color: #ff4444; font-size: 11px;">• ${error.name}: ${error.details}</div>`;
+      });
+    }
+
+    details.innerHTML = detailsHTML;
+
+    // Setup toggle functionality
+    if (header && !header.hasAttribute('data-toggle-setup')) {
+      header.setAttribute('data-toggle-setup', 'true');
+      header.addEventListener('click', () => {
+        const isCollapsed = content.style.display === 'none';
+        content.style.display = isCollapsed ? 'block' : 'none';
+        toggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+      });
+    }
   }
 
   // Create visual report in DOM
@@ -292,7 +372,7 @@ if (document.readyState === 'loading') {
     setTimeout(() => {
       const qc = new QualityController();
       qc.runAllTests().then(() => {
-        qc.createVisualReport();
+        qc.updateCollapsibleReport();
       });
     }, 2000); // Wait 2 seconds for everything to load
   });
@@ -300,7 +380,7 @@ if (document.readyState === 'loading') {
   setTimeout(() => {
     const qc = new QualityController();
     qc.runAllTests().then(() => {
-      qc.createVisualReport();
+      qc.updateCollapsibleReport();
     });
   }, 2000);
 }

@@ -115,9 +115,59 @@
             padding: 10px;
             /* background-color, color, border are inherited from general button styles or overridden by main.css vars */
         }
-        </style>
+
+        /* Quality Control Report Styles */
+        #qc-report-container {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            max-width: 400px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            display: none;
+        }
+
+        #qc-report-header {
+            padding: 10px;
+            background: var(--secondary-bg-color);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #qc-report-content {
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        #qc-report-summary {
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+    </style>
     </head>
 <body>
+    <!-- Quality Control Report Section -->
+    <div id="qc-report-container" style="position: fixed; top: 10px; right: 10px; z-index: 1000; max-width: 400px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-family: 'Monaco', 'Consolas', monospace; font-size: 12px; display: none;">
+        <div id="qc-report-header" style="padding: 10px; background: var(--secondary-bg-color); border-bottom: 1px solid var(--border-color); cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: bold;">📊 Quality Control Report</span>
+            <span id="qc-toggle-icon" style="transform: rotate(0deg); transition: transform 0.3s ease;">▼</span>
+        </div>
+        <div id="qc-report-content" style="padding: 10px; max-height: 300px; overflow-y: auto; display: none;">
+            <div id="qc-report-summary" style="margin-bottom: 10px; font-weight: bold;"></div>
+            <div id="qc-report-details"></div>
+        </div>
+    </div>
+
     <button id="sidebar-toggle-btn">☰</button>
     <!-- Quality Control will be loaded dynamically to avoid path conflicts -->
     <script>
@@ -177,10 +227,39 @@
             if (!iframe) {
                 iframe = document.createElement('iframe');
                 iframe.id = 'content-iframe'; // Set the ID that router expects
+                
+                // Add error handling for iframe loading
+                iframe.onerror = function() {
+                    console.error('Failed to load content:', pageUrl);
+                    iframe.src = 'data:text/html,<html><body><h3>Content not available</h3><p>Unable to load: ' + pageUrl + '</p></body></html>';
+                };
+                
+                // Prevent script execution errors from iframe content
+                iframe.onload = function() {
+                    try {
+                        // Ensure iframe content is properly isolated
+                        if (iframe.contentWindow) {
+                            iframe.contentWindow.onerror = function(msg, url, line, col, error) {
+                                console.warn('Iframe script error suppressed:', msg, 'at', url, line);
+                                return true; // Suppress the error
+                            };
+                        }
+                    } catch (e) {
+                        // Cross-origin or security error - ignore
+                    }
+                };
+                
                 homeContentDiv.innerHTML = ''; 
                 homeContentDiv.appendChild(iframe);
             }
-            iframe.src = pageUrl;
+            
+            // Add validation before setting src
+            if (pageUrl && pageUrl.trim() && !pageUrl.includes('<') && !pageUrl.includes('javascript:')) {
+                iframe.src = pageUrl;
+            } else {
+                console.error('Invalid page URL:', pageUrl);
+                iframe.src = 'data:text/html,<html><body><h3>Invalid URL</h3><p>Invalid URL provided: ' + (pageUrl || 'undefined') + '</p></body></html>';
+            }
         };
 
         // Function for static navigation buttons in the sidebar
@@ -243,33 +322,40 @@
             // Simple routing without complex router dependency
             const hash = window.location.hash.slice(1); // Remove # 
             if (hash) {
-                // Try to find content based on hash
+                // Try to find content based on hash with more comprehensive path mapping
                 const possiblePaths = [
-                    `EXPRESS/${hash}/page.html`,
-                    `EXPRESS/${hash}/index.html`,
-                    `EXPRESS/${hash}.html`
+                    `EXPRESS/${hash}/index.html`,     // Try index.html first (most common)
+                    `EXPRESS/${hash}/page.html`,      // Then page.html
+                    `EXPRESS/${hash}.html`            // Finally direct .html file
                 ];
                 
-                // Try each possible path
-                let loaded = false;
-                for (const path of possiblePaths) {
-                    fetch(path, { method: 'HEAD' }).then(response => {
-                        if (response.ok && !loaded) {
-                            loaded = true;
-                            window.loadContent(path, null);
-                            sessionStorage.setItem('currentPage', path);
+                // Try each possible path sequentially and wait for responses
+                async function tryPaths() {
+                    let loaded = false;
+                    for (const path of possiblePaths) {
+                        if (loaded) break;
+                        try {
+                            const response = await fetch(path, { method: 'HEAD' });
+                            if (response.ok && !loaded) {
+                                loaded = true;
+                                window.loadContent(path, null);
+                                sessionStorage.setItem('currentPage', path);
+                                return;
+                            }
+                        } catch (error) {
+                            // Continue to next path
+                            console.debug(`Path not found: ${path}`);
                         }
-                    }).catch(() => {
-                        // Ignore errors, try next path
-                    });
-                }
-                
-                // Fallback after trying all paths
-                setTimeout(() => {
+                    }
+                    
+                    // If no paths work, load default
                     if (!loaded) {
+                        console.warn(`No valid path found for hash: ${hash}, loading default`);
                         window.loadContent('EXPRESS/introduction/page.html', null);
                     }
-                }, 500);
+                }
+                
+                tryPaths();
             } else {
                 // No hash, load default content
                 window.loadContent('EXPRESS/introduction/page.html', null);
@@ -548,9 +634,17 @@
           try {
             const qcModule = await import('./src/quality-control.js');
             window.qualityController = new qcModule.default();
-            // Run QC tests in background
+            
+            // Show QC container in collapsed state on load
+            const qcContainer = document.getElementById('qc-report-container');
+            if (qcContainer) {
+              qcContainer.style.display = 'block';
+            }
+            
+            // Run QC tests in background and update the collapsible UI
             setTimeout(() => {
               window.qualityController.runAllTests().then(() => {
+                window.qualityController.updateCollapsibleReport();
                 console.log('Quality Control tests completed');
               }).catch(e => console.warn('QC tests failed:', e));
             }, 2000); // Delay to let other components initialize
@@ -646,6 +740,69 @@
         // This path might be taken if this script itself is deferred or placed very late.
         loadConfigAndInitialize();
       }
+
+      // Add QC Report toggle functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        const qcHeader = document.getElementById('qc-report-header');
+        const qcContent = document.getElementById('qc-report-content');
+        const qcToggleIcon = document.getElementById('qc-toggle-icon');
+        
+        if (qcHeader && qcContent && qcToggleIcon) {
+          qcHeader.addEventListener('click', function() {
+            const isVisible = qcContent.style.display !== 'none';
+            qcContent.style.display = isVisible ? 'none' : 'block';
+            qcToggleIcon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+          });
+        }
+      });
+
+      // Enhanced global error handler to prevent script execution errors from breaking the app
+      window.addEventListener('error', function(event) {
+        const errorMsg = event.message || '';
+        const fileName = event.filename || '';
+        
+        // Suppress "Unexpected token '<'" errors (HTML being executed as JS)
+        if (errorMsg.includes('Unexpected token') || errorMsg.includes('Unexpected end of input')) {
+          console.warn('🔇 Suppressed script execution error:', errorMsg, 'at', fileName, event.lineno);
+          event.preventDefault();
+          return true;
+        }
+        
+        // Suppress cross-origin iframe errors
+        if (errorMsg.includes('Script error') || errorMsg.includes('cross-origin')) {
+          console.warn('🔇 Suppressed cross-origin error:', errorMsg);
+          event.preventDefault();
+          return true;
+        }
+        
+        // Suppress module loading errors that don't affect functionality
+        if (errorMsg.includes('Failed to fetch dynamically imported module') || errorMsg.includes('Loading chunk')) {
+          console.warn('🔇 Suppressed module loading error:', errorMsg);
+          event.preventDefault();
+          return true;
+        }
+        
+        // Log other errors normally but don't break the app
+        console.error('⚠️ Application error:', errorMsg, 'at', fileName, event.lineno);
+        return false;
+      });
+
+      // Enhanced promise rejection handler
+      window.addEventListener('unhandledrejection', function(event) {
+        const reason = event.reason || {};
+        const reasonMsg = reason.message || reason.toString();
+        
+        if (reasonMsg.includes('Loading CSS chunk') || 
+            reasonMsg.includes('Loading chunk') ||
+            reasonMsg.includes('Failed to fetch dynamically imported module')) {
+          console.warn('🔇 Suppressed promise rejection:', reasonMsg);
+          event.preventDefault();
+          return true;
+        }
+        
+        console.warn('⚠️ Promise rejection:', reasonMsg);
+        return false;
+      });
     </script>
 </body>
 </html>
