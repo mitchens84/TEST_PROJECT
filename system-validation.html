@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Validation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-result { padding: 10px; margin: 5px 0; border-radius: 3px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        iframe { width: 100%; height: 400px; border: 1px solid #ccc; margin: 10px 0; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    </style>
+</head>
+<body>
+    <h1>TEST PROJECT System Validation</h1>
+    <p>This page tests all major components of the content hub template.</p>
+
+    <div class="test-section">
+        <h2>1. Basic System Check</h2>
+        <div id="system-check-results"></div>
+        <button onclick="runSystemCheck()">Run System Check</button>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Content Loading Test</h2>
+        <div id="content-test-results"></div>
+        <button onclick="testContentLoading()">Test Content Loading</button>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Navigation Test</h2>
+        <div id="nav-test-results"></div>
+        <button onclick="testNavigation()">Test Navigation</button>
+        <iframe id="nav-test-iframe" style="display: none;"></iframe>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Complex Showcase Test</h2>
+        <div id="showcase-test-results"></div>
+        <button onclick="testComplexShowcase()">Test Complex Showcase</button>
+        <iframe id="showcase-iframe" style="display: none;"></iframe>
+    </div>
+
+    <div class="test-section">
+        <h2>5. React Apps Test</h2>
+        <div id="react-test-results"></div>
+        <button onclick="testReactApps()">Test React Apps</button>
+        <iframe id="react-iframe" style="display: none;"></iframe>
+    </div>
+
+    <div class="test-section">
+        <h2>6. All Content Access Test</h2>
+        <div id="all-content-results"></div>
+        <button onclick="testAllContent()">Test All Express Content</button>
+    </div>
+
+    <script>
+        // System Check - Verify all core files exist
+        async function runSystemCheck() {
+            const results = document.getElementById('system-check-results');
+            results.innerHTML = '<div class="test-result info">Running system check...</div>';
+
+            const tests = [
+                { name: 'Main Index', path: 'index.html' },
+                { name: 'Table of Contents', path: 'toc.html' },
+                { name: 'Sample Data', path: 'data/sample-chart-data.json' },
+                { name: 'Auto Storage Module', path: 'src/auto-storage.js' },
+                { name: 'Quality Control Module', path: 'src/quality-control.js' },
+                { name: 'Environment Config', path: 'src/env-config.js' },
+                { name: 'Main Stylesheet', path: 'assets/styles/main.css' }
+            ];
+
+            let passed = 0;
+            let total = tests.length;
+
+            for (const test of tests) {
+                try {
+                    const response = await fetch(test.path, { method: 'HEAD' });
+                    if (response.ok) {
+                        results.innerHTML += `<div class="test-result success">✓ ${test.name}: Available</div>`;
+                        passed++;
+                    } else {
+                        results.innerHTML += `<div class="test-result error">✗ ${test.name}: HTTP ${response.status}</div>`;
+                    }
+                } catch (error) {
+                    results.innerHTML += `<div class="test-result error">✗ ${test.name}: ${error.message}</div>`;
+                }
+            }
+
+            const successRate = (passed / total * 100).toFixed(1);
+            results.innerHTML += `<div class="test-result ${passed === total ? 'success' : 'warning'}">System Check: ${passed}/${total} passed (${successRate}%)</div>`;
+        }
+
+        // Content Loading Test
+        async function testContentLoading() {
+            const results = document.getElementById('content-test-results');
+            results.innerHTML = '<div class="test-result info">Testing content loading...</div>';
+
+            const contentPages = [
+                'EXPRESS/introduction/page.html',
+                'EXPRESS/complex-showcase/index.html',
+                'EXPRESS/comprehensive-storage-test/index.html',
+                'EXPRESS/career/index.html',
+                'EXPRESS/sitruna/index.html',
+                'EXPRESS/appliance-scaling-tutorial/page.html',
+                'EXPRESS/features/page.html',
+                'EXPRESS/new-test-section/page.html',
+                'EXPRESS/section/page.html',
+                'EXPRESS/markdown-example/page.html'
+            ];
+
+            let loaded = 0;
+            for (const page of contentPages) {
+                try {
+                    const response = await fetch(page, { method: 'HEAD' });
+                    if (response.ok) {
+                        results.innerHTML += `<div class="test-result success">✓ ${page}: Accessible</div>`;
+                        loaded++;
+                    } else {
+                        results.innerHTML += `<div class="test-result error">✗ ${page}: HTTP ${response.status}</div>`;
+                    }
+                } catch (error) {
+                    results.innerHTML += `<div class="test-result error">✗ ${page}: ${error.message}</div>`;
+                }
+            }
+
+            const successRate = (loaded / contentPages.length * 100).toFixed(1);
+            results.innerHTML += `<div class="test-result ${loaded === contentPages.length ? 'success' : 'warning'}">Content Loading: ${loaded}/${contentPages.length} accessible (${successRate}%)</div>`;
+        }
+
+        // Navigation Test
+        function testNavigation() {
+            const results = document.getElementById('nav-test-results');
+            const iframe = document.getElementById('nav-test-iframe');
+            
+            results.innerHTML = '<div class="test-result info">Testing navigation system...</div>';
+            iframe.style.display = 'block';
+
+            // Test navigation to different sections
+            const testRoutes = [
+                'introduction',
+                'complex-showcase', 
+                'career',
+                'comprehensive-storage-test'
+            ];
+
+            let currentTest = 0;
+            
+            function testNextRoute() {
+                if (currentTest >= testRoutes.length) {
+                    results.innerHTML += '<div class="test-result success">✓ Navigation test completed</div>';
+                    return;
+                }
+
+                const route = testRoutes[currentTest];
+                results.innerHTML += `<div class="test-result info">Testing route: ${route}</div>`;
+                
+                // Simulate hash navigation
+                window.location.hash = route;
+                
+                // Load content in test iframe
+                iframe.src = `EXPRESS/${route}/page.html`;
+                iframe.onload = () => {
+                    results.innerHTML += `<div class="test-result success">✓ Route ${route}: Loaded successfully</div>`;
+                    currentTest++;
+                    setTimeout(testNextRoute, 1000);
+                };
+                iframe.onerror = () => {
+                    // Try index.html instead
+                    iframe.src = `EXPRESS/${route}/index.html`;
+                    iframe.onload = () => {
+                        results.innerHTML += `<div class="test-result success">✓ Route ${route}: Loaded via index.html</div>`;
+                        currentTest++;
+                        setTimeout(testNextRoute, 1000);
+                    };
+                    iframe.onerror = () => {
+                        results.innerHTML += `<div class="test-result error">✗ Route ${route}: Failed to load</div>`;
+                        currentTest++;
+                        setTimeout(testNextRoute, 1000);
+                    };
+                };
+            }
+
+            testNextRoute();
+        }
+
+        // Complex Showcase Test
+        function testComplexShowcase() {
+            const results = document.getElementById('showcase-test-results');
+            const iframe = document.getElementById('showcase-iframe');
+            
+            results.innerHTML = '<div class="test-result info">Testing complex showcase components...</div>';
+            iframe.style.display = 'block';
+            iframe.src = 'EXPRESS/complex-showcase/index.html';
+
+            iframe.onload = () => {
+                setTimeout(() => {
+                    try {
+                        const showcaseDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        
+                        // Check for D3 chart
+                        const d3Container = showcaseDoc.getElementById('d3-chart-container');
+                        if (d3Container && d3Container.querySelector('svg')) {
+                            results.innerHTML += '<div class="test-result success">✓ D3.js Chart: Rendered</div>';
+                        } else {
+                            results.innerHTML += '<div class="test-result warning">⚠ D3.js Chart: Container found but no SVG</div>';
+                        }
+
+                        // Check for Three.js scene
+                        const threeContainer = showcaseDoc.getElementById('threejs-canvas-container');
+                        if (threeContainer && threeContainer.querySelector('canvas')) {
+                            results.innerHTML += '<div class="test-result success">✓ Three.js Scene: Canvas rendered</div>';
+                        } else {
+                            results.innerHTML += '<div class="test-result warning">⚠ Three.js Scene: Container found but no canvas</div>';
+                        }
+
+                        // Check for React component
+                        const reactContainer = showcaseDoc.getElementById('react-app-root');
+                        if (reactContainer && reactContainer.innerHTML.trim()) {
+                            results.innerHTML += '<div class="test-result success">✓ React Component: Rendered</div>';
+                        } else {
+                            results.innerHTML += '<div class="test-result warning">⚠ React Component: Container empty</div>';
+                        }
+
+                    } catch (error) {
+                        results.innerHTML += `<div class="test-result error">✗ Complex Showcase: Cross-origin access denied - ${error.message}</div>`;
+                    }
+                }, 3000); // Wait for components to initialize
+            };
+
+            iframe.onerror = () => {
+                results.innerHTML += '<div class="test-result error">✗ Complex Showcase: Failed to load</div>';
+            };
+        }
+
+        // React Apps Test
+        function testReactApps() {
+            const results = document.getElementById('react-test-results');
+            const iframe = document.getElementById('react-iframe');
+            
+            results.innerHTML = '<div class="test-result info">Testing React applications...</div>';
+            iframe.style.display = 'block';
+
+            // Test career proposal React app
+            iframe.src = 'EXPRESS/career/index.html';
+            iframe.onload = () => {
+                setTimeout(() => {
+                    try {
+                        const careerDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        const nestedIframe = careerDoc.getElementById('interactive-content-frame');
+                        
+                        if (nestedIframe) {
+                            results.innerHTML += '<div class="test-result success">✓ Career Proposal: Nested iframe found</div>';
+                            
+                            // Test the nested React app
+                            nestedIframe.onload = () => {
+                                setTimeout(() => {
+                                    try {
+                                        const reactDoc = nestedIframe.contentDocument || nestedIframe.contentWindow.document;
+                                        const reactRoot = reactDoc.getElementById('root');
+                                        
+                                        if (reactRoot && reactRoot.innerHTML.trim()) {
+                                            results.innerHTML += '<div class="test-result success">✓ Career Proposal React App: Content rendered</div>';
+                                        } else {
+                                            results.innerHTML += '<div class="test-result warning">⚠ Career Proposal React App: Root element empty</div>';
+                                        }
+                                    } catch (error) {
+                                        results.innerHTML += `<div class="test-result warning">⚠ Career Proposal React App: Cross-origin access denied</div>`;
+                                    }
+                                }, 2000);
+                            };
+                        } else {
+                            results.innerHTML += '<div class="test-result error">✗ Career Proposal: Nested iframe not found</div>';
+                        }
+                    } catch (error) {
+                        results.innerHTML += `<div class="test-result error">✗ Career Proposal: ${error.message}</div>`;
+                    }
+                }, 1000);
+            };
+
+            iframe.onerror = () => {
+                results.innerHTML += '<div class="test-result error">✗ Career Proposal: Failed to load</div>';
+            };
+        }
+
+        // Test All Content Access
+        async function testAllContent() {
+            const results = document.getElementById('all-content-results');
+            results.innerHTML = '<div class="test-result info">Testing all Express content access...</div>';
+
+            try {
+                // Load TOC to get all content links
+                const tocResponse = await fetch('toc.html');
+                if (!tocResponse.ok) {
+                    throw new Error('TOC not accessible');
+                }
+
+                const tocHtml = await tocResponse.text();
+                const parser = new DOMParser();
+                const tocDoc = parser.parseFromString(tocHtml, 'text/html');
+                const links = tocDoc.querySelectorAll('a[href]');
+
+                results.innerHTML += `<div class="test-result info">Found ${links.length} links in TOC</div>`;
+
+                let accessible = 0;
+                for (const link of links) {
+                    const href = link.getAttribute('href');
+                    if (href && href !== '#') {
+                        try {
+                            const response = await fetch(href, { method: 'HEAD' });
+                            if (response.ok) {
+                                results.innerHTML += `<div class="test-result success">✓ ${href}: Accessible</div>`;
+                                accessible++;
+                            } else {
+                                results.innerHTML += `<div class="test-result error">✗ ${href}: HTTP ${response.status}</div>`;
+                            }
+                        } catch (error) {
+                            results.innerHTML += `<div class="test-result error">✗ ${href}: ${error.message}</div>`;
+                        }
+                    }
+                }
+
+                const successRate = (accessible / links.length * 100).toFixed(1);
+                results.innerHTML += `<div class="test-result ${accessible === links.length ? 'success' : 'warning'}">All Content Test: ${accessible}/${links.length} accessible (${successRate}%)</div>`;
+
+            } catch (error) {
+                results.innerHTML += `<div class="test-result error">✗ All Content Test Failed: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run basic system check on load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(runSystemCheck, 500);
+        });
+    </script>
+</body>
+</html>

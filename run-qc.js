@@ -1,7 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Configuration
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // const baseDir = path.join(__dirname, 'TEMPLATE'); // Old path
 const baseDir = __dirname; // New path: script is in project root
 const expressDir = path.join(baseDir, 'EXPRESS'); // EXPRESS is directly under project root

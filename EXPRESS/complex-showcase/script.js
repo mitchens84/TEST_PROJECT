@@ -1,3 +1,24 @@
+// Get correct base path for loading resources
+function getBasePath() {
+    // If we're in an iframe, get the top window's location
+    try {
+        if (window.top && window.top !== window) {
+            // We're in an iframe - use absolute path from the main site
+            const topOrigin = window.top.location.origin;
+            const topPathname = window.top.location.pathname;
+            // Remove index.html if present
+            const basePath = topPathname.replace(/\/[^\/]*\.html$/, '');
+            return `${topOrigin}${basePath}/`;
+        }
+    } catch (e) {
+        // Cross-origin iframe, can't access parent
+        console.warn('Cannot access parent window, using relative paths');
+    }
+    
+    // Default to relative path resolution
+    return '../../';
+}
+
 // D3.js Bar Chart
 const d3Container = document.getElementById('d3-chart-container');
 if (d3Container) {
@@ -11,7 +32,11 @@ if (d3Container) {
       .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    d3.json("../../data/sample-chart-data.json").then(data => {
+    const basePath = getBasePath();
+    const dataPath = `${basePath}data/sample-chart-data.json`;
+    console.log('Loading D3 data from:', dataPath);
+    
+    d3.json(dataPath).then(data => {
         const x = d3.scaleBand()
             .range([0, width])
             .domain(data.map(d => d.label))
@@ -78,21 +103,20 @@ if (threeContainer && typeof THREE !== 'undefined') {
 }
 
 
-// React Counter Component (using Babel for JSX)
+// React Counter Component (using plain JavaScript, no JSX)
 const reactRoot = document.getElementById('react-app-root');
 if (reactRoot && typeof React !== 'undefined' && typeof ReactDOM !== 'undefined') {
     const Counter = () => {
         const [count, setCount] = React.useState(0);
-        return (
-            <div>
-                <p>You clicked {count} times</p>
-                <button onClick={() => setCount(count + 1)}>
-                    Click me
-                </button>
-            </div>
+        return React.createElement('div', null,
+            React.createElement('p', null, `You clicked ${count} times`),
+            React.createElement('button', {
+                onClick: () => setCount(count + 1),
+                style: { padding: '8px 16px', fontSize: '16px', cursor: 'pointer' }
+            }, 'Click me')
         );
     };
-    ReactDOM.render(<Counter />, reactRoot);
+    ReactDOM.render(React.createElement(Counter), reactRoot);
 } else {
     console.warn('React root or React/ReactDOM libraries not found.');
     if (reactRoot) reactRoot.innerHTML = '<p>React component could not be initialized. Check console.</p>';

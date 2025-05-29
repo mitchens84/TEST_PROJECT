@@ -216,20 +216,14 @@
 
         // Function called by toc.html links (e.g., parent.loadContentIntoIframe('path/to/page.html', this))
         window.loadContentIntoIframe = function(pageUrl, tocLinkElement) {
-            // Use the new router for navigation
-            if (window.router) {
-                const route = extractRouteFromUrl(pageUrl);
-                window.router.navigate(route);
-            } else {
-                // Fallback to old method if router not available
-                const route = extractRouteFromUrl(pageUrl);
-                const newUrl = new URL(window.location);
-                newUrl.hash = route;
-                window.history.pushState({ page: pageUrl, route: route }, '', newUrl);
-                
-                window.loadContent(pageUrl, null); 
-                sessionStorage.setItem('currentPage', pageUrl);
-            }
+            // Simple routing with history management
+            const route = extractRouteFromUrl(pageUrl);
+            const newUrl = new URL(window.location);
+            newUrl.hash = route;
+            window.history.pushState({ page: pageUrl, route: route }, '', newUrl);
+            
+            window.loadContent(pageUrl, null); 
+            sessionStorage.setItem('currentPage', pageUrl);
         };
         
         // Helper function to extract route from URL
@@ -245,45 +239,47 @@
         }
         
         // Handle URL routing for direct access and browser navigation
-        // This is handled by the Router class now, but kept for fallback
         function handleRouting() {
-          if (window.router) {
-            // Let the router handle it
-            window.router.loadCurrentRoute();
-            return;
-          }
-          
-          // Fallback routing logic
-          const hash = window.location.hash.slice(1);
-          if (hash) {
-            let pageUrl;
-            if (hash === 'home' || hash === '') {
-              pageUrl = 'EXPRESS/introduction/page.html';
-            } else if (hash.includes('/')) {
-              pageUrl = `EXPRESS/${hash}/page.html`;
+            // Simple routing without complex router dependency
+            const hash = window.location.hash.slice(1); // Remove # 
+            if (hash) {
+                // Try to find content based on hash
+                const possiblePaths = [
+                    `EXPRESS/${hash}/page.html`,
+                    `EXPRESS/${hash}/index.html`,
+                    `EXPRESS/${hash}.html`
+                ];
+                
+                // Try each possible path
+                let loaded = false;
+                for (const path of possiblePaths) {
+                    fetch(path, { method: 'HEAD' }).then(response => {
+                        if (response.ok && !loaded) {
+                            loaded = true;
+                            window.loadContent(path, null);
+                            sessionStorage.setItem('currentPage', path);
+                        }
+                    }).catch(() => {
+                        // Ignore errors, try next path
+                    });
+                }
+                
+                // Fallback after trying all paths
+                setTimeout(() => {
+                    if (!loaded) {
+                        window.loadContent('EXPRESS/introduction/page.html', null);
+                    }
+                }, 500);
             } else {
-              pageUrl = `EXPRESS/${hash}/page.html`;
-            }
-            
-            fetch(pageUrl, { method: 'HEAD' }).then(response => {
-              if (response.ok) {
-                window.loadContent(pageUrl, null);
-                sessionStorage.setItem('currentPage', pageUrl);
-              } else {
-                console.warn(`Page not found: ${pageUrl}, loading introduction`);
+                // No hash, load default content
                 window.loadContent('EXPRESS/introduction/page.html', null);
-              }
-            }).catch(() => {
-              console.warn(`Failed to check page: ${pageUrl}, loading introduction`);
-              window.loadContent('EXPRESS/introduction/page.html', null);
-            });
-          }
+            }
         }
 
-        // Listen for hash changes (browser back/forward) - Router will handle this too
+        // Listen for hash changes (browser back/forward)
         window.addEventListener('hashchange', handleRouting);
         
-        // Handle initial routing if URL has hash - Router will handle this
+        // Handle initial routing if URL has hash
         if (window.location.hash) {
           setTimeout(handleRouting, 100);
         }
@@ -528,43 +524,24 @@
         }
 
         try {
-          // Attempt to import env-config.js. Ensure the path is correct.
-          // If index.html is at the root, and src is a top-level folder, './src/env-config.js' is correct.
+          // Load environment configuration
           const configModule = await import('./src/env-config.js'); 
           window.envConfig = configModule.default; 
           console.log('env-config.js loaded successfully via dynamic import:', window.envConfig);
 
-          // Initialize Router and AutoStorage
+          // Initialize AutoStorage (without complex router)
           try {
-            const routerModule = await import('./src/router.js');
             const autoStorageModule = await import('./src/auto-storage.js');
             
-            // Initialize ContentRouter with proper route configuration
-            window.router = new routerModule.ContentRouter({
-              contentContainer: 'content-iframe',
-              contentBasePath: 'EXPRESS/',
-              defaultRoute: 'introduction'
-            });
-            
-            // Add route handlers
-            window.router.addContentRoute('home', 'introduction/page.html', 'Introduction - Project Hub');
-            window.router.addContentRoute('introduction', 'introduction/page.html', 'Introduction - Project Hub');
-            window.router.addContentRoute('sitruna', 'sitruna/index.html', 'Sitruna - Project Hub');
-            window.router.addContentRoute('career', 'career/index.html', 'Career - Project Hub');
-            window.router.addContentRoute('features', 'features/page.html', 'Features - Project Hub');
-            window.router.addContentRoute('complex-showcase', 'complex-showcase/index.html', 'Complex Showcase - Project Hub');
-            window.router.addContentRoute('comprehensive-storage-test', 'comprehensive-storage-test/index.html', 'Storage Test - Project Hub');
-            
-            // Initialize auto-storage (it's a singleton instance, not a constructor)
+            // Initialize auto-storage (it's a singleton instance)
             window.autoStorage = autoStorageModule.default;
             if (!window.autoStorage.initialized) {
               await window.autoStorage.init();
             }
             
-            console.log('Router and AutoStorage initialized successfully');
+            console.log('AutoStorage initialized successfully');
           } catch (error) {
-            console.error('Failed to initialize Router and/or AutoStorage:', error);
-            // Continue without these features if they fail
+            console.error('Failed to initialize AutoStorage:', error);
           }
 
           // Load Quality Control for testing (optional, non-blocking)
