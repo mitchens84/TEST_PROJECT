@@ -208,12 +208,40 @@
     </div>
 
     <script>
-        // Core function to load content into the iframe
-        window.loadContent = function(pageUrl, buttonElementToActivate) {
+        // Import the content diagnostics system
+        let contentDiagnostics;
+        
+        // Initialize diagnostics when DOM is ready
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Load the diagnostics module
+                const diagnosticsModule = await import('./src/content-diagnostics.js');
+                window.ContentLoadingDiagnostics = diagnosticsModule.default || diagnosticsModule.ContentLoadingDiagnostics;
+                contentDiagnostics = new window.ContentLoadingDiagnostics();
+                window.contentDiagnostics = contentDiagnostics;
+                console.log('✅ Content diagnostics system initialized');
+            } catch (error) {
+                console.warn('⚠️ Could not load diagnostics module, using fallback:', error.message);
+                // Create a minimal fallback
+                contentDiagnostics = {
+                    loadContentWithDiagnostics: window.loadContent,
+                    log: (msg, level) => console.log(`[Fallback] ${msg}`)
+                };
+            }
+        });
+
+        // Enhanced core function to load content into the iframe
+        window.loadContent = async function(pageUrl, buttonElementToActivate) {
+            // Use diagnostics system if available, otherwise fallback
+            if (contentDiagnostics && contentDiagnostics.loadContentWithDiagnostics) {
+                return await contentDiagnostics.loadContentWithDiagnostics(pageUrl, buttonElementToActivate);
+            }
+            
+            // Fallback implementation
             const homeContentDiv = document.getElementById('home-content');
             if (!homeContentDiv) {
                 console.error('Home content area (home-content) not found.');
-                return;
+                return false;
             }
 
             const navButtons = document.querySelectorAll('#navigation-area button');
@@ -226,26 +254,35 @@
             let iframe = homeContentDiv.querySelector('iframe');
             if (!iframe) {
                 iframe = document.createElement('iframe');
-                iframe.id = 'content-iframe'; // Set the ID that router expects
+                iframe.id = 'content-iframe';
+                iframe.style.cssText = 'width: 100%; height: 100%; border: none; background: white; min-height: 500px;';
                 
-                // Add error handling for iframe loading
+                // Enhanced error handling for iframe loading
                 iframe.onerror = function() {
                     console.error('Failed to load content:', pageUrl);
-                    iframe.src = 'data:text/html,<html><body><h3>Content not available</h3><p>Unable to load: ' + pageUrl + '</p></body></html>';
+                    const errorHtml = `
+                        <html><body style="font-family: Arial; padding: 20px; text-align: center;">
+                            <h3>Content not available</h3>
+                            <p>Unable to load: ${pageUrl}</p>
+                            <button onclick="window.location.reload()">Retry</button>
+                        </body></html>
+                    `;
+                    iframe.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(errorHtml);
                 };
                 
-                // Prevent script execution errors from iframe content
+                // Improved iframe load handling
                 iframe.onload = function() {
+                    console.log('✅ Content loaded:', pageUrl);
                     try {
-                        // Ensure iframe content is properly isolated
+                        // Enhanced cross-origin error suppression
                         if (iframe.contentWindow) {
-                            iframe.contentWindow.onerror = function(msg, url, line, col, error) {
-                                console.warn('Iframe script error suppressed:', msg, 'at', url, line);
-                                return true; // Suppress the error
-                            };
+                            iframe.contentWindow.addEventListener('error', function(e) {
+                                console.warn('🔇 Iframe error suppressed:', e.message);
+                                return true;
+                            });
                         }
                     } catch (e) {
-                        // Cross-origin or security error - ignore
+                        // Cross-origin restrictions - this is expected and normal
                     }
                 };
                 
@@ -253,12 +290,30 @@
                 homeContentDiv.appendChild(iframe);
             }
             
-            // Add validation before setting src
+            // Validate and set URL
             if (pageUrl && pageUrl.trim() && !pageUrl.includes('<') && !pageUrl.includes('javascript:')) {
-                iframe.src = pageUrl;
+                console.log('🔄 Loading:', pageUrl);
+                
+                // Pre-flight check
+                try {
+                    const response = await fetch(pageUrl, { method: 'HEAD' });
+                    if (response.ok) {
+                        iframe.src = pageUrl;
+                        return true;
+                    } else {
+                        console.error('❌ File not found:', pageUrl, response.status);
+                        iframe.src = `data:text/html,<html><body style="font-family: Arial; padding: 20px; text-align: center;"><h3>File Not Found</h3><p>${pageUrl} (HTTP ${response.status})</p></body></html>`;
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('❌ Network error:', error.message);
+                    iframe.src = `data:text/html,<html><body style="font-family: Arial; padding: 20px; text-align: center;"><h3>Network Error</h3><p>${error.message}</p></body></html>`;
+                    return false;
+                }
             } else {
                 console.error('Invalid page URL:', pageUrl);
-                iframe.src = 'data:text/html,<html><body><h3>Invalid URL</h3><p>Invalid URL provided: ' + (pageUrl || 'undefined') + '</p></body></html>';
+                iframe.src = `data:text/html,<html><body style="font-family: Arial; padding: 20px; text-align: center;"><h3>Invalid URL</h3><p>Invalid URL provided: ${pageUrl || 'undefined'}</p></body></html>`;
+                return false;
             }
         };
 
@@ -317,57 +372,58 @@
             return route;
         }
         
-        // Handle URL routing for direct access and browser navigation
-        function handleRouting() {
+        // Enhanced handle URL routing for direct access and browser navigation
+        async function handleRouting() {
             // Simple routing without complex router dependency
             const hash = window.location.hash.slice(1); // Remove # 
-            if (hash) {
-                // Try to find content based on hash with more comprehensive path mapping
-                const possiblePaths = [
-                    `EXPRESS/${hash}/index.html`,     // Try index.html first (most common)
-                    `EXPRESS/${hash}/page.html`,      // Then page.html
-                    `EXPRESS/${hash}.html`            // Finally direct .html file
-                ];
-                
-                // Try each possible path sequentially and wait for responses
-                async function tryPaths() {
-                    let loaded = false;
-                    for (const path of possiblePaths) {
-                        if (loaded) break;
-                        try {
-                            const response = await fetch(path, { method: 'HEAD' });
-                            if (response.ok && !loaded) {
-                                loaded = true;
-                                window.loadContent(path, null);
-                                sessionStorage.setItem('currentPage', path);
-                                return;
-                            }
-                        } catch (error) {
-                            // Continue to next path
-                            console.debug(`Path not found: ${path}`);
+            if (!hash) {
+                return false; // No hash to process
+            }
+            
+            console.log('🔍 Processing URL hash:', hash);
+            
+            // Try to find content based on hash with more comprehensive path mapping
+            const possiblePaths = [
+                `EXPRESS/${hash}/index.html`,     // Try index.html first (most common)
+                `EXPRESS/${hash}/page.html`,      // Then page.html
+                `EXPRESS/${hash}.html`            // Finally direct .html file
+            ];
+            
+            // Try each possible path sequentially and wait for responses
+            for (const path of possiblePaths) {
+                try {
+                    console.log('🔍 Trying path:', path);
+                    const response = await fetch(path, { method: 'HEAD' });
+                    if (response.ok) {
+                        console.log('✅ Found content at:', path);
+                        const success = await window.loadContent(path, null);
+                        if (success) {
+                            sessionStorage.setItem('currentPage', path);
+                            return true;
                         }
                     }
-                    
-                    // If no paths work, load default
-                    if (!loaded) {
-                        console.warn(`No valid path found for hash: ${hash}, loading default`);
-                        window.loadContent('EXPRESS/introduction/page.html', null);
-                    }
+                } catch (error) {
+                    // Continue to next path
+                    console.debug(`Path not accessible: ${path}`, error.message);
                 }
-                
-                tryPaths();
-            } else {
-                // No hash, load default content
-                window.loadContent('EXPRESS/introduction/page.html', null);
             }
+            
+            console.log('❌ No content found for hash:', hash);
+            return false;
         }
 
-        // Listen for hash changes (browser back/forward)
-        window.addEventListener('hashchange', handleRouting);
+        // Enhanced navigation event handlers
+        window.addEventListener('hashchange', async function() {
+            console.log('🔄 Hash changed, handling routing...');
+            await handleRouting();
+        });
         
         // Handle initial routing if URL has hash
         if (window.location.hash) {
-          setTimeout(handleRouting, 100);
+          setTimeout(async () => {
+            console.log('🔄 Initial hash detected, handling routing...');
+            await handleRouting();
+          }, 100);
         }
 
         // Handle browser back/forward buttons
@@ -685,27 +741,73 @@
                   }
                 });
 
-                // Initial page load logic - use router if available
-                if (window.router) {
-                  // Let router handle initial load
-                  window.router.loadCurrentRoute();
-                } else {
-                  // Fallback to old logic
+                // Enhanced initial page load logic
+                setTimeout(async () => {
+                  console.log('🚀 Starting initial content load...');
+                  
+                  // First try URL routing
+                  const handled = await handleRouting();
+                  if (handled) {
+                    console.log('✅ Content loaded via URL routing');
+                    return;
+                  }
+                  
+                  // Then try session storage
                   const lastPage = sessionStorage.getItem('currentPage');
                   if (lastPage) {
-                    window.loadContent(lastPage, null);
-                  } else {
-                    setTimeout(() => { 
-                      const introLink = document.querySelector('#dynamic-toc-content a[href*="introduction/page.html"]');
-                      if (introLink && introLink.href) {
-                        window.loadContentIntoIframe(introLink.getAttribute('href'), introLink);
-                      } else {
-                        console.warn('Introduction link not found in TOC, loading default EXPRESS/introduction/page.html');
-                        window.loadContent('EXPRESS/introduction/page.html', null);
-                      }
-                    }, 0);
+                    console.log('🔄 Loading last viewed page:', lastPage);
+                    const success = await window.loadContent(lastPage, null);
+                    if (success) {
+                      console.log('✅ Content loaded from session storage');
+                      return;
+                    }
                   }
-                }
+                  
+                  // Try to find introduction link in TOC
+                  const introLink = document.querySelector('#dynamic-toc-content a[href*="introduction/page.html"]');
+                  if (introLink && introLink.href) {
+                    console.log('🔄 Loading introduction from TOC');
+                    window.loadContentIntoIframe(introLink.getAttribute('href'), introLink);
+                    return;
+                  }
+                  
+                  // Fallback to hardcoded introduction page
+                  console.log('🔄 Loading fallback introduction page');
+                  const success = await window.loadContent('EXPRESS/introduction/page.html', null);
+                  if (success) {
+                    console.log('✅ Fallback introduction loaded');
+                    return;
+                  }
+                  
+                  // Last resort - try any working page
+                  const fallbackPages = [
+                    'EXPRESS/section/page.html',
+                    'EXPRESS/career/index.html',
+                    'EXPRESS/comprehensive-storage-test/index.html'
+                  ];
+                  
+                  for (const page of fallbackPages) {
+                    console.log('🔄 Trying fallback page:', page);
+                    const success = await window.loadContent(page, null);
+                    if (success) {
+                      console.log('✅ Fallback page loaded:', page);
+                      return;
+                    }
+                  }
+                  
+                  // If all else fails, show a helpful message
+                  console.warn('⚠️ No content could be loaded, showing help message');
+                  const homeContentDiv = document.getElementById('home-content');
+                  if (homeContentDiv) {
+                    homeContentDiv.innerHTML = `
+                      <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
+                        <h2>Welcome to TEST_PROJECT</h2>
+                        <p>Click any item in the Table of Contents on the left to view content.</p>
+                        <button onclick="location.reload()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Refresh Page</button>
+                      </div>
+                    `;
+                  }
+                }, 100); // Short delay to ensure TOC is loaded
               })
               .catch(error => {
                 console.error('Error loading Table of Contents:', error);

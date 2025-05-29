@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 5px 5px 0;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn.secondary {
+            background: #6c757d;
+        }
+        .btn.danger {
+            background: #dc3545;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.warn {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .iframe-test {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Comprehensive System Test</h1>
+    <p>This page tests all the critical functionality and fixes implemented in the TEST_PROJECT.</p>
+
+    <div class="test-section">
+        <h2>🔧 Content Loading Diagnostics</h2>
+        <button class="btn" onclick="loadDiagnosticsModule()">Load Diagnostics Module</button>
+        <button class="btn" onclick="testContentLoading()">Test Content Loading</button>
+        <button class="btn" onclick="testAllPages()">Test All Pages</button>
+        <div id="diagnostics-status" class="status">Not loaded</div>
+        <div class="test-results" id="diagnostics-results">Results will appear here...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>📄 Page Loading Tests</h2>
+        <p>Test loading specific problematic pages:</p>
+        <button class="btn" onclick="testSpecificPage('EXPRESS/section/page.html')">Content Demonstrations</button>
+        <button class="btn" onclick="testSpecificPage('EXPRESS/sitruna/index.html')">Sitruna Knowledge Map</button>
+        <button class="btn" onclick="testSpecificPage('EXPRESS/appliance-scaling-tutorial/page.html')">Appliance Tutorial</button>
+        <button class="btn" onclick="testSpecificPage('EXPRESS/markdown-example/page.html')">Markdown Example</button>
+        <div class="test-results" id="page-test-results">Results will appear here...</div>
+        <iframe id="test-iframe" class="iframe-test" src="about:blank"></iframe>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Quality Control Integration</h2>
+        <button class="btn" onclick="testQualityControl()">Run QC Tests</button>
+        <button class="btn secondary" onclick="toggleQCReport()">Toggle QC Report</button>
+        <div class="test-results" id="qc-test-results">Results will appear here...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>🌐 Network and File Tests</h2>
+        <button class="btn" onclick="testFileExistence()">Test File Existence</button>
+        <button class="btn" onclick="testNetworkConnectivity()">Test Network</button>
+        <div class="test-results" id="network-test-results">Results will appear here...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧮 Browser Compatibility</h2>
+        <button class="btn" onclick="testBrowserFeatures()">Test Browser Features</button>
+        <div class="test-results" id="browser-test-results">Results will appear here...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Real-time Log</h2>
+        <button class="btn secondary" onclick="clearLog()">Clear Log</button>
+        <button class="btn secondary" onclick="toggleLogCapture()">Toggle Log Capture</button>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        // Global test state
+        let contentDiagnostics = null;
+        let qualityController = null;
+        let logCapture = true;
+        
+        // Enhanced logging
+        function log(message, level = 'info') {
+            const timestamp = new Date().toISOString().substr(11, 12);
+            const logDiv = document.getElementById('log');
+            
+            let color = '#0f0';
+            let prefix = 'INFO';
+            
+            switch (level) {
+                case 'error':
+                    color = '#f44';
+                    prefix = 'ERROR';
+                    break;
+                case 'warning':
+                    color = '#fa0';
+                    prefix = 'WARN';
+                    break;
+                case 'success':
+                    color = '#4f4';
+                    prefix = 'SUCCESS';
+                    break;
+            }
+            
+            if (logCapture && logDiv) {
+                logDiv.innerHTML += `<span style="color: ${color}">[${timestamp}] ${prefix}: ${message}</span>\n`;
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+            
+            // Also log to console
+            switch (level) {
+                case 'error':
+                    console.error(message);
+                    break;
+                case 'warning':
+                    console.warn(message);
+                    break;
+                default:
+                    console.log(message);
+            }
+        }
+
+        // Load diagnostics module
+        async function loadDiagnosticsModule() {
+            const statusDiv = document.getElementById('diagnostics-status');
+            const resultsDiv = document.getElementById('diagnostics-results');
+            
+            try {
+                log('Loading content diagnostics module...');
+                statusDiv.textContent = 'Loading...';
+                statusDiv.className = 'status warn';
+                
+                // Import the module
+                const module = await import('./src/content-diagnostics.js');
+                
+                if (module.default) {
+                    window.ContentLoadingDiagnostics = module.default;
+                } else {
+                    window.ContentLoadingDiagnostics = module.ContentLoadingDiagnostics;
+                }
+                
+                contentDiagnostics = new window.ContentLoadingDiagnostics();
+                
+                statusDiv.textContent = 'Loaded';
+                statusDiv.className = 'status pass';
+                
+                resultsDiv.innerHTML = `
+                    ✅ Content diagnostics module loaded successfully<br>
+                    📊 Diagnostics instance created<br>
+                    🔧 Enhanced content loading available
+                `;
+                
+                log('Content diagnostics module loaded successfully', 'success');
+                
+            } catch (error) {
+                statusDiv.textContent = 'Failed';
+                statusDiv.className = 'status fail';
+                
+                resultsDiv.innerHTML = `
+                    ❌ Failed to load diagnostics module<br>
+                    Error: ${error.message}
+                `;
+                
+                log(`Failed to load diagnostics module: ${error.message}`, 'error');
+            }
+        }
+
+        // Test content loading
+        async function testContentLoading() {
+            const resultsDiv = document.getElementById('diagnostics-results');
+            
+            if (!contentDiagnostics) {
+                resultsDiv.innerHTML = '❌ Diagnostics module not loaded. Click "Load Diagnostics Module" first.';
+                log('Cannot test content loading without diagnostics module', 'error');
+                return;
+            }
+            
+            log('Starting content loading test...');
+            resultsDiv.innerHTML = '🔄 Testing content loading...';
+            
+            const testUrl = 'EXPRESS/introduction/page.html';
+            const iframe = document.getElementById('test-iframe');
+            
+            try {
+                // Create a temporary div to simulate the home content area
+                const tempDiv = document.createElement('div');
+                tempDiv.id = 'temp-home-content';
+                document.body.appendChild(tempDiv);
+                
+                // Override the home content reference temporarily
+                const originalGetElement = document.getElementById;
+                document.getElementById = function(id) {
+                    if (id === 'home-content') {
+                        return tempDiv;
+                    }
+                    return originalGetElement.call(document, id);
+                };
+                
+                const success = await contentDiagnostics.loadContentWithDiagnostics(testUrl, null);
+                
+                // Restore original function
+                document.getElementById = originalGetElement;
+                
+                // Copy the iframe to our test area
+                const loadedIframe = tempDiv.querySelector('iframe');
+                if (loadedIframe) {
+                    iframe.src = loadedIframe.src;
+                }
+                
+                // Clean up
+                document.body.removeChild(tempDiv);
+                
+                if (success) {
+                    resultsDiv.innerHTML = `
+                        ✅ Content loading test passed<br>
+                        📄 Successfully loaded: ${testUrl}<br>
+                        🎯 Iframe updated with content
+                    `;
+                    log('Content loading test passed', 'success');
+                } else {
+                    resultsDiv.innerHTML = `
+                        ❌ Content loading test failed<br>
+                        📄 Could not load: ${testUrl}
+                    `;
+                    log('Content loading test failed', 'error');
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    ❌ Content loading test error<br>
+                    Error: ${error.message}
+                `;
+                log(`Content loading test error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test all pages
+        async function testAllPages() {
+            const resultsDiv = document.getElementById('diagnostics-results');
+            
+            if (!contentDiagnostics) {
+                resultsDiv.innerHTML = '❌ Diagnostics module not loaded. Click "Load Diagnostics Module" first.';
+                return;
+            }
+            
+            log('Starting comprehensive page test...');
+            resultsDiv.innerHTML = '🔄 Testing all pages...';
+            
+            try {
+                const results = await contentDiagnostics.testAllPages();
+                
+                let html = '<strong>📊 Comprehensive Page Test Results:</strong><br><br>';
+                
+                results.forEach(result => {
+                    const status = result.success ? '✅' : '❌';
+                    html += `${status} ${result.page}<br>`;
+                });
+                
+                const passed = results.filter(r => r.success).length;
+                const total = results.length;
+                const successRate = ((passed / total) * 100).toFixed(1);
+                
+                html += `<br><strong>Summary:</strong><br>`;
+                html += `📈 Success Rate: ${successRate}%<br>`;
+                html += `✅ Passed: ${passed}/${total}<br>`;
+                html += `❌ Failed: ${total - passed}/${total}`;
+                
+                resultsDiv.innerHTML = html;
+                log(`Page testing complete: ${successRate}% success rate`, 'success');
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ Page testing error: ${error.message}`;
+                log(`Page testing error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test specific page
+        async function testSpecificPage(pageUrl) {
+            const resultsDiv = document.getElementById('page-test-results');
+            const iframe = document.getElementById('test-iframe');
+            
+            log(`Testing specific page: ${pageUrl}`);
+            resultsDiv.innerHTML = `🔄 Testing: ${pageUrl}...`;
+            
+            try {
+                // Test file existence first
+                const response = await fetch(pageUrl, { method: 'HEAD' });
+                
+                if (!response.ok) {
+                    resultsDiv.innerHTML = `❌ File not found: ${pageUrl} (HTTP ${response.status})`;
+                    log(`File not found: ${pageUrl} (HTTP ${response.status})`, 'error');
+                    return;
+                }
+                
+                // Load in iframe
+                iframe.src = pageUrl;
+                
+                // Wait for load
+                iframe.onload = function() {
+                    resultsDiv.innerHTML = `
+                        ✅ Successfully loaded: ${pageUrl}<br>
+                        📄 HTTP Status: ${response.status}<br>
+                        🎯 Content displayed in iframe below
+                    `;
+                    log(`Successfully loaded: ${pageUrl}`, 'success');
+                };
+                
+                iframe.onerror = function() {
+                    resultsDiv.innerHTML = `❌ Iframe loading failed: ${pageUrl}`;
+                    log(`Iframe loading failed: ${pageUrl}`, 'error');
+                };
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ Network error: ${error.message}`;
+                log(`Network error testing ${pageUrl}: ${error.message}`, 'error');
+            }
+        }
+
+        // Test quality control
+        async function testQualityControl() {
+            const resultsDiv = document.getElementById('qc-test-results');
+            
+            log('Testing quality control system...');
+            resultsDiv.innerHTML = '🔄 Loading quality control module...';
+            
+            try {
+                // Import QC module
+                const qcModule = await import('./src/quality-control.js');
+                
+                resultsDiv.innerHTML = '🔄 Running quality control tests...';
+                
+                // Create QC instance
+                const qc = new qcModule.QualityController();
+                
+                // Run tests
+                await qc.runAllTests();
+                
+                resultsDiv.innerHTML = `
+                    ✅ Quality control tests completed<br>
+                    📊 Check console for detailed results<br>
+                    📋 Look for QC Report container on main page
+                `;
+                
+                log('Quality control tests completed', 'success');
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `❌ QC test error: ${error.message}`;
+                log(`QC test error: ${error.message}`, 'error');
+            }
+        }
+
+        // Toggle QC report (if available)
+        function toggleQCReport() {
+            const qcContainer = window.parent?.document?.getElementById('qc-report-container');
+            if (qcContainer) {
+                const isVisible = qcContainer.style.display !== 'none';
+                qcContainer.style.display = isVisible ? 'none' : 'block';
+                log(`QC report ${isVisible ? 'hidden' : 'shown'}`, 'info');
+            } else {
+                log('QC report container not found (may be on main page)', 'warning');
+            }
+        }
+
+        // Test file existence
+        async function testFileExistence() {
+            const resultsDiv = document.getElementById('network-test-results');
+            
+            const files = [
+                'index.html',
+                'toc.html',
+                'src/content-diagnostics.js',
+                'src/quality-control.js',
+                'EXPRESS/section/page.html',
+                'EXPRESS/sitruna/index.html',
+                'EXPRESS/appliance-scaling-tutorial/page.html',
+                'EXPRESS/markdown-example/page.html'
+            ];
+            
+            log('Testing file existence...');
+            resultsDiv.innerHTML = '🔄 Testing file existence...';
+            
+            let html = '<strong>📁 File Existence Test:</strong><br><br>';
+            let passed = 0;
+            
+            for (const file of files) {
+                try {
+                    const response = await fetch(file, { method: 'HEAD' });
+                    const status = response.ok ? '✅' : '❌';
+                    html += `${status} ${file} (HTTP ${response.status})<br>`;
+                    if (response.ok) passed++;
+                } catch (error) {
+                    html += `❌ ${file} (Network Error)<br>`;
+                }
+            }
+            
+            const successRate = ((passed / files.length) * 100).toFixed(1);
+            html += `<br><strong>Summary:</strong> ${successRate}% files accessible (${passed}/${files.length})`;
+            
+            resultsDiv.innerHTML = html;
+            log(`File existence test complete: ${successRate}% accessible`, 'success');
+        }
+
+        // Test network connectivity
+        async function testNetworkConnectivity() {
+            const resultsDiv = document.getElementById('network-test-results');
+            
+            log('Testing network connectivity...');
+            
+            const tests = [
+                { name: 'Fetch API', test: () => fetch('index.html', { method: 'HEAD' }) },
+                { name: 'XMLHttpRequest', test: () => {
+                    return new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open('HEAD', 'index.html');
+                        xhr.onload = () => resolve(xhr);
+                        xhr.onerror = reject;
+                        xhr.send();
+                    });
+                }}
+            ];
+            
+            let html = '<strong>🌐 Network Connectivity Test:</strong><br><br>';
+            
+            for (const test of tests) {
+                try {
+                    await test.test();
+                    html += `✅ ${test.name} - Working<br>`;
+                } catch (error) {
+                    html += `❌ ${test.name} - Failed: ${error.message}<br>`;
+                }
+            }
+            
+            resultsDiv.innerHTML = html;
+            log('Network connectivity test complete', 'success');
+        }
+
+        // Test browser features
+        function testBrowserFeatures() {
+            const resultsDiv = document.getElementById('browser-test-results');
+            
+            log('Testing browser features...');
+            
+            const features = [
+                { name: 'ES6 Modules', test: () => {
+                    try {
+                        return typeof eval('import') === 'function';
+                    } catch (e) {
+                        return false;
+                    }
+                }},
+                { name: 'Fetch API', test: () => typeof fetch === 'function' },
+                { name: 'Local Storage', test: () => typeof localStorage !== 'undefined' },
+                { name: 'Session Storage', test: () => typeof sessionStorage !== 'undefined' },
+                { name: 'History API', test: () => typeof history.pushState === 'function' },
+                { name: 'Promise', test: () => typeof Promise === 'function' },
+                { name: 'Async/Await', test: () => {
+                    try {
+                        eval('async function test() { await Promise.resolve(); }');
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                }}
+            ];
+            
+            let html = '<strong>🧮 Browser Feature Test:</strong><br><br>';
+            html += `User Agent: ${navigator.userAgent}<br><br>`;
+            
+            features.forEach(feature => {
+                const supported = feature.test();
+                const status = supported ? '✅' : '❌';
+                html += `${status} ${feature.name}<br>`;
+            });
+            
+            resultsDiv.innerHTML = html;
+            log('Browser feature test complete', 'success');
+        }
+
+        // Utility functions
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            log('Log cleared', 'info');
+        }
+
+        function toggleLogCapture() {
+            logCapture = !logCapture;
+            log(`Log capture ${logCapture ? 'enabled' : 'disabled'}`, 'info');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Comprehensive System Test page loaded', 'success');
+            log('Click buttons above to run various tests', 'info');
+        });
+    </script>
+</body>
+</html>

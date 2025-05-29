@@ -244,43 +244,70 @@ class QualityController {
     const content = document.getElementById('qc-report-content');
     const toggleIcon = document.getElementById('qc-toggle-icon');
 
-    if (!container || !summary || !details) return;
+    if (!container || !summary || !details) {
+      console.warn('QC Report: UI elements not found in DOM');
+      return;
+    }
+
+    // If no report provided, generate a summary from current state
+    if (!report) {
+      const total = this.tests.length + this.errors.length + this.warnings.length;
+      const passed = this.tests.length;
+      const failed = this.errors.length;
+      const warned = this.warnings.length;
+      
+      report = {
+        total,
+        passed,
+        failed,
+        warned,
+        successRate: total > 0 ? (passed / total) * 100 : 0,
+        hasErrors: failed > 0,
+        tests: this.tests || [],
+        errors: this.errors || [],
+        warnings: this.warnings || []
+      };
+    }
 
     // Show the container
     container.style.display = 'block';
 
     // Update summary
-    const successRate = report.successRate.toFixed(1);
-    const statusColor = report.hasErrors ? '#ff4444' : report.warned > 0 ? '#ff8800' : '#44aa44';
+    const successRate = report.successRate ? report.successRate.toFixed(1) : '0.0';
+    const statusColor = report.hasErrors ? '#ff4444' : (report.warned || 0) > 0 ? '#ff8800' : '#44aa44';
     
     summary.innerHTML = `
       <div style="color: ${statusColor}; font-size: 14px;">
-        Success Rate: ${successRate}% | ✅ ${report.passed} ❌ ${report.failed} ⚠️ ${report.warned}
+        Success Rate: ${successRate}% | ✅ ${report.passed || 0} ❌ ${report.failed || 0} ⚠️ ${report.warned || 0}
       </div>
     `;
 
     // Update detailed results
     let detailsHTML = '';
     
-    if (report.tests.length > 0) {
+    if (report.tests && report.tests.length > 0) {
       detailsHTML += '<div style="margin-bottom: 8px;"><strong style="color: #44aa44;">✅ Passed Tests:</strong></div>';
       report.tests.forEach(test => {
         detailsHTML += `<div style="margin-left: 10px; color: #666; font-size: 11px;">• ${test.name}: ${test.details}</div>`;
       });
     }
     
-    if (report.warnings.length > 0) {
+    if (report.warnings && report.warnings.length > 0) {
       detailsHTML += '<div style="margin: 8px 0 4px 0;"><strong style="color: #ff8800;">⚠️ Warnings:</strong></div>';
       report.warnings.forEach(warning => {
         detailsHTML += `<div style="margin-left: 10px; color: #ff8800; font-size: 11px;">• ${warning.name}: ${warning.details}</div>`;
       });
     }
     
-    if (report.errors.length > 0) {
+    if (report.errors && report.errors.length > 0) {
       detailsHTML += '<div style="margin: 8px 0 4px 0;"><strong style="color: #ff4444;">❌ Failed Tests:</strong></div>';
       report.errors.forEach(error => {
         detailsHTML += `<div style="margin-left: 10px; color: #ff4444; font-size: 11px;">• ${error.name}: ${error.details}</div>`;
       });
+    }
+
+    if (!detailsHTML) {
+      detailsHTML = '<div style="color: #666; font-size: 11px;">No test results available yet.</div>';
     }
 
     details.innerHTML = detailsHTML;
@@ -291,7 +318,9 @@ class QualityController {
       header.addEventListener('click', () => {
         const isCollapsed = content.style.display === 'none';
         content.style.display = isCollapsed ? 'block' : 'none';
-        toggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+        if (toggleIcon) {
+          toggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
       });
     }
   }
