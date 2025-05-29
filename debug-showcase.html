@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Complex Showcase</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        iframe { width: 100%; height: 600px; border: 1px solid #ccc; margin: 10px 0; }
+        .test-section { margin: 20px 0; padding: 10px; border: 1px solid #ddd; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Debug Complex Showcase</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Direct Access to Complex Showcase</h2>
+        <p>Loading complex showcase directly:</p>
+        <iframe src="EXPRESS/complex-showcase/index.html" id="direct-iframe"></iframe>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Router Navigation to Complex Showcase</h2>
+        <button onclick="testRouterNavigation()">Navigate via Router</button>
+        <div id="router-test-result"></div>
+        <iframe id="router-iframe" style="display: none;"></iframe>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Script Loading Test</h2>
+        <button onclick="testScriptLoading()">Test Script Loading</button>
+        <div id="script-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Data Loading Test</h2>
+        <button onclick="testDataLoading()">Test D3 Data Loading</button>
+        <div id="data-test-result"></div>
+    </div>
+
+    <script type="module">
+        import { ContentRouter } from './src/router.js';
+
+        window.debugRouter = new ContentRouter({
+            contentContainer: 'router-iframe',
+            contentBasePath: 'EXPRESS/',
+            defaultRoute: 'introduction'
+        });
+
+        window.debugRouter.addContentRoute('complex-showcase', 'complex-showcase/index.html', 'Complex Showcase');
+
+        window.testRouterNavigation = async function() {
+            const resultDiv = document.getElementById('router-test-result');
+            const iframe = document.getElementById('router-iframe');
+            iframe.style.display = 'block';
+            
+            try {
+                resultDiv.innerHTML = '<span style="color: blue;">Testing router navigation...</span>';
+                await window.debugRouter.navigate('complex-showcase');
+                resultDiv.innerHTML = '<span class="success">✓ Router navigation successful</span>';
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ Router navigation failed: ${error.message}</span>`;
+            }
+        };
+
+        window.testScriptLoading = async function() {
+            const resultDiv = document.getElementById('script-test-result');
+            
+            try {
+                resultDiv.innerHTML = '<span style="color: blue;">Testing script loading...</span>';
+                const response = await fetch('EXPRESS/complex-showcase/script.js');
+                const content = await response.text();
+                
+                if (content.includes('getBasePath') && content.includes('d3Container')) {
+                    resultDiv.innerHTML = '<span class="success">✓ Script.js loads correctly and contains expected functions</span>';
+                } else {
+                    resultDiv.innerHTML = '<span class="error">✗ Script.js content unexpected</span>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ Script loading failed: ${error.message}</span>`;
+            }
+        };
+
+        window.testDataLoading = async function() {
+            const resultDiv = document.getElementById('data-test-result');
+            
+            try {
+                resultDiv.innerHTML = '<span style="color: blue;">Testing data loading...</span>';
+                const response = await fetch('data/sample-chart-data.json');
+                const data = await response.json();
+                
+                if (Array.isArray(data) && data.length > 0 && data[0].label && data[0].value) {
+                    resultDiv.innerHTML = `<span class="success">✓ Data loads correctly: ${data.length} items</span>`;
+                } else {
+                    resultDiv.innerHTML = '<span class="error">✗ Data format unexpected</span>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">✗ Data loading failed: ${error.message}</span>`;
+            }
+        };
+
+        // Monitor iframe loading
+        document.getElementById('direct-iframe').addEventListener('load', function() {
+            console.log('Direct iframe loaded successfully');
+        });
+
+        document.getElementById('direct-iframe').addEventListener('error', function() {
+            console.error('Direct iframe failed to load');
+        });
+    </script>
+</body>
+</html>

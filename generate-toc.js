@@ -1,5 +1,6 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Extracts the title from an HTML file and applies specified casing.
@@ -175,7 +176,11 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
   }
 }
 
-if (require.main === module) {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Check if this script is being run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
   const projectRoot = path.resolve(__dirname); // Assumes script is in project root
 
   // Default paths
@@ -223,4 +228,4 @@ if (require.main === module) {
   generateHtmlToc(expressDir, htmlOutputFile, htmlBaseDir);
 }
 
-module.exports = { generateHtmlToc, extractTitle };
+export { generateHtmlToc, extractTitle };

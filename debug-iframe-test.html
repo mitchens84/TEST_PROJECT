@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Iframe Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        iframe { width: 100%; height: 600px; border: 2px solid #333; margin: 20px 0; }
+        .test-section { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Debug Iframe Loading Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Direct Complex Showcase Load</h2>
+        <iframe id="test1" src="EXPRESS/complex-showcase/index.html"></iframe>
+        <button onclick="checkIframe('test1')">Check Console for Errors</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Simple Content Load</h2>
+        <iframe id="test2" src="EXPRESS/introduction/page.html"></iframe>
+        <button onclick="checkIframe('test2')">Check Console for Errors</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Check Script Loading</h2>
+        <iframe id="test3" src="about:blank"></iframe>
+        <button onclick="loadTestScript()">Load Test Script</button>
+    </div>
+
+    <script>
+        function checkIframe(iframeId) {
+            const iframe = document.getElementById(iframeId);
+            try {
+                console.log(`Checking iframe ${iframeId}:`, iframe.contentWindow);
+                console.log(`Source: ${iframe.src}`);
+                console.log(`Content Document:`, iframe.contentDocument);
+            } catch (e) {
+                console.error(`Error accessing iframe ${iframeId}:`, e);
+            }
+        }
+        
+        function loadTestScript() {
+            const iframe = document.getElementById('test3');
+            const testHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="../../EXPRESS/complex-showcase/script.js"></script>
+</head>
+<body>
+    <h1>Test Script Loading</h1>
+    <div id="test-output"></div>
+    <script>
+        document.getElementById('test-output').innerHTML = 'Script loaded successfully';
+    </script>
+</body>
+</html>`;
+            iframe.srcdoc = testHTML;
+        }
+        
+        // Listen for errors
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e);
+        });
+        
+        // Listen for messages from iframes
+        window.addEventListener('message', function(e) {
+            console.log('Message from iframe:', e.data);
+        });
+    </script>
+</body>
+</html>
