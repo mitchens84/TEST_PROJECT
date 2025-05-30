@@ -487,8 +487,8 @@ const IntegratedComponent = {
         </div>
 
         <div class="back-nav">
-            <a href="/EXPRESS/section/" class="nav-button">← Back to Section Overview</a>
-            <a href="/" class="nav-button">🏠 Main Application</a>
+            <a href="javascript:void(0)" onclick="window.parent.postMessage({type: 'navigate', path: 'section/'}, '*')" class="nav-button">← Back to Section Overview</a>
+            <a href="javascript:void(0)" onclick="window.parent.postMessage({type: 'navigate', path: ''}, '*')" class="nav-button">🏠 Main Application</a>
         </div>
     </div>
 

@@ -139,9 +139,8 @@
         
         .info-panel {
             position: fixed;
-            top: 50%;
+            top: 20px;
             right: 20px;
-            transform: translateY(-50%);
             background: rgba(255, 255, 255, 0.95);
             padding: 20px;
             border-radius: 10px;
@@ -150,17 +149,17 @@
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
             z-index: 200;
+            transform: translateX(calc(100% - 40px));
         }
         
-        .info-panel.collapsed {
-            transform: translateY(-50%) translateX(calc(100% - 40px));
+        .info-panel.expanded {
+            transform: translateX(0);
         }
         
         .info-toggle {
             position: absolute;
             left: -15px;
-            top: 50%;
-            transform: translateY(-50%);
+            top: 10px;
             background: #3498db;
             color: white;
             border: none;
@@ -171,13 +170,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 14px;
             transition: all 0.3s ease;
+            z-index: 201;
         }
         
         .info-toggle:hover {
             background: #2980b9;
-            transform: translateY(-50%) scale(1.1);
+            transform: scale(1.1);
         }
         
         .info-panel h3 {
@@ -236,7 +236,7 @@
                 top: auto;
             }
             
-            .info-panel.collapsed {
+            .info-panel.expanded {
                 transform: none;
             }
             
@@ -555,8 +555,8 @@
         // Info panel toggle
         document.getElementById("info-toggle").addEventListener("click", function() {
             const panel = document.getElementById("info-panel");
-            panel.classList.toggle("collapsed");
-            this.textContent = panel.classList.contains("collapsed") ? "📋" : "ℹ️";
+            panel.classList.toggle("expanded");
+            this.textContent = panel.classList.contains("expanded") ? "✖️" : "ℹ️";
         });
 
         // Handle window resize
