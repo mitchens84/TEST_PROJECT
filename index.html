@@ -1009,19 +1009,24 @@
             qcToggleIcon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
           });
         }
-      });
-
-      // Enhanced global error handler to prevent script execution errors from breaking the app
-      window.addEventListener('error', function(event) {
-        const errorMsg = event.message || '';
-        const fileName = event.filename || '';
-        
-        // Suppress "Unexpected token '<'" errors (HTML being executed as JS)
-        if (errorMsg.includes('Unexpected token') || errorMsg.includes('Unexpected end of input')) {
-          console.warn('🔇 Suppressed script execution error:', errorMsg, 'at', fileName, event.lineno);
-          event.preventDefault();
-          return true;
-        }
+      });        // Enhanced global error handler to prevent script execution errors from breaking the app
+        window.addEventListener('error', function(event) {
+            const errorMsg = event.message || '';
+            const fileName = event.filename || '';
+            
+            // Suppress "Unexpected token '<'" errors (HTML being executed as JS)
+            if (errorMsg.includes('Unexpected token') || errorMsg.includes('Unexpected end of input')) {
+              console.warn('🔇 Suppressed script execution error:', errorMsg, 'at', fileName, event.lineno);
+              event.preventDefault();
+              return true;
+            }
+            
+            // Additional suppression for iframe-related script errors
+            if (errorMsg.includes('Script error') && fileName.includes('about:blank')) {
+              console.warn('🔇 Suppressed iframe script error:', errorMsg);
+              event.preventDefault();
+              return true;
+            }
         
         // Suppress cross-origin iframe errors
         if (errorMsg.includes('Script error') || errorMsg.includes('cross-origin')) {

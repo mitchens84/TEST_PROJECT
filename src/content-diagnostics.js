@@ -46,18 +46,18 @@ class ContentLoadingDiagnostics {
       return false;
     }
 
-    // Pre-flight check - verify file exists
+    // Enhanced pre-flight content validation
     try {
-      const response = await fetch(pageUrl, { method: 'HEAD' });
-      if (!response.ok) {
-        this.log(`❌ File not found: ${pageUrl} (HTTP ${response.status})`, 'error');
-        this.showErrorContent(iframe, `File not found: ${pageUrl} (HTTP ${response.status})`);
+      const contentValidation = await this.validateContentPreFlight(pageUrl);
+      if (!contentValidation.isValid) {
+        this.log(`❌ Content validation failed: ${contentValidation.error}`, 'error');
+        this.showErrorContent(iframe, `Content validation failed: ${contentValidation.error}`);
         return false;
       }
-      this.log(`✅ File exists: ${pageUrl} (HTTP ${response.status})`, 'success');
+      this.log(`✅ Content validation passed: ${pageUrl}`, 'success');
     } catch (error) {
-      this.log(`❌ Network error checking ${pageUrl}: ${error.message}`, 'error');
-      this.showErrorContent(iframe, `Network error: ${error.message}`);
+      this.log(`❌ Pre-flight validation error: ${error.message}`, 'error');
+      this.showErrorContent(iframe, `Validation error: ${error.message}`);
       return false;
     }
 
@@ -252,6 +252,79 @@ class ContentLoadingDiagnostics {
         loaded: iframe.contentDocument ? true : false
       }))
     };
+  }
+
+  // Enhanced pre-flight content validation to prevent script errors
+  async validateContentPreFlight(pageUrl) {
+    try {
+      // First check if file exists
+      const response = await fetch(pageUrl, { method: 'HEAD' });
+      if (!response.ok) {
+        return {
+          isValid: false,
+          error: `File not found (HTTP ${response.status})`
+        };
+      }
+
+      // Get content for validation
+      const contentResponse = await fetch(pageUrl);
+      if (!contentResponse.ok) {
+        return {
+          isValid: false,
+          error: `Failed to fetch content (HTTP ${contentResponse.status})`
+        };
+      }
+
+      const contentType = contentResponse.headers.get('content-type') || '';
+      const content = await contentResponse.text();
+
+      // Validate content type
+      if (!contentType.includes('text/html') && !pageUrl.endsWith('.html')) {
+        this.log(`⚠️ Warning: Content type is ${contentType}, expected HTML`, 'warning');
+      }
+
+      // Check for common error patterns that cause "Unexpected token '<'" errors
+      const errorPatterns = [
+        { pattern: /^\s*<\?\s*xml/, message: "XML declaration in HTML" },
+        { pattern: /^\s*<!DOCTYPE\s+xml/, message: "XML DOCTYPE in HTML" },
+        { pattern: /<script[^>]*>\s*</, message: "Malformed script tag with HTML" },
+        { pattern: /javascript:\s*</, message: "JavaScript with HTML content" },
+        { pattern: /<\s*script[^>]*>[\s\S]*?<(?!\/script>)/, message: "Script tag with embedded HTML" }
+      ];
+
+      for (const errorPattern of errorPatterns) {
+        if (errorPattern.pattern.test(content)) {
+          return {
+            isValid: false,
+            error: `Content validation failed: ${errorPattern.message}`
+          };
+        }
+      }
+
+      // Check for empty or minimal content
+      const textContent = content.replace(/<[^>]*>/g, '').trim();
+      if (textContent.length < 50) {
+        this.log(`⚠️ Warning: Content appears minimal (${textContent.length} characters)`, 'warning');
+      }
+
+      // Check for basic HTML structure
+      if (!content.includes('<html') && !content.includes('<body')) {
+        this.log(`⚠️ Warning: Content lacks basic HTML structure`, 'warning');
+      }
+
+      return {
+        isValid: true,
+        contentLength: content.length,
+        textLength: textContent.length,
+        contentType: contentType
+      };
+
+    } catch (error) {
+      return {
+        isValid: false,
+        error: `Validation error: ${error.message}`
+      };
+    }
   }
 
   // Test all problematic pages

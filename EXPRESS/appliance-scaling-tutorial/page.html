@@ -24,7 +24,7 @@
                }
              } catch (e) { console.warn('Initial theme pre-application script failed:', e); }
            })();
-         <\/script>
+         </script>
          <style>
              /* Specific styles for the tutorial page */
              body { padding: 20px; font-family: var(--font-sans-serif); } /* Ensure main.css font is used */
@@ -67,9 +67,12 @@
                      <input type="range" id="freezer-size" name="freezer-size" min="1" max="10" value="3">
                      <span id="freezer-size-value" class="output">3</span>
                  </div>
-                 <div class="visualization" id="freezer-viz">Visual representation of freezer</div>
+                 <div class="visualization" id="freezer-viz">
+                     <canvas id="freezer-canvas" width="400" height="200" style="border: 1px solid var(--border-color); background: white;"></canvas>
+                 </div>
                  <p class="output">Volume (Capacity): <span id="freezer-volume">27</span> cubic units</p>
                  <p class="output">Surface Area (Material Approx.): <span id="freezer-surface-area">54</span> square units</p>
+                 <p class="output">Cost Efficiency (Volume/Surface): <span id="freezer-efficiency">0.50</span></p>
                  <p>Notice how doubling the side length doesn't just double the volume or surface area. Volume scales with the cube of the linear dimension (L³), while surface area scales with the square (6L² for a cube).</p>
              </section>
              
@@ -188,18 +191,21 @@
                  const freezerViz = document.getElementById('freezer-viz');
                  const freezerVolume = document.getElementById('freezer-volume');
                  const freezerSurfaceArea = document.getElementById('freezer-surface-area');
+                 const freezerEfficiency = document.getElementById('freezer-efficiency');
 
                  function updateFreezerDemo() {
                      const size = parseInt(freezerSizeSlider.value);
                      freezerSizeValue.textContent = size;
                      const volume = size * size * size;
                      const surfaceArea = 6 * size * size;
+                     const efficiency = (volume / surfaceArea).toFixed(2);
                      freezerVolume.textContent = volume;
                      freezerSurfaceArea.textContent = surfaceArea;
+                     if (freezerEfficiency) freezerEfficiency.textContent = efficiency;
                      // Basic visualization update
-                     freezerViz.innerHTML = `Imagine a cube with side ${size}`;
+                     freezerViz.innerHTML = "Imagine a cube with side " + size;
                      const scaleFactor = size / 10; // Max size is 10
-                     freezerViz.style.transform = \`scale(\${0.5 + scaleFactor * 0.5})\`;
+                     freezerViz.style.transform = `scale(${0.5 + scaleFactor * 0.5})`;
                  }
                  freezerSizeSlider.addEventListener('input', updateFreezerDemo);
                  updateFreezerDemo(); // Initial call
@@ -264,10 +270,10 @@
                         .attr("width", width + margin.left + margin.right)
                         .attr("height", height + margin.top + margin.bottom)
                     .append("g")
-                        .attr("transform", `translate(${margin.left},${margin.top})`);
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
                 const x0 = d3.scaleBand()
-                    .domain(data.map(d => `L=${d.L}`))
+                    .domain(data.map(d => "L=" + d.L))
                     .range([0, width])
                     .paddingInner(0.2);
 
@@ -285,7 +291,7 @@
                     .selectAll("g")
                     .data(data)
                     .join("g")
-                        .attr("transform", d => `translate(${x0(`L=${d.L}`)},0)`)
+                        .attr("transform", d => "translate(" + x0("L=" + d.L) + ",0)")
                     .selectAll("rect")
                     .data(d => [{key: 'volume', value: d.volume}, {key: 'surface', value: d.surface}])
                     .join("rect")
@@ -296,7 +302,7 @@
                         .attr("fill", d => d.key === 'volume' ? 'var(--primary-color)' : 'var(--secondary-color)');
                 
                 svg.append("g")
-                   .attr("transform", `translate(0,${height})`)
+                   .attr("transform", "translate(0," + height + ")")
                    .call(d3.axisBottom(x0))
                    .selectAll("text")
                        .style("fill", "var(--text-color)"); 
@@ -328,7 +334,7 @@
                    .selectAll("g")
                    .data([{key: 'volume', color: 'var(--primary-color)', text: 'Volume (L³)'}, {key: 'surface', color: 'var(--secondary-color)', text: 'Surface Area (6L²)'}])
                    .join("g")
-                       .attr("transform", (d, i) => `translate(0,${i * 20})`);
+                       .attr("transform", (d, i) => "translate(0," + (i * 20) + ")");
 
                 legend.append("rect")
                    .attr("x", width - 19)
@@ -394,7 +400,10 @@
                 const sizeValueDisplay = document.getElementById('three-cube-size-value');
                 if(sizeValueDisplay) sizeValueDisplay.textContent = size.toFixed(1);
             }
-         <\/script>
-         <footer><p>&copy; ${new Date().getFullYear()} Your Project</p></footer>
+         </script>
+         <footer><p>&copy; <span id="current-year"></span> Your Project</p></footer>
+         <script>
+             document.getElementById('current-year').textContent = new Date().getFullYear();
+         </script>
      </body>
      </html>
