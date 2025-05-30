@@ -116,55 +116,140 @@
             /* background-color, color, border are inherited from general button styles or overridden by main.css vars */
         }
 
-        /* Quality Control Report Styles */
-        #qc-report-container {
+        /* Quality Control Button & Modal Styles */
+        #qc-button {
             position: fixed;
-            top: 10px;
-            right: 10px;
+            bottom: 20px;
+            right: 20px;
             z-index: 1000;
-            max-width: 400px;
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            font-family: 'Monaco', 'Consolas', monospace;
-            font-size: 12px;
-            display: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--accent-color, #007bff);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        #qc-report-header {
-            padding: 10px;
+        #qc-button:hover {
+            background: var(--accent-hover-color, #0056b3);
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        #qc-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #qc-modal-content {
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 600px;
+            max-height: 80vh;
+            width: 90%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #qc-modal-header {
+            padding: 20px;
             background: var(--secondary-bg-color);
             border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        #qc-report-content {
-            padding: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-            display: none;
+        #qc-modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--text-color);
         }
 
-        #qc-report-summary {
-            margin-bottom: 10px;
-            font-weight: bold;
+        #qc-close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-color);
+            padding: 0;
+            line-height: 1;
         }
+
+        #qc-close-button:hover {
+            color: var(--accent-color, #007bff);
+        }
+
+        #qc-modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+        }
+
+        .qc-summary {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--secondary-bg-color);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color, #007bff);
+        }
+
+        .qc-section {
+            margin-bottom: 15px;
+        }
+
+        .qc-section h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+
+        .qc-test-item {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .qc-test-pass { background: #d4edda; color: #155724; }
+        .qc-test-fail { background: #f8d7da; color: #721c24; }
+        .qc-test-warn { background: #fff3cd; color: #856404; }
     </style>
     </head>
 <body>
-    <!-- Quality Control Report Section -->
-    <div id="qc-report-container" style="position: fixed; top: 10px; right: 10px; z-index: 1000; max-width: 400px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-family: 'Monaco', 'Consolas', monospace; font-size: 12px; display: none;">
-        <div id="qc-report-header" style="padding: 10px; background: var(--secondary-bg-color); border-bottom: 1px solid var(--border-color); cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: bold;">📊 Quality Control Report</span>
-            <span id="qc-toggle-icon" style="transform: rotate(0deg); transition: transform 0.3s ease;">▼</span>
-        </div>
-        <div id="qc-report-content" style="padding: 10px; max-height: 300px; overflow-y: auto; display: none;">
-            <div id="qc-report-summary" style="margin-bottom: 10px; font-weight: bold;"></div>
-            <div id="qc-report-details"></div>
+    <!-- Quality Control Button -->
+    <button id="qc-button" title="Quality Control Report">📊</button>
+    
+    <!-- Quality Control Modal -->
+    <div id="qc-modal">
+        <div id="qc-modal-content">
+            <div id="qc-modal-header">
+                <h3>📊 Quality Control Report</h3>
+                <button id="qc-close-button">&times;</button>
+            </div>
+            <div id="qc-modal-body">
+                <div class="qc-summary" id="qc-summary">
+                    <strong>Initializing quality control tests...</strong>
+                </div>
+                <div id="qc-details"></div>
+            </div>
         </div>
     </div>
 
@@ -390,22 +475,37 @@
         async function runQualityCheck() {
             try {
                 if (window.qualityController) {
-                    // Show QC container in collapsed state
-                    const qcContainer = document.getElementById('qc-report-container');
-                    if (qcContainer) {
-                        qcContainer.style.display = 'block';
+                    // Update modal content to show running status
+                    const qcSummary = document.getElementById('qc-summary');
+                    const qcDetails = document.getElementById('qc-details');
+                    
+                    if (qcSummary) {
+                        qcSummary.innerHTML = '<strong>🔄 Running quality control tests...</strong>';
+                    }
+                    if (qcDetails) {
+                        qcDetails.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Please wait while tests are executed...</div>';
                     }
                     
-                    // Run QC tests and update the collapsible UI
+                    // Run QC tests and update the modal UI
                     await window.qualityController.runAllTests();
-                    if (window.qualityController.updateCollapsibleReport) {
-                        window.qualityController.updateCollapsibleReport();
+                    if (window.qualityController.updateModalReport) {
+                        window.qualityController.updateModalReport();
                     }
                     console.log('✅ Quality Control tests completed');
                 } else {
+                    // Show error in modal
+                    const qcSummary = document.getElementById('qc-summary');
+                    if (qcSummary) {
+                        qcSummary.innerHTML = '<strong style="color: #721c24;">⚠️ Quality Controller not available</strong>';
+                    }
                     console.warn('⚠️ Quality Controller not available');
                 }
             } catch (error) {
+                // Show error in modal
+                const qcSummary = document.getElementById('qc-summary');
+                if (qcSummary) {
+                    qcSummary.innerHTML = `<strong style="color: #721c24;">❌ QC tests failed: ${error.message}</strong>`;
+                }
                 console.warn('⚠️ QC tests failed:', error);
             }
         }
@@ -996,17 +1096,39 @@
         loadConfigAndInitialize();
       }
 
-      // Add QC Report toggle functionality
+      // Add QC Modal functionality
       document.addEventListener('DOMContentLoaded', function() {
-        const qcHeader = document.getElementById('qc-report-header');
-        const qcContent = document.getElementById('qc-report-content');
-        const qcToggleIcon = document.getElementById('qc-toggle-icon');
+        const qcButton = document.getElementById('qc-button');
+        const qcModal = document.getElementById('qc-modal');
+        const qcCloseButton = document.getElementById('qc-close-button');
         
-        if (qcHeader && qcContent && qcToggleIcon) {
-          qcHeader.addEventListener('click', function() {
-            const isVisible = qcContent.style.display !== 'none';
-            qcContent.style.display = isVisible ? 'none' : 'block';
-            qcToggleIcon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+        if (qcButton && qcModal && qcCloseButton) {
+          // Open modal when button is clicked
+          qcButton.addEventListener('click', function() {
+            qcModal.style.display = 'flex';
+            // Run QC if not already done
+            if (window.qualityController) {
+              runQualityCheck();
+            }
+          });
+          
+          // Close modal when X is clicked
+          qcCloseButton.addEventListener('click', function() {
+            qcModal.style.display = 'none';
+          });
+          
+          // Close modal when clicking outside
+          qcModal.addEventListener('click', function(e) {
+            if (e.target === qcModal) {
+              qcModal.style.display = 'none';
+            }
+          });
+          
+          // Close modal with Escape key
+          document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && qcModal.style.display === 'flex') {
+              qcModal.style.display = 'none';
+            }
           });
         }
       });        // Enhanced global error handler to prevent script execution errors from breaking the app

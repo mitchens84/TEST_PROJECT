@@ -208,8 +208,21 @@ class QualityController {
       });
     }
 
-    // Update collapsible UI report
+    // Update both collapsible UI report and modal report
     this.updateCollapsibleReport({
+      total,
+      passed,
+      failed,
+      warned,
+      successRate: (passed / total) * 100,
+      hasErrors: failed > 0,
+      tests: this.tests,
+      errors: this.errors,
+      warnings: this.warnings
+    });
+
+    // Also update modal report if it exists
+    this.updateModalReport({
       total,
       passed,
       failed,
@@ -325,6 +338,89 @@ class QualityController {
     }
   }
 
+  // Update the modal report UI (new modal interface)
+  updateModalReport(report) {
+    const qcSummary = document.getElementById('qc-summary');
+    const qcDetails = document.getElementById('qc-details');
+
+    if (!qcSummary || !qcDetails) {
+      console.warn('QC Modal: UI elements not found in DOM');
+      return;
+    }
+
+    // If no report provided, generate a summary from current state
+    if (!report) {
+      const total = this.tests.length + this.errors.length + this.warnings.length;
+      const passed = this.tests.length;
+      const failed = this.errors.length;
+      const warned = this.warnings.length;
+      
+      report = {
+        total,
+        passed,
+        failed,
+        warned,
+        successRate: total > 0 ? (passed / total) * 100 : 0,
+        hasErrors: failed > 0,
+        tests: this.tests || [],
+        errors: this.errors || [],
+        warnings: this.warnings || []
+      };
+    }
+
+    // Update summary
+    const successRate = report.successRate ? report.successRate.toFixed(1) : '0.0';
+    const statusIcon = report.hasErrors ? '❌' : (report.warned || 0) > 0 ? '⚠️' : '✅';
+    const statusColor = report.hasErrors ? '#721c24' : (report.warned || 0) > 0 ? '#856404' : '#155724';
+    
+    qcSummary.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <strong style="color: ${statusColor};">${statusIcon} Success Rate: ${successRate}%</strong>
+        </div>
+        <div style="font-size: 12px; color: #666;">
+          ✅ ${report.passed || 0} | ❌ ${report.failed || 0} | ⚠️ ${report.warned || 0}
+        </div>
+      </div>
+      <div style="margin-top: 8px; font-size: 12px; color: #666;">
+        Total tests: ${report.total || 0} | Last run: ${new Date().toLocaleTimeString()}
+      </div>
+    `;
+
+    // Update detailed results
+    let detailsHTML = '';
+    
+    if (report.tests && report.tests.length > 0) {
+      detailsHTML += '<div class="qc-section"><h4 style="color: #155724;">✅ Passed Tests</h4>';
+      report.tests.forEach(test => {
+        detailsHTML += `<div class="qc-test-item qc-test-pass">• ${test.name}: ${test.details}</div>`;
+      });
+      detailsHTML += '</div>';
+    }
+    
+    if (report.warnings && report.warnings.length > 0) {
+      detailsHTML += '<div class="qc-section"><h4 style="color: #856404;">⚠️ Warnings</h4>';
+      report.warnings.forEach(warning => {
+        detailsHTML += `<div class="qc-test-item qc-test-warn">• ${warning.name}: ${warning.details}</div>`;
+      });
+      detailsHTML += '</div>';
+    }
+    
+    if (report.errors && report.errors.length > 0) {
+      detailsHTML += '<div class="qc-section"><h4 style="color: #721c24;">❌ Failed Tests</h4>';
+      report.errors.forEach(error => {
+        detailsHTML += `<div class="qc-test-item qc-test-fail">• ${error.name}: ${error.details}</div>`;
+      });
+      detailsHTML += '</div>';
+    }
+
+    if (!detailsHTML) {
+      detailsHTML = '<div style="text-align: center; padding: 20px; color: #666;">No test results available yet.</div>';
+    }
+
+    qcDetails.innerHTML = detailsHTML;
+  }
+
   // Create visual report in DOM
   createVisualReport() {
     const reportContainer = document.createElement('div');
@@ -400,16 +496,20 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       const qc = new QualityController();
+      window.qualityController = qc; // Make globally available
       qc.runAllTests().then(() => {
         qc.updateCollapsibleReport();
+        qc.updateModalReport();
       });
     }, 2000); // Wait 2 seconds for everything to load
   });
 } else {
   setTimeout(() => {
     const qc = new QualityController();
+    window.qualityController = qc; // Make globally available
     qc.runAllTests().then(() => {
       qc.updateCollapsibleReport();
+      qc.updateModalReport();
     });
   }, 2000);
 }
