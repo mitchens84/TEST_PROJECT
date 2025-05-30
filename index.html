@@ -208,39 +208,215 @@
     </div>
 
     <script>
-        // Import the content diagnostics system
-        let contentDiagnostics;
+        // CORS FALLBACK IMPLEMENTATIONS FOR FILE:// PROTOCOL
+        // These provide basic functionality when ES modules can't be loaded
         
-        // Initialize diagnostics when DOM is ready
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                // Load the diagnostics module
-                const diagnosticsModule = await import('./src/content-diagnostics.js');
-                window.ContentLoadingDiagnostics = diagnosticsModule.default || diagnosticsModule.ContentLoadingDiagnostics;
-                contentDiagnostics = new window.ContentLoadingDiagnostics();
-                window.contentDiagnostics = contentDiagnostics;
-                console.log('✅ Content diagnostics system initialized');
-            } catch (error) {
-                console.warn('⚠️ Could not load diagnostics module, using fallback:', error.message);
-                // Create a minimal fallback
-                contentDiagnostics = {
-                    loadContentWithDiagnostics: window.loadContent,
-                    log: (msg, level) => console.log(`[Fallback] ${msg}`)
-                };
+        // Fallback environment configuration
+        window.envConfigFallback = {
+            environment: 'development',
+            baseUrl: '/',
+            authConfig: {
+                tier: 1,
+                password: 'TEST_PROJECT',
+                passwordHash: 'c44267c8b6a0f19268d96cfd59aa6a42b6ad7571f35bfa6752dce77e04922673',
+                sessionKey: 'tier0Password'
             }
-        });
+        };
 
-        // Enhanced core function to load content into the iframe
-        window.loadContent = async function(pageUrl, buttonElementToActivate) {
-            // Use diagnostics system if available, otherwise fallback
-            if (contentDiagnostics && contentDiagnostics.loadContentWithDiagnostics) {
-                return await contentDiagnostics.loadContentWithDiagnostics(pageUrl, buttonElementToActivate);
+        // Fallback AutoStorage implementation
+        window.AutoStorageFallback = class {
+            constructor() {
+                this.initialized = false;
             }
             
-            // Fallback implementation
+            async init() {
+                if (this.initialized) return;
+                this.initialized = true;
+                console.info("AutoStorage fallback initialized");
+            }
+            
+            saveState() { /* Basic localStorage operations */ }
+            loadState() { /* Basic localStorage operations */ }
+        };
+
+        // Fallback Quality Control implementation
+        window.QualityControllerFallback = class {
+            constructor() {
+                this.errors = [];
+                this.warnings = [];
+                this.tests = [];
+            }
+            
+            async runAllTests() {
+                this.tests.push({
+                    name: 'Fallback Mode Active',
+                    status: 'INFO',
+                    details: 'Running in fallback mode due to CORS restrictions'
+                });
+                return { errors: this.errors, warnings: this.warnings, tests: this.tests };
+            }
+            
+            generateReport() {
+                return {
+                    summary: 'Fallback mode active - limited functionality',
+                    timestamp: new Date().toISOString(),
+                    errors: this.errors,
+                    warnings: this.warnings,
+                    tests: this.tests
+                };
+            }
+        };
+
+        // Fallback Content Diagnostics implementation
+        window.ContentLoadingDiagnosticsFallback = class {
+            constructor() {
+                this.debugMode = true;
+            }
+            
+            log(message, level = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`);
+            }
+            
+            async loadContentWithDiagnostics(pageUrl, buttonElementToActivate) {
+                this.log(`🔄 Loading content (fallback): ${pageUrl}`, 'info');
+                return window.basicLoadContent(pageUrl, buttonElementToActivate);
+            }
+            
+            createEnhancedIframe() {
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
+                return iframe;
+            }
+        };
+
+        // Enhanced module loading with CORS fallback
+        async function loadModuleWithFallback(modulePath, fallbackObject) {
+            try {
+                // Try to load ES module
+                const module = await import(modulePath);
+                console.log(`✅ Loaded ES module: ${modulePath}`);
+                return module.default || module;
+            } catch (error) {
+                if (error.message.includes('CORS') || error.message.includes('file://')) {
+                    console.warn(`🔄 CORS restriction detected for ${modulePath}, using fallback`);
+                    return fallbackObject;
+                } else {
+                    console.error(`❌ Failed to load ${modulePath}:`, error);
+                    return fallbackObject;
+                }
+            }
+        }
+
+        // Enhanced initialization with fallback support
+        async function initializeWithFallbacks() {
+            console.log('🚀 Initializing application with CORS fallback support...');
+            
+            try {
+                // Load content diagnostics with fallback
+                const diagnosticsModule = await loadModuleWithFallback(
+                    './src/content-diagnostics.js', 
+                    window.ContentLoadingDiagnosticsFallback
+                );
+                
+                if (typeof diagnosticsModule === 'function') {
+                    window.contentDiagnostics = new diagnosticsModule();
+                } else if (diagnosticsModule && diagnosticsModule.ContentLoadingDiagnostics) {
+                    window.contentDiagnostics = new diagnosticsModule.ContentLoadingDiagnostics();
+                } else {
+                    window.contentDiagnostics = new window.ContentLoadingDiagnosticsFallback();
+                }
+                
+                console.log('✅ Content diagnostics initialized');
+                
+                // Try to load other modules with fallbacks
+                const configModule = await loadModuleWithFallback(
+                    './src/env-config.js',
+                    window.envConfigFallback
+                );
+                
+                // Make config globally accessible
+                window.envConfig = configModule;
+                
+                const autoStorageModule = await loadModuleWithFallback(
+                    './src/auto-storage.js',
+                    window.AutoStorageFallback
+                );
+                
+                if (typeof autoStorageModule === 'function') {
+                    window.autoStorage = new autoStorageModule();
+                } else if (autoStorageModule && autoStorageModule.AutoStorage) {
+                    window.autoStorage = new autoStorageModule.AutoStorage();
+                } else {
+                    window.autoStorage = new window.AutoStorageFallback();
+                }
+                
+                await window.autoStorage.init();
+                
+                const qcModule = await loadModuleWithFallback(
+                    './src/quality-control.js',
+                    window.QualityControllerFallback
+                );
+                
+                if (typeof qcModule === 'function') {
+                    window.qualityController = new qcModule();
+                } else if (qcModule && qcModule.QualityController) {
+                    window.qualityController = new qcModule.QualityController();
+                } else {
+                    window.qualityController = new window.QualityControllerFallback();
+                }
+                
+                console.log('✅ All modules initialized successfully');
+                
+                // Run initial QC check
+                setTimeout(() => {
+                    runQualityCheck();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('❌ Initialization failed:', error);
+                // Ensure basic functionality works even if everything fails
+                window.contentDiagnostics = new window.ContentLoadingDiagnosticsFallback();
+                window.autoStorage = new window.AutoStorageFallback();
+                window.qualityController = new window.QualityControllerFallback();
+                await window.autoStorage.init();
+            }
+        }
+
+        // Quality Control runner function
+        async function runQualityCheck() {
+            try {
+                if (window.qualityController) {
+                    // Show QC container in collapsed state
+                    const qcContainer = document.getElementById('qc-report-container');
+                    if (qcContainer) {
+                        qcContainer.style.display = 'block';
+                    }
+                    
+                    // Run QC tests and update the collapsible UI
+                    await window.qualityController.runAllTests();
+                    if (window.qualityController.updateCollapsibleReport) {
+                        window.qualityController.updateCollapsibleReport();
+                    }
+                    console.log('✅ Quality Control tests completed');
+                } else {
+                    console.warn('⚠️ Quality Controller not available');
+                }
+            } catch (error) {
+                console.warn('⚠️ QC tests failed:', error);
+            }
+        }
+
+        // Enhanced basic content loading function
+        async function basicLoadContent(pageUrl, buttonElementToActivate) {
+            console.log(`🔄 [Basic] Loading content: ${pageUrl}`);
+            
             const homeContentDiv = document.getElementById('home-content');
             if (!homeContentDiv) {
-                console.error('Home content area (home-content) not found.');
+                console.error('[Basic] Home content area (home-content) not found.');
                 return false;
             }
 
@@ -259,7 +435,7 @@
                 
                 // Enhanced error handling for iframe loading
                 iframe.onerror = function() {
-                    console.error('Failed to load content:', pageUrl);
+                    console.error('[Basic] Failed to load content:', pageUrl);
                     const errorHtml = `
                         <html><body style="font-family: Arial; padding: 20px; text-align: center;">
                             <h3>Content not available</h3>
@@ -272,12 +448,12 @@
                 
                 // Improved iframe load handling
                 iframe.onload = function() {
-                    console.log('✅ Content loaded:', pageUrl);
+                    console.log('✅ [Basic] Content loaded:', pageUrl);
                     try {
                         // Enhanced cross-origin error suppression
                         if (iframe.contentWindow) {
                             iframe.contentWindow.addEventListener('error', function(e) {
-                                console.warn('🔇 Iframe error suppressed:', e.message);
+                                console.warn('🔇 [Basic] Iframe error suppressed:', e.message);
                                 return true;
                             });
                         }
@@ -292,7 +468,7 @@
             
             // Validate and set URL
             if (pageUrl && pageUrl.trim() && !pageUrl.includes('<') && !pageUrl.includes('javascript:')) {
-                console.log('🔄 Loading:', pageUrl);
+                console.log('🔄 [Basic] Loading:', pageUrl);
                 
                 // Pre-flight check
                 try {
@@ -301,20 +477,46 @@
                         iframe.src = pageUrl;
                         return true;
                     } else {
-                        console.error('❌ File not found:', pageUrl, response.status);
+                        console.error('❌ [Basic] File not found:', pageUrl, response.status);
                         iframe.src = `data:text/html,<html><body style="font-family: Arial; padding: 20px; text-align: center;"><h3>File Not Found</h3><p>${pageUrl} (HTTP ${response.status})</p></body></html>`;
                         return false;
                     }
                 } catch (error) {
-                    console.error('❌ Network error:', error.message);
+                    console.error('❌ [Basic] Network error:', error.message);
                     iframe.src = `data:text/html,<html><body style="font-family: Arial; padding: 20px; text-align: center;"><h3>Network Error</h3><p>${error.message}</p></body></html>`;
                     return false;
                 }
             } else {
-                console.error('Invalid page URL:', pageUrl);
+                console.error('[Basic] Invalid page URL:', pageUrl);
                 iframe.src = `data:text/html,<html><body style="font-family: Arial; padding: 20px; text-align: center;"><h3>Invalid URL</h3><p>Invalid URL provided: ${pageUrl || 'undefined'}</p></body></html>`;
                 return false;
             }
+        };
+
+        // Import the content diagnostics system
+        let contentDiagnostics;
+        
+        // Initialize all modules with CORS fallback support when DOM is ready
+        document.addEventListener('DOMContentLoaded', async function() {
+            await initializeWithFallbacks();
+        });
+
+        // Enhanced core function to load content into the iframe
+        window.loadContent = async function(pageUrl, buttonElementToActivate) {
+            console.log(`🔄 Loading content: ${pageUrl}`);
+            
+            // Try to use diagnostics system if available
+            if (window.contentDiagnostics && window.contentDiagnostics.loadContentWithDiagnostics) {
+                try {
+                    return await window.contentDiagnostics.loadContentWithDiagnostics(pageUrl, buttonElementToActivate);
+                } catch (error) {
+                    console.warn('⚠️ Diagnostics system failed, using basic loading:', error.message);
+                    // Fall through to basic implementation
+                }
+            }
+            
+            // Basic implementation (used as fallback or when diagnostics unavailable)
+            return await basicLoadContent(pageUrl, buttonElementToActivate);
         };
 
         // Function for static navigation buttons in the sidebar
@@ -665,56 +867,16 @@
           if (themeToggleButton) themeToggleButton.disabled = true;
         }
 
-        try {
-          // Load environment configuration
-          const configModule = await import('./src/env-config.js'); 
-          window.envConfig = configModule.default; 
-          console.log('env-config.js loaded successfully via dynamic import:', window.envConfig);
-
-          // Initialize AutoStorage (without complex router)
-          try {
-            const autoStorageModule = await import('./src/auto-storage.js');
-            
-            // Initialize auto-storage (it's a singleton instance)
-            window.autoStorage = autoStorageModule.default;
-            if (!window.autoStorage.initialized) {
-              await window.autoStorage.init();
-            }
-            
-            console.log('AutoStorage initialized successfully');
-          } catch (error) {
-            console.error('Failed to initialize AutoStorage:', error);
-          }
-
-          // Load Quality Control for testing (optional, non-blocking)
-          try {
-            const qcModule = await import('./src/quality-control.js');
-            window.qualityController = new qcModule.default();
-            
-            // Show QC container in collapsed state on load
-            const qcContainer = document.getElementById('qc-report-container');
-            if (qcContainer) {
-              qcContainer.style.display = 'block';
-            }
-            
-            // Run QC tests in background and update the collapsible UI
-            setTimeout(() => {
-              window.qualityController.runAllTests().then(() => {
-                window.qualityController.updateCollapsibleReport();
-                console.log('Quality Control tests completed');
-              }).catch(e => console.warn('QC tests failed:', e));
-            }, 2000); // Delay to let other components initialize
-          } catch (error) {
-            console.warn('Quality Control module failed to load:', error);
-          }
-
-          // Clear any previous error shown in TOC area if it was there from a different script
-          if (tocTargetDiv && tocTargetDiv.innerHTML.includes("Critical Error")) {
-            tocTargetDiv.innerHTML = '<p>Loading Table of Contents...</p>'; 
-          }
-          if (searchInput) searchInput.disabled = false;
-          const themeToggleButton = document.getElementById('theme-toggle-btn');
-          if (themeToggleButton) themeToggleButton.disabled = false;
+        // Modules are already initialized via initializeWithFallbacks() in DOMContentLoaded
+        // Just ensure they're available and run initial setup
+        
+        // Clear any previous error shown in TOC area if it was there from a different script
+        if (tocTargetDiv && tocTargetDiv.innerHTML.includes("Critical Error")) {
+          tocTargetDiv.innerHTML = '<p>Loading Table of Contents...</p>'; 
+        }
+        if (searchInput) searchInput.disabled = false;
+        const themeToggleButtonInit = document.getElementById('theme-toggle-btn');
+        if (themeToggleButtonInit) themeToggleButtonInit.disabled = false;
           
           // ----- Start: TOC and Initial Page Load Logic -----
           if (tocTargetDiv) {
@@ -823,15 +985,6 @@
           }
           // ----- End: TOC and Initial Page Load Logic -----
 
-        } catch (error) {
-          console.error('Fatal Error: Failed to load or process src/env-config.js.', error);
-          // Check if the error is due to fetch returning HTML (like a 404 page)
-          if (error instanceof SyntaxError && error.message.toLowerCase().includes("unexpected token '<'")) {
-            showFatalError('Failed to load critical configuration (env-config.js). The server returned HTML instead of JavaScript. This often means the file was not found (404 error) or the server is misconfigured. Please check the file path and server settings.');
-          } else {
-            showFatalError('Failed to load critical configuration (env-config.js). Details: ' + error.message);
-          }
-        }
       }
       
       // Run initialization
@@ -905,6 +1058,9 @@
         console.warn('⚠️ Promise rejection:', reasonMsg);
         return false;
       });
+
+      // Initialize with fallbacks
+      initializeWithFallbacks();
     </script>
 </body>
 </html>

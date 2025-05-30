@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Validation Test</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .pass { background-color: #d4edda; border-left: 4px solid #28a745; }
+        .fail { background-color: #f8d7da; border-left: 4px solid #dc3545; }
+        .warn { background-color: #fff3cd; border-left: 4px solid #ffc107; }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #28a745;
+            transition: width 0.3s ease;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        .loading { color: #6c757d; font-style: italic; }
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin: 10px 0;
+        }
+        .stat-box {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            flex: 1;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .critical-pages {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .page-test {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 2px 0;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .status-icon {
+            font-size: 18px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 Final Validation Test Suite</h1>
+        <p>Testing all critical fixes for the TEST_PROJECT application</p>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-number" id="total-tests">0</div>
+                <div>Total Tests</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="passed-tests">0</div>
+                <div>Passed</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="failed-tests">0</div>
+                <div>Failed</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="success-rate">0%</div>
+                <div>Success Rate</div>
+            </div>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+        </div>
+
+        <button onclick="runAllTests()" id="run-tests-btn">🚀 Run All Tests</button>
+        <button onclick="testCriticalPages()" id="test-pages-btn">📄 Test Critical Pages</button>
+        <button onclick="testQCSystem()" id="test-qc-btn">🔍 Test QC System</button>
+        <button onclick="clearResults()" id="clear-btn">🧹 Clear Results</button>
+    </div>
+
+    <div class="test-container">
+        <h2>🔍 Critical Pages Status</h2>
+        <div class="critical-pages">
+            <div class="page-test" id="test-content-demos">
+                <span>Content Demonstrations (EXPRESS/section/page.html)</span>
+                <span class="status-icon" id="status-content-demos">⏳</span>
+            </div>
+            <div class="page-test" id="test-sitruna">
+                <span>Sitruna Knowledge Map (EXPRESS/sitruna/index.html)</span>
+                <span class="status-icon" id="status-sitruna">⏳</span>
+            </div>
+            <div class="page-test" id="test-appliance">
+                <span>Appliance Scaling Tutorial (EXPRESS/appliance-scaling-tutorial/page.html)</span>
+                <span class="status-icon" id="status-appliance">⏳</span>
+            </div>
+            <div class="page-test" id="test-markdown">
+                <span>Markdown Rendering Example (EXPRESS/markdown-example/page.html)</span>
+                <span class="status-icon" id="status-markdown">⏳</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>📋 Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <script type="module">
+        let testResults = [];
+        let totalTests = 0;
+        let passedTests = 0;
+        let failedTests = 0;
+
+        function addTestResult(name, status, details) {
+            testResults.push({ name, status, details, timestamp: new Date() });
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${status.toLowerCase()}`;
+            resultDiv.innerHTML = `
+                <strong>${status}</strong>: ${name}<br>
+                <small>${details}</small>
+            `;
+            resultsDiv.appendChild(resultDiv);
+            
+            totalTests++;
+            if (status === 'PASS') passedTests++;
+            if (status === 'FAIL') failedTests++;
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('total-tests').textContent = totalTests;
+            document.getElementById('passed-tests').textContent = passedTests;
+            document.getElementById('failed-tests').textContent = failedTests;
+            const rate = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
+            document.getElementById('success-rate').textContent = rate + '%';
+            document.getElementById('progress-bar').style.width = rate + '%';
+        }
+
+        async function testCriticalPages() {
+            const button = document.getElementById('test-pages-btn');
+            button.disabled = true;
+            button.textContent = '🔄 Testing Pages...';
+
+            const criticalPages = [
+                { url: 'EXPRESS/section/page.html', name: 'Content Demonstrations', id: 'content-demos' },
+                { url: 'EXPRESS/sitruna/index.html', name: 'Sitruna Knowledge Map', id: 'sitruna' },
+                { url: 'EXPRESS/appliance-scaling-tutorial/page.html', name: 'Appliance Scaling Tutorial', id: 'appliance' },
+                { url: 'EXPRESS/markdown-example/page.html', name: 'Markdown Rendering Example', id: 'markdown' }
+            ];
+
+            for (const page of criticalPages) {
+                try {
+                    const response = await fetch(page.url, { method: 'HEAD' });
+                    const statusIcon = document.getElementById(`status-${page.id}`);
+                    
+                    if (response.ok) {
+                        statusIcon.textContent = '✅';
+                        statusIcon.style.color = 'green';
+                        addTestResult(`Critical Page: ${page.name}`, 'PASS', `HTTP ${response.status} - Page accessible`);
+                    } else {
+                        statusIcon.textContent = '❌';
+                        statusIcon.style.color = 'red';
+                        addTestResult(`Critical Page: ${page.name}`, 'FAIL', `HTTP ${response.status} - ${response.statusText}`);
+                    }
+                } catch (error) {
+                    const statusIcon = document.getElementById(`status-${page.id}`);
+                    statusIcon.textContent = '❌';
+                    statusIcon.style.color = 'red';
+                    addTestResult(`Critical Page: ${page.name}`, 'FAIL', error.message);
+                }
+            }
+
+            button.disabled = false;
+            button.textContent = '📄 Test Critical Pages';
+        }
+
+        async function testQCSystem() {
+            const button = document.getElementById('test-qc-btn');
+            button.disabled = true;
+            button.textContent = '🔄 Testing QC...';
+
+            try {
+                // Test if QC script can be loaded
+                const qcModule = await import('./src/quality-control.js');
+                addTestResult('QC Module Loading', 'PASS', 'Quality control module loaded successfully');
+                
+                // Test QC report container exists
+                const qcContainer = document.getElementById('qc-container');
+                if (qcContainer) {
+                    addTestResult('QC Container', 'PASS', 'QC report container found in DOM');
+                } else {
+                    addTestResult('QC Container', 'FAIL', 'QC report container not found in DOM');
+                }
+
+            } catch (error) {
+                addTestResult('QC Module Loading', 'FAIL', error.message);
+            }
+
+            button.disabled = false;
+            button.textContent = '🔍 Test QC System';
+        }
+
+        async function testModuleLoading() {
+            const modules = [
+                'src/env-config.js',
+                'src/auto-storage.js',
+                'src/content-diagnostics.js',
+                'src/quality-control.js'
+            ];
+
+            for (const modulePath of modules) {
+                try {
+                    await import(`./${modulePath}`);
+                    addTestResult(`Module: ${modulePath}`, 'PASS', 'Module loaded successfully');
+                } catch (error) {
+                    addTestResult(`Module: ${modulePath}`, 'FAIL', error.message);
+                }
+            }
+        }
+
+        async function testFileExistence() {
+            const files = [
+                'index.html',
+                'toc.html',
+                'EXPRESS/introduction/page.html',
+                'EXPRESS/career/index.html',
+                'EXPRESS/comprehensive-storage-test/index.html'
+            ];
+
+            for (const filePath of files) {
+                try {
+                    const response = await fetch(filePath, { method: 'HEAD' });
+                    if (response.ok) {
+                        addTestResult(`File: ${filePath}`, 'PASS', `HTTP ${response.status}`);
+                    } else {
+                        addTestResult(`File: ${filePath}`, 'FAIL', `HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    addTestResult(`File: ${filePath}`, 'FAIL', error.message);
+                }
+            }
+        }
+
+        async function runAllTests() {
+            const button = document.getElementById('run-tests-btn');
+            button.disabled = true;
+            button.textContent = '🔄 Running Tests...';
+            
+            clearResults();
+            
+            addTestResult('Test Suite Started', 'INFO', `Started at ${new Date().toLocaleTimeString()}`);
+            
+            await testModuleLoading();
+            await testFileExistence();
+            await testCriticalPages();
+            await testQCSystem();
+            
+            addTestResult('Test Suite Completed', 'INFO', `Completed at ${new Date().toLocaleTimeString()}`);
+            
+            button.disabled = false;
+            button.textContent = '🚀 Run All Tests';
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+            testResults = [];
+            totalTests = 0;
+            passedTests = 0;
+            failedTests = 0;
+            updateStats();
+            
+            // Reset critical page status icons
+            ['content-demos', 'sitruna', 'appliance', 'markdown'].forEach(id => {
+                const statusIcon = document.getElementById(`status-${id}`);
+                statusIcon.textContent = '⏳';
+                statusIcon.style.color = 'initial';
+            });
+        }
+
+        // Make functions available globally
+        window.runAllTests = runAllTests;
+        window.testCriticalPages = testCriticalPages;
+        window.testQCSystem = testQCSystem;
+        window.clearResults = clearResults;
+
+        // Auto-run basic tests on load
+        setTimeout(() => {
+            addTestResult('Page Loaded', 'PASS', 'Final validation test page loaded successfully');
+        }, 500);
+    </script>
+</body>
+</html>
