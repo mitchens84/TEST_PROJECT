@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health & Nutrition Dashboard</title>
+    <link rel="stylesheet" href="../../assets/styles/main.css">
+    <script>
+        // Apply theme on initial load and listen for changes from parent
+        (function() {
+            function applyTheme(theme) {
+                if (document.documentElement) {
+                    if (theme === 'dark') {
+                        document.documentElement.classList.add('dark-theme-preload');
+                    } else {
+                        document.documentElement.classList.remove('dark-theme-preload');
+                    }
+                }
+                if (document.body) {
+                    if (theme === 'dark') {
+                        document.body.classList.add('dark-theme');
+                    } else {
+                        document.body.classList.remove('dark-theme');
+                    }
+                }
+            }
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) applyTheme(savedTheme); else applyTheme('light');
+            } catch (e) { applyTheme('light'); }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                if (document.documentElement && document.documentElement.classList.contains('dark-theme-preload')) {
+                     document.documentElement.classList.remove('dark-theme-preload');
+                }
+                if (window.parent && window.parent !== window) {
+                    try {
+                        const parentTheme = parent.localStorage.getItem('theme');
+                        if (parentTheme) applyTheme(parentTheme);
+                    } catch(e) { console.warn("iframe could not access parent's localStorage for theme.");}
+                }
+            });
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'themeChange') {
+                    applyTheme(event.data.theme);
+                    try { localStorage.setItem('theme', event.data.theme); } catch (e) { /* ignore */ }
+                }
+            });
+        })();
+    </script>
+    <style>
+        .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
+        header a { color: var(--link-color); }
+        header a:hover { color: var(--link-hover-color); }
+        
+        .dashboard-container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        
+        .nutrition-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .nutrition-card {
+            background: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nutrition-card h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+        
+        .nutrient-bar {
+            background: var(--secondary-color);
+            height: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nutrient-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .vitamin-c { background: linear-gradient(90deg, #ff6b6b, #ff8e53); }
+        .sulforaphane { background: linear-gradient(90deg, #4ecdc4, #44a08d); }
+        .fiber { background: linear-gradient(90deg, #a8e6cf, #7fcdcd); }
+        .antioxidants { background: linear-gradient(90deg, #ffd93d, #ff6b6b); }
+        
+        .benefit-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .benefit-list li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .benefit-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .data-source {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <nav>
+                <a href="../../index.html">Home</a>
+            </nav>
+            <h1>Health & Nutrition Dashboard</h1>
+            <p>Integrated content from DASHBOARDS - Demonstrating nutritional data visualization</p>
+        </header>
+
+        <main>
+            <section>
+                <h2>Sulforaphane: A Powerful Antioxidant</h2>
+                <p>This section demonstrates content integration from the DASHBOARDS project, showcasing nutritional information and health benefits.</p>
+                
+                <div class="nutrition-grid">
+                    <div class="nutrition-card">
+                        <h3>🥦 Broccoli Sprouts</h3>
+                        <p>Highest concentration of sulforaphane among common foods.</p>
+                        
+                        <div class="nutrient-bar">
+                            <div class="nutrient-fill sulforaphane" style="width: 95%;"></div>
+                        </div>
+                        <small>Sulforaphane content: Very High (95%)</small>
+                        
+                        <ul class="benefit-list">
+                            <li>Anti-cancer properties</li>
+                            <li>Detoxification support</li>
+                            <li>Anti-inflammatory effects</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nutrition-card">
+                        <h3>🥬 Cruciferous Vegetables</h3>
+                        <p>Rich source of various beneficial compounds including sulforaphane.</p>
+                        
+                        <div class="nutrient-bar">
+                            <div class="nutrient-fill vitamin-c" style="width: 78%;"></div>
+                        </div>
+                        <small>Vitamin C content: High (78%)</small>
+                        
+                        <div class="nutrient-bar">
+                            <div class="nutrient-fill fiber" style="width: 65%;"></div>
+                        </div>
+                        <small>Fiber content: Good (65%)</small>
+                        
+                        <ul class="benefit-list">
+                            <li>Immune system support</li>
+                            <li>Digestive health</li>
+                            <li>Heart health benefits</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nutrition-card">
+                        <h3>🌿 Daily Nutrition Goals</h3>
+                        <p>Recommended daily intake for optimal health benefits.</p>
+                        
+                        <div class="nutrient-bar">
+                            <div class="nutrient-fill antioxidants" style="width: 85%;"></div>
+                        </div>
+                        <small>Antioxidant intake: Excellent (85%)</small>
+                        
+                        <ul class="benefit-list">
+                            <li>2-3 servings cruciferous vegetables</li>
+                            <li>1 tablespoon broccoli sprouts</li>
+                            <li>Variety of colorful vegetables</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h3>Research Insights</h3>
+                <p>Recent studies have shown that sulforaphane may help with:</p>
+                <ul>
+                    <li><strong>Cancer Prevention:</strong> Activates phase II detoxification enzymes</li>
+                    <li><strong>Brain Health:</strong> May support cognitive function and neuroprotection</li>
+                    <li><strong>Heart Health:</strong> Helps reduce inflammation in cardiovascular system</li>
+                    <li><strong>Diabetes Management:</strong> May improve glucose tolerance</li>
+                </ul>
+                
+                <div class="data-source">
+                    <strong>Content Integration Demo:</strong> This page demonstrates how content from the DASHBOARDS project 
+                    (originally at /Users/mitchens/Local/PAGES/DASHBOARDS/sulphoraphane-information.html) 
+                    can be integrated into the TEST_PROJECT template system. The nutritional data and visualizations 
+                    are examples of how external data sources can be incorporated into the template framework.
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; <span id="currentYear">2025</span> Health & Nutrition Dashboard - Integrated from DASHBOARDS</p>
+        </footer>
+    </div>
+
+    <script>
+        // Simple animation for nutrition bars
+        document.addEventListener('DOMContentLoaded', function() {
+            const bars = document.querySelectorAll('.nutrient-fill');
+            bars.forEach((bar, index) => {
+                setTimeout(() => {
+                    bar.style.width = bar.style.width; // Trigger animation
+                }, index * 200);
+            });
+            
+            // Update year
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+        });
+    </script>
+</body>
+</html>

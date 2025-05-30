@@ -419,7 +419,7 @@
                     .style("left", (event.pageX + 10) + "px")
                     .style("top", (event.pageY - 28) + "px");
                 
-                if (highlightMode) {
+                if (!highlightMode) {
                     highlightConnections(d);
                 }
             })
@@ -428,8 +428,15 @@
                     .duration(500)
                     .style("opacity", 0);
                 
-                if (highlightMode) {
+                if (!highlightMode) {
                     resetHighlight();
+                }
+            })
+            .on("click", function(event, d) {
+                if (highlightMode) {
+                    event.stopPropagation();
+                    highlightConnections(d);
+                    console.log(`Highlighted connections for: ${d.name}`);
                 }
             });
 
@@ -536,8 +543,12 @@
         document.getElementById("highlight-connections").addEventListener("click", function() {
             highlightMode = !highlightMode;
             this.classList.toggle("active");
+            this.textContent = highlightMode ? "Exit Highlight Mode" : "Highlight Connections";
             if (!highlightMode) {
                 resetHighlight();
+            } else {
+                // Enable highlight mode - show message
+                console.log("Highlight mode enabled - click on nodes to see their connections");
             }
         });
 

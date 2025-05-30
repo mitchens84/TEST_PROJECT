@@ -686,8 +686,8 @@
             
             // Try to find content based on hash with more comprehensive path mapping
             const possiblePaths = [
-                `EXPRESS/${hash}/index.html`,     // Try index.html first (most common)
-                `EXPRESS/${hash}/page.html`,      // Then page.html
+                `EXPRESS/${hash}/page.html`,      // Try page.html first (our standard)
+                `EXPRESS/${hash}/index.html`,     // Then index.html
                 `EXPRESS/${hash}.html`            // Finally direct .html file
             ];
             
