@@ -19,6 +19,10 @@ from typing import Dict, List, Any, Optional
 import requests
 from dotenv import load_dotenv
 
+# Attempt to load .env file at the very start for local development
+# This will not affect GitHub Actions if .env is not present there.
+load_dotenv() 
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -64,6 +68,12 @@ def fetch_and_save_airtable_data(base_id, table_id, view_id, api_key, output_fil
 
 
 def main():
+    # AIRTABLE_API_KEY is now expected to be loaded by load_dotenv() at the script start
+    # or be pre-set in the environment (e.g., by GitHub Actions).
+    # if not os.environ.get("AIRTABLE_API_KEY"):
+    #     load_dotenv() # Load variables from .env in the project root
+    #     print("Attempting to load AIRTABLE_API_KEY from .env file for local development...")
+
     api_key = os.environ.get("AIRTABLE_API_KEY")
     if not api_key:
         print("Error: AIRTABLE_API_KEY environment variable not set.")
