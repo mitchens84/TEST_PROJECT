@@ -906,48 +906,14 @@
             const searchInput = document.getElementById('toc-search'); // Get it after it's loaded
             const tocContentDiv = document.getElementById('dynamic-toc-content');
 
-            searchInput.addEventListener('input', function(event) {
-                const searchTerm = event.target.value.toUpperCase();
-
-                // Ensure the UL/LI structure is within tocContentDiv (dynamic-toc-content)
-                if (!tocContentDiv.querySelector('ul')) {
-                    console.warn("TOC search: No UL found in dynamic-toc-content.");
-                    return; 
-                }
-
-                const allTopLevelLi = tocContentDiv.querySelectorAll(':scope > ul > li');
-
-                allTopLevelLi.forEach(mainLi => {
-                    let mainLiVisible = false;
-                    const mainLink = mainLi.querySelector(':scope > a, :scope > span'); 
-                    
-                    if (mainLink && mainLink.textContent.toUpperCase().includes(searchTerm)) {
-                        mainLiVisible = true;
-                    }
-
-                    const subUl = mainLi.querySelector(':scope > ul');
-                    let hasVisibleSubItem = false;
-                    if (subUl) {
-                        const allSubLevelLi = subUl.querySelectorAll(':scope > li');
-                        allSubLevelLi.forEach(subLi => {
-                            const subLink = subLi.querySelector(':scope > a');
-                            if (subLink && subLink.textContent.toUpperCase().includes(searchTerm)) {
-                                subLi.style.display = ''; 
-                                hasVisibleSubItem = true;
-                            } else {
-                                subLi.style.display = 'none'; 
-                            }
-                        });
-                    }
-
-                    if (mainLiVisible || hasVisibleSubItem) {
-                        mainLi.style.display = ''; 
-                        if (subUl) subUl.style.display = ''; 
-                    } else {
-                        mainLi.style.display = 'none'; 
-                    }
-                });
+            // THIS EVENT LISTENER IS THE ONE THAT SHOULD BE REMOVED OR ENSURED IT ISN'T CAUSING THE ERROR
+            // If it was intended to be the main one, it's firing too early.
+            // The one inside loadConfigAndInitialize, after toc.html is loaded, is correctly placed.
+            /* 
+            searchInput.addEventListener('input', function(event) { 
+                // ... search logic ...
             });
+            */
 
             // Ensure iframe gets theme on initial load if it's already there
             // This is a bit redundant if loadContent also triggers it, but good for safety
@@ -978,14 +944,14 @@
       async function loadConfigAndInitialize() {
         const tocTargetDiv = document.getElementById('dynamic-toc-content');
         const homeContentDiv = document.getElementById('home-content');
-        // const searchInput = document.getElementById('toc-search'); // Will be defined later
-        // const initialLoadLogicContainer = document.getElementById('initial-page-load-logic-container'); // Assuming you move initial load logic here
+        let searchInput = null; // Initialize searchInput to null
 
         function showFatalError(message) {
           if (tocTargetDiv) tocTargetDiv.innerHTML = `<p style="color: red; font-weight: bold;">${message}</p>`;
           if (homeContentDiv) homeContentDiv.innerHTML = `<p style="padding:20px; color:red;">Application failed to initialize: ${message}</p>`;
-          if (searchInput) searchInput.disabled = true;
-          // Consider disabling other interactive elements too, like theme toggle
+          if (searchInput) { // Check if searchInput has been assigned
+            searchInput.disabled = true;
+          }
           const themeToggleButton = document.getElementById('theme-toggle-btn');
           if (themeToggleButton) themeToggleButton.disabled = true;
         }
@@ -997,7 +963,7 @@
         if (tocTargetDiv && tocTargetDiv.innerHTML.includes("Critical Error")) {
           tocTargetDiv.innerHTML = '<p>Loading Table of Contents...</p>'; 
         }
-        if (searchInput) searchInput.disabled = false;
+        // if (searchInput) searchInput.disabled = false; // Moved to after searchInput is defined
         const themeToggleButtonInit = document.getElementById('theme-toggle-btn');
         if (themeToggleButtonInit) themeToggleButtonInit.disabled = false;
           
@@ -1014,8 +980,9 @@
                 tocTargetDiv.innerHTML = html;
 
                 // TOC Search Functionality - MOVED HERE
-                const searchInput = document.getElementById('toc-search'); // Get it after it's loaded
-                if (searchInput && tocTargetDiv) { // tocTargetDiv is already defined in this scope
+                searchInput = document.getElementById('toc-search'); // Assign searchInput HERE
+                if (searchInput && tocTargetDiv) { 
+                    searchInput.disabled = false; // Enable it now that it's found
                     searchInput.addEventListener('input', function(event) {
                         const searchTerm = event.target.value.toUpperCase();
 

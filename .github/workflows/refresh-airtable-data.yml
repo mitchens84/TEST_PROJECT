@@ -14,6 +14,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Get Secrets from Bitwarden
+        uses: bitwarden/sm-action@v2
+        with:
+          access_token: ${{ secrets.BWS_ACCESS_TOKEN }} # Ensure this GitHub secret is set
+          secrets: |
+            c2866edf-1e4d-441c-87a3-b21b010c3001 > AIRTABLE_API_KEY
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -29,13 +36,12 @@ jobs:
           fi
 
       - name: Run Airtable script
-        env:
-          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
         run: |
-          python integrations/airtable/airtable_workflow_extractor.py \
-            --base-id "appaWqv85wwLPD2Gy" \
-            --table-id "tblrbfE4HKco5T6Tj" \
-            # The --output argument will use the new default "data/airtable_index_data.json"
+          python integrations/airtable/airtable_workflow_extractor.py
+          # Command-line arguments for base-id and table-id are removed
+          # as the script now reads them from airtable_config.json.
+          # Ensure airtable_config.json has a task that outputs to data/airtable_index_data.json
+          # for the commit step below to work as intended.
 
       - name: Commit and push if data changed
         run: |
