@@ -9,12 +9,22 @@
         // Apply theme on initial load and listen for changes from parent
         (function() { // Standard theme handling script
             function applyTheme(theme) {
-                if (theme === 'dark') {
-                    document.documentElement.classList.add('dark-theme-preload');
-                    document.body.classList.add('dark-theme');
-                } else {
-                    document.documentElement.classList.remove('dark-theme-preload');
-                    document.body.classList.remove('dark-theme');
+                if (document.documentElement) { // Check if documentElement exists
+                    if (theme === 'dark') {
+                        document.documentElement.classList.add('dark-theme-preload');
+                    } else {
+                        document.documentElement.classList.remove('dark-theme-preload');
+                    }
+                }
+                // Body class application should be safe even if body is not fully parsed,
+                // but ideally this runs after DOMContentLoaded or is re-applied.
+                // For initial load, preload class on <html> is more critical.
+                if (document.body) {
+                    if (theme === 'dark') {
+                        document.body.classList.add('dark-theme');
+                    } else {
+                        document.body.classList.remove('dark-theme');
+                    }
                 }
             }
             try {
@@ -23,10 +33,14 @@
             } catch (e) { applyTheme('light'); }
 
             window.addEventListener('DOMContentLoaded', () => {
-                if (document.documentElement.classList.contains('dark-theme-preload')) {
+                if (document.documentElement && document.documentElement.classList.contains('dark-theme-preload')) {
                      document.documentElement.classList.remove('dark-theme-preload');
                 }
-                 // Fallback for initial theme sync if message was missed
+                // Ensure body theme is correctly applied after DOM is loaded
+                const currentTheme = localStorage.getItem('theme') || 'light';
+                applyTheme(currentTheme);
+
+                // Fallback for initial theme sync if message was missed
                 if (window.parent && window.parent !== window) {
                     try {
                         const parentTheme = parent.localStorage.getItem('theme');
@@ -41,35 +55,92 @@
                 }
             });
         })();
-    <\/script>
+    </script>
     <style>
         /* Prevent FOUC (Flash Of Unstyled Content) for dark theme */
         .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
         /* Ensure links in header are visible in dark theme if not covered by main.css */
         header a { color: var(--link-color); }
         header a:hover { color: var(--link-hover-color); }
+        body { padding: 20px; font-family: sans-serif; }
+        section { margin-bottom: 2rem; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 0.5rem; }
+        code { background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
+        .dark-theme code { background-color: #333; color: #f0f0f0;}
     </style>
 </head>
 <body style="padding: 20px;">
     <header>
         <nav>
-            <a href="../../index.html">Home</a>
-            <a href="./page.html">Back to Full Features Details</a>
+            <a href="javascript:void(0)" onclick="window.parent.postMessage({type: 'navigate', path: ''}, '*')">Home</a>
+            <a href="javascript:void(0)" onclick="window.parent.postMessage({type: 'navigate', path: 'EXPRESS/features/page.html'}, '*')">Back to Main Features Page</a>
         </nav>
-        <h1>Quick Features Overview</h1>
+        <h1>Detailed Features Overview</h1>
     </header>
     <main>
-        <p>This page provides a brief summary of the Content Hub Template's main features. For more detailed information, please see the <a href="./page.html">full features page</a>.</p>
-        <ul>
-            <li>Dynamic & Sortable Table of Contents</li>
-            <li>Light/Dark Theme Support (persisted)</li>
-            <li>Client-Side SHA256 Hashed Login</li>
-            <li>Organized Content in <code>EXPRESS/</code> Directory</li>
-            <li>Helper Scripts (<code>add-content.js</code>, <code>generate-toc.js</code>)</li>
-        </ul>
+        <section>
+            <h2>Deep Dive into Core Functionalities</h2>
+            <p>This section provides a more in-depth look at the various features available within this content hub. Each feature is designed to enhance usability, content presentation, and developer experience.</p>
+            
+            <h3>Advanced Navigation System</h3>
+            <p>Beyond the basic collapsible sidebar, the navigation system includes:</p>
+            <ul>
+                <li>Persistent state memory for expanded/collapsed sections using <code>localStorage</code>.</li>
+                <li>Dynamic generation of the Table of Contents (TOC) by scanning the <code>EXPRESS/</code> directory structure. The <code>generate-toc.js</code> script handles this.</li>
+                <li>Support for deep linking: URLs with hashes (e.g., <code>index.html#EXPRESS/your/page.html</code>) allow direct navigation to specific content sections.</li>
+                <li>Post-authentication redirection to originally requested deep-linked content.</li>
+            </ul>
+
+            <h3>Comprehensive Theme Engine</h3>
+            <p>The theme engine offers:</p>
+            <ul>
+                <li>User-selectable light and dark modes.</li>
+                <li>Theme preference persistence across sessions using <code>localStorage</code>.</li>
+                <li>Automatic theme propagation to content loaded in <code>&lt;iframe&gt;</code> elements, ensuring a consistent look and feel. This is managed by a standard script in each iframe page that listens to <code>message</code> events from the parent.</li>
+                <li>Themes are built using CSS variables for straightforward customization and extension. Key variables are in <code>assets/styles/main.css</code>.</li>
+            </ul>
+
+            <h3>Robust Content Integration</h3>
+            <p>Content integration capabilities feature:</p>
+            <ul>
+                <li>Support for various content types:
+                    <ul>
+                        <li>Static HTML pages (e.g., <code>EXPRESS/introduction/page.html</code>)</li>
+                        <li>Interactive JavaScript components and showcases (e.g., <code>EXPRESS/complex-showcase/index.html</code>)</li>
+                        <li>React applications, typically built with Vite and integrated (e.g., <code>src_react/career-proposal/</code> which outputs to <code>EXPRESS/career/</code>)</li>
+                        <li>Markdown-to-HTML rendering (e.g., <code>EXPRESS/markdown-example/page.html</code>)</li>
+                    </ul>
+                </li>
+                <li>Content is loaded into <code>&lt;iframe&gt;</code>s to isolate styles and scripts, preventing conflicts between different content modules and the main application shell.</li>
+                <li>A CLI tool (<code>node add-content.js EXPRESS/your-new-section</code>) is available for scaffolding new content sections with a basic HTML template.</li>
+            </ul>
+
+            <h3>Security and Access Control</h3>
+            <p>The client-side authentication mechanism includes:</p>
+            <ul>
+                <li>Password protection for the entire application. Access is granted upon providing the correct password on <code>login.html</code>.</li>
+                <li>The password check involves comparing a SHA256 hash of the entered password with a pre-defined hash stored in <code>src/env-config.js</code>.</li>
+                <li>Session management is handled using <code>sessionStorage</code>. Once authenticated, a flag (<code>isAuthenticated</code>) is set.</li>
+                <li>Unauthenticated users attempting to access any page are redirected to <code>login.html</code>.</li>
+            </ul>
+            
+            <h3>Development and Utility Scripts</h3>
+            <ul>
+                <li><code>generate-toc.js</code>: Scans the <code>EXPRESS/</code> directory and generates <code>toc.html</code>.</li>
+                <li><code>add-content.js</code>: Helps create boilerplate for new content pages.</li>
+                <li><code>build.sh</code> / <code>scripts/build-all.sh</code>: Example build scripts (may require review for current project specifics).</li>
+                <li><code>local-server.py</code> / <code>start-server.sh</code>: Scripts to run a local development server.</li>
+            </ul>
+
+            <p><em>This overview provides insight into the template's structure and capabilities. For hands-on examples, please explore the different sections in the Table of Contents.</em></p>
+        </section>
     </main>
     <footer>
         <p>&copy; <span id="currentYear">2025</span> Your Project</p>
+        <script>
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+        </script>
     </footer>
 </body>
 </html>

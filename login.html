@@ -91,10 +91,13 @@
 
                 if (hashedEnteredPassword === effectivePasswordHash) {
                     sessionStorage.setItem('isAuthenticated', 'true');
-                    // Optional: Check for a redirect URL
-                    // const redirectUrl = sessionStorage.getItem('redirectUrl') || 'index.html';
-                    // sessionStorage.removeItem('redirectUrl'); // Clean up
-                    window.location.href = 'index.html';
+                    const redirectHash = sessionStorage.getItem('redirectHash');
+                    let targetUrl = 'index.html';
+                    if (redirectHash) {
+                        targetUrl += redirectHash;
+                        sessionStorage.removeItem('redirectHash'); // Clean up
+                    }
+                    window.location.href = targetUrl;
                 } else {
                     errorMessageElement.textContent = 'Invalid password.';
                     passwordInput.value = ''; // Clear password field

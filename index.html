@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Content Hub</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="alternate icon" href="favicon.ico" type="image/x-icon"> <!-- Added this line -->
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/styles/main.css">
     <style>
@@ -108,13 +109,37 @@
             font-weight: bold;
             /* color will be var(--button-text) or overridden if needed */
         }
-        #theme-toggle-btn { /* Style for the new theme toggle button */
-            display: block; /* Make it take full width in its container */
-            width: calc(100% - 16px); /* Adjust width considering padding */
-            margin: 10px auto; /* Center it and add some margin */
-            padding: 10px;
-            /* background-color, color, border are inherited from general button styles or overridden by main.css vars */
+        
+        /* Theme Toggle Button - Icon Style */
+        #theme-toggle-container {
+            position: fixed;
+            top: 10px;
+            right: 10px; /* Positioned to the right */
+            z-index: 1001; /* Above sidebar, same as sidebar-toggle */
         }
+
+        #theme-toggle-btn {
+            background-color: var(--button-background);
+            color: var(--button-text);
+            border: 1px solid var(--border-color);
+            padding: 8px 10px; /* Adjusted padding for icon */
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 18px; /* Icon size */
+            line-height: 1; /* Ensure icon is centered vertically */
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            width: 40px; /* Fixed width for a square-ish button */
+            height: 38px; /* Fixed height, align with sidebar-toggle-btn if possible */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #theme-toggle-btn:hover {
+            background-color: var(--button-hover-background);
+            color: var(--button-hover-text);
+        }
+
 
         /* Quality Control Button & Modal Styles */
         #qc-button {
@@ -254,38 +279,22 @@
     </div>
 
     <button id="sidebar-toggle-btn">☰</button>
-    <!-- Quality Control will be loaded dynamically to avoid path conflicts -->
-    <script>
-        // Authentication Check and Redirection
-        (function() {
-            // console.log("Checking authentication status..."); // Log can be removed or kept
-            const isAuthenticated = sessionStorage.getItem('isAuthenticated');
-            if (isAuthenticated !== 'true') {
-                // Optional: Store the page they were trying to access to redirect back later
-                // sessionStorage.setItem('redirectUrl', window.location.pathname + window.location.search);
-                window.location.href = 'login.html';
-            }
-        })();
-    </script>
-
     <div id="sidebar">
-        <div> <!-- Wrapper for theme button -->
-            <button id="theme-toggle-btn">Toggle Theme</button>
-        </div>
-        <hr>
-        <div id="search-container" style="padding: 10px 0;">
-            <input type="search" id="toc-search" placeholder="Search content..." style="width: 100%; box-sizing: border-box; padding: 8px;">
-        </div>
-        <hr>
         <div id="toc-container">
             <h2>Table of Contents</h2>
-            <div id="dynamic-toc-content">
-                <!-- toc.html will be loaded here -->
-                <p>Loading Table of Contents...</p> 
-            </div>
-            <!-- Removed extra closing div from here -->
+            <iframe src="toc.html" style="width: 100%; height: 70%; border: none;"></iframe>
+        </div>
+        <div id="navigation-area">
+            <h3>Navigation</h3>
+            <button id="home-btn" class="active">Home</button>
+            <!-- Theme toggle button moved to its own container -->
         </div>
     </div>
+
+    <div id="theme-toggle-container">
+        <button id="theme-toggle-btn">☀️</button> <!-- Initial icon, will be updated by JS -->
+    </div>
+
     <div id="content-area">
         <div id="home-content">
             <!-- Iframe will be created here by JavaScript -->
@@ -738,7 +747,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             // Theme Toggle Functionality
-            const themeToggleButton = document.getElementById('theme-toggle-btn');
+            const themeToggleButtonInstance = document.getElementById('theme-toggle-btn');
             // const body = document.body; // Define body inside DOMContentLoaded or pass to applyTheme
             // const iframe = document.querySelector('#home-content iframe'); // Get iframe reference early
 
@@ -794,7 +803,7 @@
                 applyTheme('light'); // Fallback
             }
 
-            themeToggleButton.addEventListener('click', function() {
+            themeToggleButtonInstance.addEventListener('click', function() {
                 const currentTheme = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
                 applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
             });
@@ -949,6 +958,16 @@
                     contentIframe.contentWindow.postMessage({ type: 'themeChange', theme: currentTheme }, '*');
                  }
             }
+
+            // Initial theme setup
+            const initialSavedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.className = initialSavedTheme === 'dark' ? 'dark-theme' : '';
+            // Update button text/icon based on initial theme
+            const initialThemeToggleButton = document.getElementById('theme-toggle-btn');
+            if (initialThemeToggleButton) {
+                initialThemeToggleButton.textContent = initialSavedTheme === 'dark' ? '🌙' : '☀️';
+            }
+            propagateThemeToIframes(initialSavedTheme);
         });
     </script>
     <script type="module">
