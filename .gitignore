@@ -31,3 +31,5 @@ Thumbs.db
 
 # Build logs
 build_logs/
+
+data/
