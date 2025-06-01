@@ -47,13 +47,16 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
     "CAREER PROPOSAL - INTERACTIVE", // was "career"
     "COMPLEX CONTENT SHOWCASE" // was "complex-showcase"
   ];
-  let htmlToc = '<ul>\n';
+  let htmlToc = '<input type="text" id="toc-search" placeholder="Search ToC..." onkeyup="filterToc()" style="width: 90%; margin-bottom: 10px; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--background-color); color: var(--text-color);">\n<ul>\n';
   try {
     const sectionNames = fs.readdirSync(expressDir, { withFileTypes: true })
       .filter(dirent => dirent.isDirectory())
       .map(dirent => dirent.name);
 
     const sectionDetails = [];
+
+    // Remove 'Home' link from ToC generation by not adding it initially
+    // The existing logic correctly builds the ToC from directories
 
     for (const sectionName of sectionNames) {
       const sectionPath = path.join(expressDir, sectionName);
