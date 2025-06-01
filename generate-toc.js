@@ -124,16 +124,19 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
 
       // Identify secondary pages
       const secondaryPages = [];
-      for (const htmlFile of allHtmlFiles) {
-        if (htmlFile === primaryPageFileName) {
-          continue; // Skip the primary page itself
+      // For "CONTENT DEMONSTRATIONS", we don't want to list sub-pages in the TOC
+      if (sectionDisplayTitle !== "CONTENT DEMONSTRATIONS") {
+        for (const htmlFile of allHtmlFiles) {
+          if (htmlFile === primaryPageFileName) {
+            continue; // Skip the primary page itself
+          }
+          const secondaryFilePath = path.join(sectionPath, htmlFile);
+          const secondaryTitle = extractTitle(secondaryFilePath, false); // false for secondary page (lowercase)
+          const secondaryLinkPath = path.relative(baseOutputDirectory, secondaryFilePath).replace(/\\/g, '/');
+          secondaryPages.push({ title: secondaryTitle, link: secondaryLinkPath });
         }
-        const secondaryFilePath = path.join(sectionPath, htmlFile);
-        const secondaryTitle = extractTitle(secondaryFilePath, false); // false for secondary page (lowercase)
-        const secondaryLinkPath = path.relative(baseOutputDirectory, secondaryFilePath).replace(/\\/g, '/');
-        secondaryPages.push({ title: secondaryTitle, link: secondaryLinkPath });
+        secondaryPages.sort((a,b) => a.title.localeCompare(b.title)); // Sort secondary pages by (lowercase) title
       }
-      secondaryPages.sort((a,b) => a.title.localeCompare(b.title)); // Sort secondary pages by (lowercase) title
 
 
       // Construct HTML for the section

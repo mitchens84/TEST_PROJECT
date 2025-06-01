@@ -48,335 +48,52 @@
             window.addEventListener('message', function(event) {
                 if (event.data && event.data.type === 'themeChange') {
                     applyTheme(event.data.theme);
-                    try { localStorage.setItem('theme', event.data.theme); } catch (e) { /* ignore */ }
+                } else if (event.data && event.data.type === 'updateContent') {
+                    // This is a placeholder for potential dynamic content updates
+                    // For now, we'll just log it.
+                    console.log("Introduction page received updateContent message:", event.data.payload);
                 }
             });
         })();
-    <\/script>
+    </script>
     <style>
-        /* Prevent FOUC (Flash Of Unstyled Content) for dark theme */
-        .dark-theme-preload { background-color: #121212; color: #e0e0e0; }
-        /* Ensure links in header are visible in dark theme if not covered by main.css */
-        header a { color: var(--link-color); }
-        header a:hover { color: var(--link-hover-color); }
-        
-        /* Introduction Page Specific Styles */
-        .intro-overview {
-            background: var(--card-bg, #f8f9fa);
-            padding: 1.5rem;
+        body {
+            font-family: 'Lato', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex; /* Use flexbox to center content */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+            min-height: 95vh; /* Ensure it takes full viewport height */
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px; /* Add some margin around the container */
+            padding: 30px;
+            background-color: var(--content-background); /* Use a distinct background for the content block */
             border-radius: 8px;
-            margin-bottom: 2rem;
-            border-left: 4px solid var(--primary-color, #007bff);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center; /* Center text inside the container */
         }
-        
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
+        h1 {
+            color: var(--heading-color);
+            margin-bottom: 20px;
         }
-        
-        .feature-card {
-            background: var(--card-bg, #ffffff);
-            padding: 1.25rem;
-            border-radius: 6px;
-            border: 1px solid var(--border-color, #e9ecef);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .feature-card h3 {
-            margin-top: 0;
-            color: var(--primary-color, #007bff);
-            font-size: 1.1rem;
-        }
-        
-        .setup-steps {
-            display: grid;
-            gap: 1.5rem;
-            margin-top: 1rem;
-        }
-        
-        .step {
-            background: var(--card-bg, #ffffff);
-            padding: 1.25rem;
-            border-radius: 6px;
-            border: 1px solid var(--border-color, #e9ecef);
-        }
-        
-        .step h3 {
-            margin-top: 0;
-            color: var(--secondary-color, #28a745);
-        }
-        
-        .step pre {
-            background: var(--code-bg, #f8f9fa);
-            padding: 0.75rem;
-            border-radius: 4px;
-            overflow-x: auto;
-            margin: 0.5rem 0 0 0;
-        }
-        
-        .step code {
-            font-family: 'Courier New', Consolas, monospace;
-            font-size: 0.9rem;
-        }
-        
-        .content-list {
-            display: grid;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-        
-        .content-list li {
-            background: var(--card-bg, #ffffff);
-            padding: 0.75rem;
-            border-radius: 4px;
-            border: 1px solid var(--border-color, #e9ecef);
-        }
-        
-        .integration-steps {
-            margin-top: 1rem;
-        }
-        
-        .integration-steps h3 {
-            color: var(--primary-color, #007bff);
-            margin-top: 1.5rem;
-        }
-        
-        .integration-steps pre {
-            background: var(--code-bg, #f8f9fa);
-            padding: 1rem;
-            border-radius: 4px;
-            overflow-x: auto;
-            margin: 0.5rem 0;
-        }
-        
-        .deployment-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .deploy-option {
-            background: var(--card-bg, #ffffff);
-            padding: 1rem;
-            border-radius: 6px;
-            border: 1px solid var(--border-color, #e9ecef);
-            text-align: center;
-        }
-        
-        .deploy-option h3 {
-            color: var(--primary-color, #007bff);
-            margin-top: 0;
-        }
-        
-        .next-steps {
-            background: var(--highlight-bg, #e7f3ff);
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-top: 2rem;
-        }
-        
-        .next-steps h2 {
-            margin-top: 0;
-            color: var(--primary-color, #007bff);
-        }
-        
-        .next-steps ol {
-            padding-left: 1.5rem;
-        }
-        
-        .next-steps li {
-            margin-bottom: 0.5rem;
-        }
-        
-        /* Dark theme adjustments */
-        .dark-theme .intro-overview,
-        .dark-theme .feature-card,
-        .dark-theme .step,
-        .dark-theme .content-list li,
-        .dark-theme .deploy-option {
-            background: var(--card-bg-dark, #2d3748);
-            border-color: var(--border-color-dark, #4a5568);
-        }
-        
-        .dark-theme .next-steps {
-            background: var(--highlight-bg-dark, #2a4a5c);
-        }
-        
-        .dark-theme .step pre,
-        .dark-theme .integration-steps pre {
-            background: var(--code-bg-dark, #1a202c);
-            color: var(--text-color-dark, #e2e8f0);
-        }
-        
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .feature-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .deployment-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .step pre,
-            .integration-steps pre {
-                font-size: 0.8rem;
-            }
+        p {
+            font-size: 1.1em;
+            margin-bottom: 15px;
         }
     </style>
 </head>
-<body style="padding: 20px;">
-    <header>
-        <nav>
-            <a href="../../index.html">Home</a>
-        </nav>
-        <h1>Content Hub Template</h1>
-    </header>
-    <main>
-        <section class="intro-overview">
-            <h2>📋 Repository Template Overview</h2>
-            <p>This repository serves as a <strong>modular content hub template</strong> designed to help you organize and present diverse web content within a consistent, professional interface. Whether you're showcasing static HTML pages, interactive JavaScript components, React applications, or documentation, this template provides the foundation for a seamless content management system.</p>
-        </section>
-
-        <section class="features">
-            <h2>✨ Core Features</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h3>🗂️ Collapsible Navigation</h3>
-                    <p>Clean sidebar with expandable/collapsible sections. Navigation state persists across sessions using localStorage.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>📑 Dynamic Table of Contents</h3>
-                    <p>Automatically generated TOC by scanning the EXPRESS/ directory. Supports nested structures and multiple page types.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>🎨 Theme Support</h3>
-                    <p>User-selectable light/dark themes with CSS variables. Theme preferences persist and propagate to iframe content.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>🔒 Password Protection</h3>
-                    <p>Client-side authentication using SHA256 hash comparison. Session management with automatic redirection.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>📱 Responsive Design</h3>
-                    <p>Mobile-friendly layout with adaptive sidebar behavior and responsive content areas.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>🔗 Iframe Integration</h3>
-                    <p>Content isolation using iframes prevents styling conflicts while maintaining theme consistency.</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="setup">
-            <h2>🚀 Quick Setup Instructions</h2>
-            <div class="setup-steps">
-                <div class="step">
-                    <h3>1. Clone & Navigate</h3>
-                    <pre><code>git clone [your-repo-url]
-cd your-project-name</code></pre>
-                </div>
-                <div class="step">
-                    <h3>2. Install Dependencies</h3>
-                    <pre><code>npm install</code></pre>
-                </div>
-                <div class="step">
-                    <h3>3. Start Local Server</h3>
-                    <pre><code># Option 1: Python
-python -m http.server 8000
-
-# Option 2: Node.js
-npx http-server -p 8000</code></pre>
-                </div>
-                <div class="step">
-                    <h3>4. Access Application</h3>
-                    <p>Open <code>http://localhost:8000</code> in your browser</p>
-                    <p><strong>Default Password:</strong> TEST_PROJECT</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="content-types">
-            <h2>📂 Supported Content Types</h2>
-            <ul class="content-list">
-                <li><strong>Static HTML Pages:</strong> Traditional web pages with custom styling</li>
-                <li><strong>Interactive Components:</strong> JavaScript-powered features and utilities</li>
-                <li><strong>React Applications:</strong> Full React apps with Vite build integration</li>
-                <li><strong>Markdown Documentation:</strong> Client-side rendered markdown content</li>
-                <li><strong>Data Visualizations:</strong> Charts, graphs, and interactive displays</li>
-                <li><strong>Knowledge Maps:</strong> Interactive relationship diagrams</li>
-            </ul>
-        </section>
-
-        <section class="integration">
-            <h2>🔧 Integration Guide</h2>
-            <div class="integration-steps">
-                <h3>Adding New Content</h3>
-                <p>Use the automated content scaffolding system:</p>
-                <pre><code># Create new section with template
-node add-content.js EXPRESS/your-new-section
-
-# Manually regenerate TOC if needed
-node generate-toc.js</code></pre>
-                
-                <h3>Directory Structure</h3>
-                <ul>
-                    <li><code>EXPRESS/</code> - All displayable content goes here</li>
-                    <li><code>assets/styles/</code> - Global stylesheets and themes</li>
-                    <li><code>src/</code> - JavaScript modules and utilities</li>
-                    <li><code>scripts/</code> - Build and utility scripts</li>
-                </ul>
-
-                <h3>Theme Customization</h3>
-                <p>Modify CSS variables in <code>assets/styles/main.css</code>:</p>
-                <pre><code>:root {
-  --primary-color: #your-color;
-  --background-color: #your-bg;
-  /* ... other variables */
-}</code></pre>
-            </div>
-        </section>
-
-        <section class="deployment">
-            <h2>🌐 Deployment Options</h2>
-            <div class="deployment-grid">
-                <div class="deploy-option">
-                    <h3>GitHub Pages</h3>
-                    <p>Static hosting with automatic builds from your repository</p>
-                </div>
-                <div class="deploy-option">
-                    <h3>Netlify</h3>
-                    <p>Includes netlify.toml configuration for one-click deployment</p>
-                </div>
-                <div class="deploy-option">
-                    <h3>Vercel</h3>
-                    <p>Serverless deployment with edge optimization</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="next-steps">
-            <h2>📈 Next Steps</h2>
-            <p>Ready to start building? Here's what to do next:</p>
-            <ol>
-                <li><strong>Explore Existing Content:</strong> Navigate through the sidebar to see example implementations</li>
-                <li><strong>Add Your Content:</strong> Use <code>node add-content.js</code> to create new sections</li>
-                <li><strong>Customize Themes:</strong> Modify CSS variables to match your brand</li>
-                <li><strong>Configure Authentication:</strong> Update the password hash in <code>src/env-config.js</code></li>
-                <li><strong>Deploy:</strong> Push to your chosen hosting platform</li>
-            </ol>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; <span id="currentYear">2025</span> Your Project</p>
-    </footer>
+<body>
+    <div class="container">
+        <h1>Welcome to the Project Content Hub</h1>
+        <p>This is a placeholder introduction page.</p>
+        <p>The content for this section is currently under development. This website serves as a demonstration platform for various web technologies, content structures, and interactive features.</p>
+        <p>Please use the Table of Contents to navigate through the available sections and examples.</p>
+    </div>
 </body>
 </html>
