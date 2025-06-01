@@ -4,6 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Content Hub</title>
+    <script>
+        // Authentication Check - Placed early in HEAD
+        (function() {
+            const isAuthenticated = sessionStorage.getItem('isAuthenticated');
+            const loginPage = 'login.html'; // Relative path to your login page
+
+            // Check if the current page is the login page to prevent redirect loops
+            let isCurrentlyOnLoginPage = false;
+            if (window.location.pathname.endsWith('/' + loginPage) || window.location.pathname === loginPage) {
+                isCurrentlyOnLoginPage = true;
+            }
+
+            if (isAuthenticated !== 'true' && !isCurrentlyOnLoginPage) {
+                // Preserve the current hash (content URL part) to redirect back after login
+                if (window.location.hash && window.location.hash !== "#") {
+                    sessionStorage.setItem('redirectHash', window.location.hash);
+                } else {
+                    // Clear any old redirectHash if there's no specific new one
+                    sessionStorage.removeItem('redirectHash');
+                }
+                // Redirect to the login page
+                window.location.href = loginPage;
+            }
+        })();
+    </script>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="alternate icon" href="favicon.ico" type="image/x-icon"> <!-- Added this line -->
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
