@@ -114,13 +114,21 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
       let primaryLinkPath = null;
 
       if (primaryPagePath) {
-        // sectionDisplayTitle is already correct from section.displayTitle
         primaryLinkPath = path.relative(baseOutputDirectory, primaryPagePath).replace(/\\/g, '/');
       } else if (allHtmlFiles.length === 0) {
-        // Should be caught by earlier continue, but defensive check
         continue;
       }
 
+      // Override link for CONTENT DEMONSTRATIONS to point to example-subpage.html
+      if (sectionDisplayTitle === "CONTENT DEMONSTRATIONS") {
+        const targetPage = 'example-subpage.html';
+        const specificPagePath = path.join(sectionPath, targetPage);
+        if (fs.existsSync(specificPagePath)) {
+          primaryLinkPath = path.relative(baseOutputDirectory, specificPagePath).replace(/\\/g, '/');
+        } else {
+          console.warn(`[ToC] CONTENT DEMONSTRATIONS: ${targetPage} not found in ${sectionPath}. Defaulting to ${primaryLinkPath || 'no primary page'}.`);
+        }
+      }
 
       // Identify secondary pages
       const secondaryPages = [];
@@ -130,14 +138,17 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
           if (htmlFile === primaryPageFileName) {
             continue; // Skip the primary page itself
           }
+          // If CONTENT DEMONSTRATIONS is linking to example-subpage.html, ensure example-subpage.html isn't also listed as secondary
+          if (sectionDisplayTitle === "CONTENT DEMONSTRATIONS" && htmlFile === 'example-subpage.html') {
+            continue;
+          }
           const secondaryFilePath = path.join(sectionPath, htmlFile);
-          const secondaryTitle = extractTitle(secondaryFilePath, false); // false for secondary page (lowercase)
+          const secondaryTitle = extractTitle(secondaryFilePath, false); 
           const secondaryLinkPath = path.relative(baseOutputDirectory, secondaryFilePath).replace(/\\/g, '/');
           secondaryPages.push({ title: secondaryTitle, link: secondaryLinkPath });
         }
-        secondaryPages.sort((a,b) => a.title.localeCompare(b.title)); // Sort secondary pages by (lowercase) title
+        secondaryPages.sort((a,b) => a.title.localeCompare(b.title)); 
       }
-
 
       // Construct HTML for the section
       if (primaryLinkPath) {
