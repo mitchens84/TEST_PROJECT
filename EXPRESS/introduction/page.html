@@ -9,31 +9,48 @@
         // Apply theme on initial load and listen for changes from parent
         (function() { // Standard theme handling script
             function applyTheme(theme) {
+                const isDark = theme === 'dark';
                 if (document.documentElement) {
-                    if (theme === 'dark') {
+                    if (isDark) {
                         document.documentElement.classList.add('dark-theme-preload');
                     } else {
                         document.documentElement.classList.remove('dark-theme-preload');
                     }
-                } else {
-                    console.error('Introduction page theme: document.documentElement is not available.');
                 }
+                // Defer body class manipulation until DOM is loaded
                 if (document.body) {
-                    if (theme === 'dark') {
+                    if (isDark) {
                         document.body.classList.add('dark-theme');
                     } else {
                         document.body.classList.remove('dark-theme');
                     }
                 } else {
-                    console.error('Introduction page theme: document.body is not available.');
+                    document.addEventListener('DOMContentLoaded', () => {
+                        if (isDark) {
+                            document.body.classList.add('dark-theme');
+                        } else {
+                            document.body.classList.remove('dark-theme');
+                        }
+                    });
                 }
             }
-            try {
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme) applyTheme(savedTheme); else applyTheme('light');
-            } catch (e) { applyTheme('light'); }
+
+            let initialThemeApplied = false;
+            function initializeTheme() {
+                if (initialThemeApplied) return;
+                try {
+                    const savedTheme = localStorage.getItem('theme');
+                    if (savedTheme) applyTheme(savedTheme); else applyTheme('light');
+                } catch (e) { applyTheme('light'); }
+                initialThemeApplied = true;
+            }
+
+            // Attempt to apply theme early
+            initializeTheme();
 
             window.addEventListener('DOMContentLoaded', () => {
+                // Ensure theme is applied if not already
+                initializeTheme(); 
                 if (document.documentElement && document.documentElement.classList.contains('dark-theme-preload')) {
                      document.documentElement.classList.remove('dark-theme-preload');
                 }

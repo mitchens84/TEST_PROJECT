@@ -358,6 +358,14 @@
     </div>
 
     <script>
+        // Function to propagate theme to iframes
+        function propagateThemeToIframes(theme) {
+            const iframe = document.getElementById('content-iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'themeChange', theme: theme }, '*');
+            }
+        }
+
         // CORS FALLBACK IMPLEMENTATIONS FOR FILE:// PROTOCOL
         // These provide basic functionality when ES modules can't be loaded
         
