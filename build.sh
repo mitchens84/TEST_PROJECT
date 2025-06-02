@@ -67,8 +67,9 @@ fi
 
 # --- 3. Generate Table of Contents ---
 echo "Generating Table of Contents..."
-# Correctly specify output for TEST_PROJECT
-node ../generate-toc.js --expressDir ./EXPRESS --htmlOutputFile ./toc.html --htmlBaseDir . --all
+# Use npm run to execute the script defined in package.json
+# Pass arguments to the script after --
+npm run generate-toc -- --expressDir ./EXPRESS --htmlOutputFile ./toc.html --htmlBaseDir . --all
 if [ $? -ne 0 ]; then
   echo "Error: Failed to generate Table of Contents. Aborting build."
   exit 1
