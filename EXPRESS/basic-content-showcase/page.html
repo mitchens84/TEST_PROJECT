@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Content Showcase</title>
+    <link rel="stylesheet" href="../../assets/styles/main.css">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        // Standard theme handling script (copied from other pages for consistency)
+        (function() {
+            function applyTheme(theme) {
+                if (document.documentElement) {
+                    if (theme === 'dark') {
+                        document.documentElement.classList.add('dark-theme-preload');
+                    } else {
+                        document.documentElement.classList.remove('dark-theme-preload');
+                    }
+                }
+                if (document.body) {
+                    if (theme === 'dark') {
+                        document.body.classList.add('dark-theme');
+                    } else {
+                        document.body.classList.remove('dark-theme');
+                    }
+                } else {
+                     document.addEventListener('DOMContentLoaded', () => {
+                        if (theme === 'dark') {
+                            document.body.classList.add('dark-theme');
+                        } else {
+                            document.body.classList.remove('dark-theme');
+                        }
+                     });
+                }
+            }
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) applyTheme(savedTheme); else applyTheme('light');
+            } catch (e) { applyTheme('light'); }
+
+            window.addEventListener('DOMContentLoaded', () => {
+                if (document.documentElement && document.documentElement.classList.contains('dark-theme-preload')) {
+                     document.documentElement.classList.remove('dark-theme-preload');
+                }
+                if (window.parent && window.parent !== window) {
+                    try {
+                        const parentTheme = parent.localStorage.getItem('theme');
+                        if (parentTheme) applyTheme(parentTheme);
+                    } catch(e) { console.warn("iframe could not access parent's localStorage for theme.");}
+                }
+            });
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'themeChange') {
+                    applyTheme(event.data.theme);
+                    try { localStorage.setItem('theme', event.data.theme); } catch (e) { /* ignore */ }
+                }
+            });
+        })();
+    </script>
+    <style>
+        /* Prevent FOUC for dark theme */
+        .dark-theme-preload { background-color: var(--background-color, #121212); color: var(--text-color, #e0e0e0); }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Basic Content Showcase</h1>
+        <p>Demonstrating fundamental HTML, CSS, and JavaScript capabilities within the template.</p>
+    </header>
+
+    <hr>
+
+    <section id="html-structure">
+        <h2>Semantic HTML Structure</h2>
+        <p>This page itself is an example of a semantic HTML structure, using <code>&lt;header&gt;</code>, <code>&lt;section&gt;</code>, <code>&lt;article&gt;</code> (below), <code>&lt;h1&gt;</code>-<code>&lt;h6&gt;</code>, etc.</p>
+        <article>
+            <h3>Article Example</h3>
+            <p>This is an <code>&lt;article&gt;</code> element, suitable for self-contained content like a blog post or news item.</p>
+        </article>
+    </section>
+
+    <hr>
+
+    <section id="css-styling">
+        <h2>CSS Styling & Theming</h2>
+        <p>Styles are applied from <code>assets/styles/main.css</code> (global) and <code>style.css</code> (local to this showcase).</p>
+        
+        <h3>Themed Elements</h3>
+        <p>Buttons and links should respect the current theme (Light/Dark).</p>
+        <button class="btn btn-primary">Primary Button</button>
+        <button class="btn btn-secondary">Secondary Button</button>
+        <p><a href="javascript:void(0)">This is a themed link.</a></p>
+
+        <h3>Layout Example (Simple Cards)</h3>
+        <div class="card-container">
+            <div class="card">
+                <h4>Card 1</h4>
+                <p>Simple card layout example. Useful for displaying items in a grid.</p>
+            </div>
+            <div class="card">
+                <h4>Card 2</h4>
+                <p>These cards use flexbox and should be responsive.</p>
+            </div>
+            <div class="card">
+                <h4>Card 3</h4>
+                <p>Theming applies here too, notice the background and text colors.</p>
+            </div>
+        </div>
+    </section>
+
+    <hr>
+
+    <section id="javascript-interaction">
+        <h2>JavaScript Interaction</h2>
+        
+        <article>
+            <h3>DOM Manipulation</h3>
+            <p id="dom-text">This text will change when you click the button below.</p>
+            <button id="change-text-btn" class="btn">Change Text</button>
+        </article>
+        
+        <article>
+            <h3>Event Handling</h3>
+            <div id="event-box" style="width: 200px; height: 100px; background-color: var(--secondary-color); color: var(--button-text); display: flex; align-items: center; justify-content: center; margin-top: 10px; border-radius: 4px; cursor: pointer;">
+                Hover over me!
+            </div>
+            <p id="event-output">Event status will appear here.</p>
+        </article>
+
+    </section>
+
+    <hr>
+
+    <section id="media-embedding">
+        <h2>Embedding Media</h2>
+        <article>
+            <h3>Image</h3>
+            <p>A sample responsive image:</p>
+            <img src="assets/placeholder-image.png" alt="Placeholder Image" style="max-width: 100%; height: auto; border: 1px solid var(--border-color);">
+            <p><small>Note: You'll need to add a placeholder image to <code>EXPRESS/basic-content-showcase/assets/placeholder-image.png</code> for this to display.</small></p>
+        </article>
+    </section>
+
+    <footer>
+        <p>End of Basic Content Showcase.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

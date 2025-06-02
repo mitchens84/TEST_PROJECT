@@ -38,14 +38,13 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
   const preferredOrder = [
     "INTRODUCTION",
     "FEATURES",
-    "CONTENT DEMONSTRATIONS", // was "section"
-    "ADVANCED SHOWCASES",   // was "new-test-section"
-    "SITRUNA KNOWLEDGE MAP", // was "sitruna"
+    "BASIC CONTENT SHOWCASE",
+    "COMPLEX CONTENT SHOWCASE",
+    "SITRUNA KNOWLEDGE MAP", 
     "APPLIANCE SCALING TUTORIAL",
     "MARKDOWN RENDERING EXAMPLE",
-    "COMPREHENSIVE STORAGE TEST", // for test.html (assuming test.html is moved into EXPRESS/comprehensive-storage-test/index.html)
-    "CAREER PROPOSAL - INTERACTIVE", // was "career"
-    "COMPLEX CONTENT SHOWCASE" // was "complex-showcase"
+    "COMPREHENSIVE STORAGE TEST", 
+    "CAREER PROPOSAL - INTERACTIVE"
   ];
   let htmlToc = '<input type="text" id="toc-search" placeholder="Search ToC..." onkeyup="filterToc()" style="width: 90%; margin-bottom: 10px; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--background-color); color: var(--text-color);">\n<ul>\n';
   try {
@@ -79,10 +78,16 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
       if (primaryPagePath) {
         displayTitle = extractTitle(primaryPagePath, true);
       } else {
-         // If no primary page, use section name, uppercased for sorting, but might be displayed differently if only sub-pages
          const allHtmlFilesCheck = fs.readdirSync(sectionPath).filter(file => file.endsWith('.html'));
-         if (allHtmlFilesCheck.length === 0) continue; // Skip if no HTML files at all
+         if (allHtmlFilesCheck.length === 0) continue; 
       }
+      // Manual mapping for new/renamed showcase directories
+      if (sectionName.toLowerCase() === 'basic-content-showcase') {
+        displayTitle = "BASIC CONTENT SHOWCASE";
+      } else if (sectionName.toLowerCase() === 'complex-showcase') {
+        displayTitle = "COMPLEX CONTENT SHOWCASE";
+      }
+
       sectionDetails.push({ name: sectionName, path: sectionPath, displayTitle, primaryPagePath, primaryPageFileName });
     }
 
@@ -108,11 +113,9 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
       let primaryPagePath = section.primaryPagePath;
       let primaryPageFileName = section.primaryPageFileName;
 
-      // Scan for all HTML files in the section
       const allHtmlFiles = fs.readdirSync(sectionPath)
         .filter(file => file.endsWith('.html'));
 
-      // Section title for display (already uppercased from sorting prep)
       let sectionDisplayTitle = section.displayTitle;
       let primaryLinkPath = null;
 
@@ -122,28 +125,17 @@ function generateHtmlToc(expressDir, outputFilePath, baseOutputDirectory) {
         continue;
       }
 
-      // Override link for CONTENT DEMONSTRATIONS to point to example-subpage.html
-      if (sectionDisplayTitle === "CONTENT DEMONSTRATIONS") {
-        const targetPage = 'example-subpage.html';
-        const specificPagePath = path.join(sectionPath, targetPage);
-        if (fs.existsSync(specificPagePath)) {
-          primaryLinkPath = path.relative(baseOutputDirectory, specificPagePath).replace(/\\/g, '/');
-        } else {
-          console.warn(`[ToC] CONTENT DEMONSTRATIONS: ${targetPage} not found in ${sectionPath}. Defaulting to ${primaryLinkPath || 'no primary page'}.`);
-        }
-      }
+      // Remove "CONTENT DEMONSTRATIONS" specific link override logic
+      // if (sectionDisplayTitle === "CONTENT DEMONSTRATIONS") { ... }
 
-      // Identify secondary pages
+
       const secondaryPages = [];
-      // For "CONTENT DEMONSTRATIONS", we don't want to list sub-pages in the TOC
-      if (sectionDisplayTitle !== "CONTENT DEMONSTRATIONS") {
+      // For "BASIC CONTENT SHOWCASE" and "COMPLEX CONTENT SHOWCASE", we don't want to list sub-pages in the TOC for now
+      // to keep them as single entry points. This can be adjusted later if needed.
+      if (sectionDisplayTitle !== "BASIC CONTENT SHOWCASE" && sectionDisplayTitle !== "COMPLEX CONTENT SHOWCASE") {
         for (const htmlFile of allHtmlFiles) {
           if (htmlFile === primaryPageFileName) {
             continue; // Skip the primary page itself
-          }
-          // If CONTENT DEMONSTRATIONS is linking to example-subpage.html, ensure example-subpage.html isn't also listed as secondary
-          if (sectionDisplayTitle === "CONTENT DEMONSTRATIONS" && htmlFile === 'example-subpage.html') {
-            continue;
           }
           const secondaryFilePath = path.join(sectionPath, htmlFile);
           const secondaryTitle = extractTitle(secondaryFilePath, false); 

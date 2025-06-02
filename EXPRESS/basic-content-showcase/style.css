@@ -1,0 +1,93 @@
+/* Styles specific to the Basic Content Showcase */
+body {
+    font-family: var(--font-family);
+    color: var(--text-color);
+    background-color: var(--background-color);
+    margin: 0;
+    padding: 20px; /* Add padding to the body */
+}
+
+header {
+    background-color: var(--primary-color);
+    color: var(--button-text); /* Assuming button-text is a good contrast for primary-color */
+    padding: 1em;
+    border-radius: 4px;
+    margin-bottom: 1em;
+}
+
+header h1 {
+    margin: 0;
+    color: var(--button-text); /* Ensure h1 color contrasts with header bg */
+}
+header p {
+    margin: 0.5em 0 0;
+    color: var(--button-text); /* Ensure p color contrasts with header bg */
+}
+
+hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 2em 0;
+}
+
+section {
+    margin-bottom: 2em;
+    padding: 1em;
+    background-color: var(--content-bg-color); /* Use a content background variable */
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+section h2 {
+    color: var(--text-color);
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 0.3em;
+    margin-top: 0;
+}
+
+article {
+    margin-top: 1em;
+    padding: 1em;
+    background-color: var(--background-color); /* Slightly different background for articles within sections */
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+article h3 {
+    color: var(--text-color);
+    margin-top: 0;
+}
+
+/* Card Layout */
+.card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em;
+}
+
+.card {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 1em;
+    flex: 1 1 calc(33.333% - 2em); /* Three cards per row, accounting for gap */
+    box-sizing: border-box;
+    min-width: 250px; /* Minimum width before wrapping */
+}
+
+.card h4 {
+    margin-top: 0;
+    color: var(--accent-color);
+}
+
+/* Buttons are styled by main.css, but we can add overrides or specific styles here if needed */
+.btn {
+    margin-right: 0.5em;
+}
+
+footer {
+    text-align: center;
+    margin-top: 2em;
+    padding: 1em;
+    color: var(--secondary-text-color);
+}
