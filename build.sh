@@ -64,14 +64,30 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+# Verify dist directory exists and is not empty
+if [ ! -d "$CAREER_PROPOSAL_APP_DIR/dist" ]; then
+  echo "Error: Build directory $CAREER_PROPOSAL_APP_DIR/dist not found after build. Aborting."
+  exit 1
+fi
+
+if [ -z "$(ls -A "$CAREER_PROPOSAL_APP_DIR/dist")" ]; then
+  echo "Error: Build directory $CAREER_PROPOSAL_APP_DIR/dist is empty after build. Aborting."
+  exit 1
+fi
+
 echo "Clearing old career proposal app assets from $CAREER_PROPOSAL_APP_OUTPUT_DIR..."
 rm -rf "$CAREER_PROPOSAL_APP_OUTPUT_DIR"/*
 mkdir -p "$CAREER_PROPOSAL_APP_OUTPUT_DIR" # Ensure directory exists
 
 echo "Copying built career proposal app assets to $CAREER_PROPOSAL_APP_OUTPUT_DIR..."
-cp -R "$CAREER_PROPOSAL_APP_DIR/dist/"* "$CAREER_PROPOSAL_APP_OUTPUT_DIR/"
-if [ $? -ne 0 ]; then
-  echo "Error: Failed to copy built assets from $CAREER_PROPOSAL_APP_DIR/dist. Aborting build."
+if [ -d "$CAREER_PROPOSAL_APP_DIR/dist/" ]; then
+  cp -R "$CAREER_PROPOSAL_APP_DIR/dist/." "$CAREER_PROPOSAL_APP_OUTPUT_DIR/"
+  if [ $? -ne 0 ]; then
+    echo "Error: Failed to copy built assets from $CAREER_PROPOSAL_APP_DIR/dist. Aborting build."
+    exit 1
+  fi
+else
+  echo "Error: Source directory $CAREER_PROPOSAL_APP_DIR/dist/ for copy does not exist. Aborting."
   exit 1
 fi
 echo "Career Proposal App built and assets copied successfully."
