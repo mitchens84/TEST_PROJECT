@@ -6,14 +6,7 @@
       "baseId": "appaWqv85wwLPD2Gy",
       "tableId": "tblrbfE4HKco5T6Tj",
       "viewId": "viwGZF8fx8eXQGoe3",
-      "outputFile": "data/trial_airtable_data.json"
-    },
-    {
-      "taskName": "PlaceholderTask",
-      "baseId": "appYOUR_BASE_ID_2",
-      "tableId": "tblYOUR_TABLE_ID_2",
-      "viewId": null,
-      "outputFile": "data/placeholder_data.json"
+      "outputFile": "data/airtable_index_data.json"
     }
   ],
   "otherConfig": {
