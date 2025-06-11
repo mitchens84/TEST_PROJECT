@@ -7,41 +7,74 @@ echo "Starting build process..."
 # --- Configuration ---
 PROJECT_ROOT_NODE_MODULES_DIR="node_modules"
 PROJECT_ROOT_PACKAGE_LOCK="package.json"
-PROPOSAL_APP_DIR="src_react/proposal_app"
-PROPOSAL_APP_OUTPUT_DIR="EXPRESS/career/full-proposal-component"
+PROPOSAL_HELPER_APP_DIR="src_react/proposal_app"
+PROPOSAL_HELPER_APP_OUTPUT_DIR="EXPRESS/proposal_helper_app_component"
+CAREER_PROPOSAL_APP_DIR="src_react/career-proposal"
+CAREER_PROPOSAL_APP_OUTPUT_DIR="EXPRESS/career/full-proposal-component"
 
-# --- 1. Build Internal React Proposal App ---
-echo "Building Internal React Proposal App..."
+# --- 1. Build Proposal Helper App ---
+echo "Building Proposal Helper App..."
 
-echo "Forcefully removing old node_modules in $PROPOSAL_APP_DIR to ensure fresh dependencies..."
-(cd "$PROPOSAL_APP_DIR" && rm -rf node_modules)
+echo "Forcefully removing old node_modules in $PROPOSAL_HELPER_APP_DIR to ensure fresh dependencies..."
+(cd "$PROPOSAL_HELPER_APP_DIR" && rm -rf node_modules)
 
-echo "Running npm install in $PROPOSAL_APP_DIR..."
-(cd "$PROPOSAL_APP_DIR" && npm install)
+echo "Running npm install in $PROPOSAL_HELPER_APP_DIR..."
+(cd "$PROPOSAL_HELPER_APP_DIR" && npm install)
 if [ $? -ne 0 ]; then
-  echo "Error: npm install failed for $PROPOSAL_APP_DIR. Aborting build."
+  echo "Error: npm install failed for $PROPOSAL_HELPER_APP_DIR. Aborting build."
   exit 1
 fi
 
-echo "Running npm run build for $PROPOSAL_APP_DIR..."
-(cd "$PROPOSAL_APP_DIR" && npm run build)
+echo "Running npm run build for $PROPOSAL_HELPER_APP_DIR..."
+(cd "$PROPOSAL_HELPER_APP_DIR" && npm run build)
 if [ $? -ne 0 ]; then
-  echo "Error: npm run build failed for $PROPOSAL_APP_DIR. Aborting build."
+  echo "Error: npm run build failed for $PROPOSAL_HELPER_APP_DIR. Aborting build."
   exit 1
 fi
 
-echo "Clearing old proposal app assets from $PROPOSAL_APP_OUTPUT_DIR..."
-rm -rf "$PROPOSAL_APP_OUTPUT_DIR"/*
-mkdir -p "$PROPOSAL_APP_OUTPUT_DIR" # Ensure directory exists
+echo "Clearing old proposal helper app assets from $PROPOSAL_HELPER_APP_OUTPUT_DIR..."
+rm -rf "$PROPOSAL_HELPER_APP_OUTPUT_DIR"/*
+mkdir -p "$PROPOSAL_HELPER_APP_OUTPUT_DIR" # Ensure directory exists
 
-echo "Copying built proposal app assets to $PROPOSAL_APP_OUTPUT_DIR..."
-cp -R "$PROPOSAL_APP_DIR/dist/"* "$PROPOSAL_APP_OUTPUT_DIR/"
+echo "Copying built proposal helper app assets to $PROPOSAL_HELPER_APP_OUTPUT_DIR..."
+cp -R "$PROPOSAL_HELPER_APP_DIR/dist/"* "$PROPOSAL_HELPER_APP_OUTPUT_DIR/"
 if [ $? -ne 0 ]; then
-  echo "Error: Failed to copy built assets from $PROPOSAL_APP_DIR/dist. Aborting build."
+  echo "Error: Failed to copy built assets from $PROPOSAL_HELPER_APP_DIR/dist. Aborting build."
   exit 1
 fi
-echo "Internal React Proposal App built and assets copied successfully."
+echo "Proposal Helper App built and assets copied successfully."
 
+# --- Build Career Proposal App ---
+echo "Building Career Proposal App..."
+
+echo "Forcefully removing old node_modules in $CAREER_PROPOSAL_APP_DIR..."
+(cd "$CAREER_PROPOSAL_APP_DIR" && rm -rf node_modules)
+
+echo "Running npm install in $CAREER_PROPOSAL_APP_DIR..."
+(cd "$CAREER_PROPOSAL_APP_DIR" && npm install)
+if [ $? -ne 0 ]; then
+  echo "Error: npm install failed for $CAREER_PROPOSAL_APP_DIR. Aborting build."
+  exit 1
+fi
+
+echo "Running npm run build for $CAREER_PROPOSAL_APP_DIR..."
+(cd "$CAREER_PROPOSAL_APP_DIR" && npm run build)
+if [ $? -ne 0 ]; then
+  echo "Error: npm run build failed for $CAREER_PROPOSAL_APP_DIR. Aborting build."
+  exit 1
+fi
+
+echo "Clearing old career proposal app assets from $CAREER_PROPOSAL_APP_OUTPUT_DIR..."
+rm -rf "$CAREER_PROPOSAL_APP_OUTPUT_DIR"/*
+mkdir -p "$CAREER_PROPOSAL_APP_OUTPUT_DIR" # Ensure directory exists
+
+echo "Copying built career proposal app assets to $CAREER_PROPOSAL_APP_OUTPUT_DIR..."
+cp -R "$CAREER_PROPOSAL_APP_DIR/dist/"* "$CAREER_PROPOSAL_APP_OUTPUT_DIR/"
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to copy built assets from $CAREER_PROPOSAL_APP_DIR/dist. Aborting build."
+  exit 1
+fi
+echo "Career Proposal App built and assets copied successfully."
 
 # --- 2. Install/Update Dependencies for TEST_PROJECT shell (if needed) ---
 echo "Checking dependencies for TEST_PROJECT shell..."
@@ -85,20 +118,6 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 echo "Quality Checks passed."
-
-# --- 5. Placeholder for Vite/React App Build ---
-# If you have React applications managed by Vite, ensure package.json at the root
-# has the necessary build scripts.
-# For example, if the main project is a Vite project:
-# echo "Building Vite application (if configured in root package.json)..."
-# npm run build # This would call the build script defined in the root package.json
-# if [ $? -ne 0 ]; then
-#   echo "Error: Vite build failed. Aborting build."
-#   exit 1
-# fi
-# echo "Vite application built successfully."
-
-# Or for multiple Vite apps, loop through them or call specific build scripts.
 
 echo "Build process completed successfully."
 exit 0
