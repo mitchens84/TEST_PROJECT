@@ -27,21 +27,9 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Build React Apps
-      run: |
-        cd src_react/career-proposal
-        npm ci
-        npm run build
-        cd ../proposal_app
-        npm ci
-        npm run build
-        
-    - name: Generate TOC
-      run: npm run generate-toc
+
+    - name: Run build script
+      run: sh build.sh
       
     - name: Setup Pages
       uses: actions/configure-pages@v4
