@@ -32,4 +32,5 @@ Thumbs.db
 # Build logs
 build_logs/
 
-data/
+data/*
+!data/airtable_index_data.json
