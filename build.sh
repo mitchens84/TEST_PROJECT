@@ -116,5 +116,33 @@ if [ $? -ne 0 ]; then
 fi
 echo "Quality Checks passed."
 
+echo "--- 5. Consolidating into 'dist' directory for Netlify deployment ---"
+
+# Clean and create the deployment directory
+rm -rf dist
+mkdir -p dist
+
+# Copy root-level static assets
+echo "Copying root-level static assets to dist/..."
+cp index.html dist/
+cp CNAME dist/
+cp favicon.ico dist/
+cp favicon.svg dist/
+cp toc.html dist/ # Ensure toc.html is generated before this step
+
+# Copy main CSS
+echo "Copying global styles to dist/assets/styles/..."
+mkdir -p dist/assets/styles/ # Ensure assets/styles subdirectories exist
+cp assets/styles/main.css dist/assets/styles/
+
+# Copy the entire EXPRESS directory which contains all built components
+echo "Copying EXPRESS directory contents to dist/EXPRESS/..."
+cp -R EXPRESS dist/EXPRESS/
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to copy EXPRESS directory to dist. Aborting build."
+  exit 1
+fi
+
+echo "All deployable assets consolidated into 'dist' directory."
 echo "Build process completed successfully."
 exit 0

@@ -2,7 +2,7 @@
 
 [build]
   command = "sh build.sh" # Script to build all React components
-  publish = "."                      # The root directory contains our static site
+  publish = "dist"                     # The Netlify deploy directory
 [build.environment]
   NODE_VERSION = "18"
 
