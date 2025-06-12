@@ -3,9 +3,8 @@
 [build]
   command = "sh build.sh" # Script to build all React components
   publish = "."                      # The root directory contains our static site
-  environment = { 
-    NODE_VERSION = "18"
-  }
+[build.environment]
+  NODE_VERSION = "18"
 
 # Handle SPA routing
 [[redirects]]
